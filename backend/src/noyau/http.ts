@@ -40,6 +40,8 @@ export interface Contexte {
   res: Response;
   /** Zéro sur une route publique. */
   personneId: number;
+  /** Session limitée : second facteur obligatoire et pas encore activé. */
+  limite: boolean;
   portee: Portee;
   /** Renseigné quand l'exigence porte sur un bien. */
   bienId: number;
@@ -72,7 +74,11 @@ export const PUBLIQUES_AUTORISEES: readonly string[] = [
   'POST /api/auth/mot-de-passe-oublie',
   'POST /api/auth/mot-de-passe-reinitialiser',
   'GET /api/sante',
+  // L'amorçage : une instance vide n'a aucun compte, donc personne ne peut se
+  // connecter pour en créer un. Ces deux routes se ferment définitivement dès
+  // qu'une personne existe (voir acces/routes.ts), ce qui est vérifié par un test.
   'GET /api/amorce',
+  'POST /api/amorce',
 ];
 
 const ipDe = (req: Request): string =>
@@ -88,7 +94,22 @@ export const agentDe = (req: Request): string => String(req.headers['user-agent'
 
 interface LignePersonne { id: number; token_version: number; archive_le: string | null }
 
-function authentifier(db: Db, config: Config, req: Request): number {
+/**
+ * Ce qu'une session limitée a le droit de faire : voir qui elle est, activer son
+ * second facteur, changer son mot de passe, se déconnecter. Rien d'autre.
+ *
+ * La liste est ici, à côté de la garde qui l'applique, et non dans le module
+ * d'authentification : c'est la garde qui décide, et une liste éloignée de son
+ * point d'application est une liste qu'on oublie de tenir à jour.
+ */
+const ROUTES_SESSION_LIMITEE: readonly string[] = [
+  'GET /moi',
+  'POST /auth/totp/preparation',
+  'POST /auth/totp/activation',
+  'POST /auth/mot-de-passe',
+];
+
+function authentifier(db: Db, config: Config, req: Request): { personneId: number; limite: boolean } {
   const jeton = jetonDe(req);
   if (!jeton) throw new ErreurApp('NON_AUTHENTIFIE', 'Connectez-vous pour accéder à cette page.');
   const charge = verifierAcces(config.jwtSecret, jeton);
@@ -99,7 +120,7 @@ function authentifier(db: Db, config: Config, req: Request): number {
   if (!p || p.archive_le || p.token_version !== charge.tv) {
     throw new ErreurApp('NON_AUTHENTIFIE', 'Votre session n\'est plus valide, reconnectez-vous.');
   }
-  return p.id;
+  return { personneId: p.id, limite: charge.lim === 1 };
 }
 
 function appliquerExigence(ctx: Contexte, exigence: Exigence): void {
@@ -162,14 +183,19 @@ export class Routeur {
 
     const pont = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        const personneId = exigence.acces === 'public' ? 0 : authentifier(db, config, req);
+        const auth = exigence.acces === 'public' ? { personneId: 0, limite: false } : authentifier(db, config, req);
+        const personneId = auth.personneId;
         const ctx: Contexte = {
-          db, config, req, res, personneId,
+          db, config, req, res, personneId, limite: auth.limite,
           portee: personneId ? porteeDe(db, personneId) : { personneId: null, biens: new Map(), structures: new Map() },
           bienId: 0, structureId: 0,
           corps: req.body,
           ip: ipDe(req),
         };
+        if (auth.limite && !ROUTES_SESSION_LIMITEE.includes(`${methode} ${chemin}`)) {
+          throw new ErreurApp('SECOND_FACTEUR_A_ACTIVER',
+            'Le second facteur est obligatoire pour les gérants sur cette instance. Activez-le pour continuer.');
+        }
         appliquerExigence(ctx, exigence);
         const resultat = await g(ctx);
         if (res.headersSent) return;                      // le gestionnaire a répondu lui-même (fichier, flux)

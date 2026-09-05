@@ -28,10 +28,20 @@ export const DUREE_RENOUVELLEMENT_JOURS = 30;
 
 const ALGORITHME = 'HS256' as const;
 
-export interface Charge { sub: number; tv: number }
+export interface Charge {
+  sub: number;
+  tv: number;
+  /**
+   * Session limitée : la personne est authentifiée, mais le second facteur est
+   * obligatoire pour son rôle et elle ne l'a pas encore activé. Elle peut aller
+   * l'activer, et rien d'autre. Marquer la limite dans le jeton plutôt que de
+   * la reconstruire à chaque requête évite qu'un chemin l'oublie.
+   */
+  lim?: 1;
+}
 
-export const signer = (secret: string, personneId: number, tokenVersion: number): string =>
-  jwt.sign({ sub: personneId, tv: tokenVersion } satisfies Charge, secret, {
+export const signer = (secret: string, personneId: number, tokenVersion: number, limite = false): string =>
+  jwt.sign({ sub: personneId, tv: tokenVersion, ...(limite ? { lim: 1 as const } : {}) } satisfies Charge, secret, {
     algorithm: ALGORITHME, expiresIn: DUREE_ACCES_S,
   });
 
@@ -48,7 +58,7 @@ export function verifierAcces(secret: string, jeton: string): Charge {
   }
   const c = brut as Partial<Charge>;
   if (typeof c.sub !== 'number' || typeof c.tv !== 'number') throw invalideJeton;
-  return { sub: c.sub, tv: c.tv };
+  return { sub: c.sub, tv: c.tv, ...(c.lim === 1 ? { lim: 1 as const } : {}) };
 }
 
 export interface SessionOuverte { jeton: string; expireLe: string }

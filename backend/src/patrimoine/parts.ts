@@ -100,6 +100,13 @@ export function anomalies(lignes: readonly LigneDetention[]): Anomalie[] {
   return out;
 }
 
+/**
+ * Ce qui empêche d'appliquer un changement. Distincte d'une erreur ordinaire
+ * parce que son message est destiné à la gérante et doit dire quoi faire, pas
+ * seulement ce qui ne va pas.
+ */
+export class ChangementImpossible extends Error {}
+
 export interface Changement {
   /** Les lignes à fermer, avec la date de fin à poser. */
   aFermer: { id: number; effetAu: string }[];
@@ -126,6 +133,22 @@ export interface Changement {
 export function preparerChangement(
   lignes: readonly LigneDetention[], nouvelles: ReadonlyMap<number, number>, dateEffet: string, motif: string,
 ): Changement {
+  if (!nouvelles.size) {
+    throw new ChangementImpossible('Une répartition ne peut pas être vide : indiquez au moins une personne et ses parts.');
+  }
+  // Une modification antérieure à une répartition déjà saisie est ambiguë :
+  // remplace-t-elle ce qui suit, ou s'insère-t-elle avant ? Deviner produirait
+  // un historique faux sans que personne ne s'en aperçoive, et c'est
+  // exactement ce qu'on ne veut pas sur des quotes-parts. On refuse, en disant
+  // quoi faire.
+  const posterieures = lignes.filter((l) => l.effetDu > dateEffet);
+  if (posterieures.length) {
+    const premiere = posterieures.map((l) => l.effetDu).sort()[0];
+    throw new ChangementImpossible(
+      `Une répartition existe déjà à partir du ${premiere}, postérieure à la date d'effet demandée (${dateEffet}). ` +
+      'Corrigez d\'abord la répartition la plus récente, ou choisissez une date d\'effet postérieure.',
+    );
+  }
   const courantes = lignes.filter((l) => enVigueur(l, dateEffet));
   const aFermer: Changement['aFermer'] = [];
   const aCreer: LigneDetention[] = [];
@@ -133,7 +156,7 @@ export function preparerChangement(
   for (const l of courantes) {
     const voulu = nouvelles.get(l.personneId);
     if (voulu === l.parts) continue;                       // inchangé : on ne touche à rien
-    if (l.id === undefined) throw new Error('Une ligne de détention à fermer doit porter son identifiant.');
+    if (l.id === undefined) throw new ChangementImpossible('Une ligne de détention à fermer doit porter son identifiant.');
     aFermer.push({ id: l.id, effetAu: dateEffet });
   }
 
@@ -141,7 +164,9 @@ export function preparerChangement(
     courantes.filter((l) => nouvelles.get(l.personneId) === l.parts).map((l) => l.personneId),
   );
   for (const [personneId, parts] of nouvelles) {
-    if (parts <= 0) throw new Error(`Les parts doivent être strictement positives (personne ${personneId}).`);
+    if (!Number.isInteger(parts) || parts <= 0) {
+      throw new ChangementImpossible(`Les parts doivent être des nombres entiers strictement positifs (personne ${personneId}).`);
+    }
     if (inchangees.has(personneId)) continue;
     aCreer.push({ personneId, parts, effetDu: dateEffet, effetAu: null, motif });
   }

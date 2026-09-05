@@ -3,7 +3,7 @@
 // quotes-parts, sinon la première contestation détruit la confiance dans l'outil.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LigneDetention, anomalies, partsALaDate, preparerChangement, quotePart, quotePartLisible } from '../src/patrimoine/parts';
+import { ChangementImpossible, LigneDetention, anomalies, partsALaDate, preparerChangement, quotePart, quotePartLisible } from '../src/patrimoine/parts';
 
 const HELENE = 1, CLAIRE = 2, THOMAS = 3, JULIEN = 4, ENFANT = 5;
 
@@ -87,8 +87,33 @@ test('un changement rétroactif dans le passé reste possible et daté', () => {
   assert.equal(c.aCreer[0].effetDu, '2020-01-01');
 });
 
-test('des parts nulles ou négatives sont refusées', () => {
-  assert.throws(() => preparerChangement(INDIVISION, new Map([[HELENE, 0]]), '2026-01-01', 'x'), /strictement positives/);
+test('des parts nulles, négatives ou fractionnaires sont refusées', () => {
+  for (const mauvais of [0, -1, 1.5, Number.NaN]) {
+    assert.throws(
+      () => preparerChangement(INDIVISION, new Map([[HELENE, mauvais]]), '2026-01-01', 'x'),
+      ChangementImpossible, `${mauvais} aurait dû être refusé`,
+    );
+  }
+});
+
+test('une répartition vide est refusée', () => {
+  // Sans ce garde-fou, « je vide la liste » supprimerait toute la structure
+  // d'un geste, sans que rien ne le dise.
+  assert.throws(() => preparerChangement(INDIVISION, new Map(), '2026-01-01', 'x'), /ne peut pas être vide/);
+});
+
+test('un changement antérieur à une répartition déjà saisie est refusé, en disant quoi faire', () => {
+  // Le cas réel : on amorce l'instance aujourd'hui, puis on veut saisir la
+  // répartition issue de la succession de 2019. Deviner si la saisie récente
+  // doit être remplacée ou conservée produirait un historique faux en silence.
+  const lignes: LigneDetention[] = [
+    { id: 1, personneId: HELENE, parts: 1, effetDu: '2026-09-05', effetAu: null },
+  ];
+  assert.throws(
+    () => preparerChangement(lignes, new Map([[HELENE, 1], [CLAIRE, 1]]), '2019-06-01', 'Succession'),
+    (e: unknown) => e instanceof ChangementImpossible
+      && /2026-09-05/.test(e.message) && /date d'effet postérieure/.test(e.message),
+  );
 });
 
 test('les anomalies attrapent ce que SQLite ne sait pas contraindre', () => {

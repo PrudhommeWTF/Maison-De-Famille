@@ -107,12 +107,6 @@ export const REGISTRE: readonly Declaration[] = [
     defaut: true,
   },
   {
-    cle: 'conflitAvantEnvoi', type: 'bool', portee: 'bien', section: 'sejours', module: 'Séjours',
-    libelle: 'Afficher les conflits avant l\'envoi',
-    description: "Vérifie les dates pendant la saisie et montre le chevauchement avant d'envoyer la demande. Désactiver ne supprime pas la détection côté serveur, cela retire seulement l'avertissement en cours de frappe.",
-    defaut: true,
-  },
-  {
     cle: 'totpObligatoirePourGerant', type: 'bool', portee: 'instance', section: 'securite', module: 'Sécurité',
     libelle: 'Second facteur obligatoire pour les gérants',
     description: "Un gérant qui n'a pas activé le second facteur ne peut plus se connecter tant qu'il ne l'a pas fait. À n'activer qu'une fois que chaque gérant a imprimé ses codes de secours : sans cela, vous vous verrouillez dehors.",

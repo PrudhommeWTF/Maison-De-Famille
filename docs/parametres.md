@@ -1,0 +1,121 @@
+# Réglages
+
+Engendré depuis `backend/src/parametres/registre.ts`. Ne pas modifier à la main :
+régénérer avec `cd backend && npm run docs:parametres`.
+
+La portée dit qui écrit le réglage et sur quoi il s'applique :
+
+| Portée | Qui écrit | Sur quoi |
+| --- | --- | --- |
+| Serveur | variable d'environnement | tout le service, en lecture seule dans l'interface |
+| Instance | un gérant | toute la famille |
+| Structure | un gérant | une indivision ou une SCI |
+| Bien | le gérant du bien | un seul bien |
+| Personnel | chacun pour soi | soi-même uniquement |
+
+## Général
+
+Identité de l'instance et affichage.
+
+### Nom de l'instance
+
+- **Clé** : `instanceNom`
+- **Portée** : Instance
+- **Par défaut** : `Maison de Famille`
+
+Apparaît dans l'objet des courriels et dans l'en-tête de l'application. Utile quand plusieurs familles hébergent la même application sur le même réseau.
+
+### Commencer la semaine le dimanche
+
+- **Clé** : `semaineCommenceDimanche`
+- **Portée** : Personnel
+- **Par défaut** : Non
+
+Change la première colonne de la grille du calendrier. Chacun règle le sien, cela n'affecte personne d'autre.
+
+## Séjours
+
+Calendrier, conflits, capacité et quotas.
+
+### Refuser une demande qui dépasse les couchages
+
+- **Clé** : `capaciteBloquante`
+- **Portée** : Bien
+- **Par défaut** : Non
+
+Quand ce réglage est actif, une demande dont le nombre d'occupants dépasse la capacité du bien ne peut pas être envoyée. Sinon elle part avec un avertissement, et la gérante tranche.
+
+### Signaler le dépassement de quota
+
+- **Clé** : `quotaAvertissement`
+- **Portée** : Bien
+- **Par défaut** : Oui
+
+Affiche un avertissement quand un foyer demande plus de nuits que son quota de la saison. Le quota reste indicatif : la gérante peut toujours valider, et le dépassement est enregistré dans le journal.
+
+## Sécurité
+
+Second facteur et visibilité des informations sensibles.
+
+### Second facteur obligatoire pour les gérants
+
+- **Clé** : `totpObligatoirePourGerant`
+- **Portée** : Instance
+- **Par défaut** : Non
+
+Un gérant qui n'a pas activé le second facteur ne peut plus se connecter tant qu'il ne l'a pas fait. À n'activer qu'une fois que chaque gérant a imprimé ses codes de secours : sans cela, vous vous verrouillez dehors.
+
+### Les membres de foyer voient les quotes-parts
+
+- **Clé** : `membreFoyerVoitParts`
+- **Portée** : Instance
+- **Par défaut** : Non
+
+Quand ce réglage est inactif, le conjoint d'un indivisaire voit qui compose l'indivision mais pas la répartition chiffrée des parts. C'est une information patrimoniale, d'où le défaut prudent.
+
+## Courriel
+
+Envoi des notifications et reprise en cas de panne.
+
+### Envoyer les notifications par courriel
+
+- **Clé** : `notificationsActives`
+- **Portée** : Instance
+- **Par défaut** : Oui
+
+Interrupteur général. Désactivé, les notifications continuent d'être enregistrées mais ne partent pas : utile pendant une reprise de données pour ne pas inonder la famille.
+
+### Tentatives avant abandon
+
+- **Clé** : `notificationsTentativesMax`
+- **Portée** : Instance
+- **Par défaut** : `5`
+- **Bornes** : de 1 à 20
+
+Nombre d'essais d'envoi avant qu'une notification soit marquée abandonnée. Chaque échec double l'attente avant l'essai suivant. Une notification abandonnée reste visible dans l'écran d'état, avec l'erreur exacte du relais.
+
+## Fichiers
+
+Photos et pièces jointes.
+
+### Taille maximale d'un fichier (Mo)
+
+- **Clé** : `fichierTailleMaxMo`
+- **Portée** : Instance
+- **Par défaut** : `15`
+- **Bornes** : de 1 à 100
+
+S'applique aux photos et aux pièces jointes. Une photo de téléphone récente pèse entre 3 et 8 Mo. Monter cette valeur consomme l'espace disque du conteneur.
+
+## Exploitation
+
+Journalisation et diagnostic.
+
+### Niveau de journalisation
+
+- **Clé** : `journalNiveau`
+- **Portée** : Instance
+- **Par défaut** : `info`
+- **Valeurs** : Erreurs seulement (`erreur`), Normal (`info`), Détaillé (`debug`)
+
+Prend effet immédiatement, sans redémarrage : « journalctl -f -u maison-de-famille » change de verbosité pendant qu'on le regarde. « debug » est bavard, à n'allumer que pour comprendre un cas précis.

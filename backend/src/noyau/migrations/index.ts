@@ -17,6 +17,7 @@ import type { Database } from 'better-sqlite3';
 import { log } from '../log';
 import { horodatage } from '../dates';
 import { migration001 } from './001-socle';
+import { migration002 } from './002-totp';
 
 export interface Migration {
   version: number;
@@ -25,7 +26,7 @@ export interface Migration {
 }
 
 /** Dans l'ordre. Ajouter une migration, c'est ajouter une ligne ici. */
-export const MIGRATIONS: readonly Migration[] = [migration001];
+export const MIGRATIONS: readonly Migration[] = [migration001, migration002];
 
 export const versionCible = (): number => Math.max(...MIGRATIONS.map((m) => m.version));
 

@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  NG_CLI_ANALYTICS: "false"
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Un secret arrivé dans l'historique est compromis même retiré ensuite :
+      # le seul moment où l'attraper est avant qu'il n'y entre.
+      - name: Recherche de secrets
+        run: node scripts/cherche-secrets.js
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      # Les dépendances de production, et elles seules : un outil de build
+      # vulnérable ne tourne pas sur la machine de la famille. Bloquant à partir
+      # de « high » : « moderate » ferait échouer la CI sur des avis souvent sans
+      # chemin d'exploitation ici, et une CI rouge en permanence ne se lit plus.
+      - name: Audit des dépendances
+        working-directory: backend
+        run: npm ci && npm audit --omit=dev --audit-level=high
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+      # Ce qui bloque vraiment : la portée d'accès, les détentions historisées,
+      # la détection de chevauchement, l'import du planning et les migrations.
+      - name: Tests
+        working-directory: backend
+        run: npm test
+
+      # « Pas de code mort » : imports, variables et paramètres inutilisés
+      # font échouer, dans le code comme dans les tests.
+      - name: Lint code mort
+        working-directory: backend
+        run: npm run lint:mort && npm run typecheck

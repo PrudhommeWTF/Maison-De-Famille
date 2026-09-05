@@ -103,11 +103,4 @@ export class Lecteur {
 export const lire = (source: unknown): Lecteur =>
   new Lecteur(source && typeof source === 'object' ? (source as Record<string, unknown>) : {});
 
-/** Un identifiant d'URL. Toujours vérifié : `/api/biens/abc` ne doit pas atteindre le SQL. */
-export function idUrl(brut: unknown, quoi = 'identifiant'): number {
-  const v = Number(brut);
-  if (!Number.isInteger(v) || v <= 0) throw invalide(`Cet ${quoi} n'est pas valide.`);
-  return v;
-}
-
 export { ErreurApp };
