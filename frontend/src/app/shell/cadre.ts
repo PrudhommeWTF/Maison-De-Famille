@@ -201,6 +201,15 @@ export class Cadre {
       e.push({ chemin: '/bien/depenses', libelle: 'Dépenses', icone: 'bi-receipt' });
       e.push({ chemin: '/bien/soldes', libelle: 'Soldes', icone: 'bi-arrow-left-right' });
     }
+    // Le carnet d'entretien est ouvert aux membres de foyer, pas aux invités :
+    // savoir que la chaudière est contrôlée intéresse tout le monde, et cacher
+    // l'entretien n'a jamais évité une panne.
+    if (this.etat.roleIci() !== 'invite') {
+      e.push({ chemin: '/bien/entretien', libelle: "Carnet d'entretien", icone: 'bi-tools' });
+    }
+    // Le coffre-fort s'affiche pour tous : son contenu est filtré par portée,
+    // et un invité en séjour y trouve légitimement le code du portail.
+    e.push({ chemin: '/bien/coffre', libelle: 'Coffre-fort', icone: 'bi-shield-lock' });
     e.push({ chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-house-door' });
     e.push({ chemin: '/bien/membres', libelle: 'Membres et ' + this.etat.vocabulaire().parts, icone: 'bi-people' });
     return e;

@@ -21,6 +21,9 @@ import { routesAuth } from './auth/routes';
 import { routesPatrimoine } from './patrimoine/routes';
 import { routesSejours } from './sejours/routes';
 import { routesArgent } from './argent/routes';
+import { demarrerEntretien, routesEntretien } from './entretien/routes';
+import { routesCoffre } from './coffre/routes';
+import { routesMaison } from './maison/routes';
 import { routesSaisons } from './sejours/saisons';
 import { routesImport } from './sejours/import/routes';
 import { routesParametres } from './parametres/routes';
@@ -79,7 +82,8 @@ export function construireApp(deps: Deps): express.Express {
 
   for (const routeur of [
     routesAuth(deps), routesAcces(deps), routesPatrimoine(deps), routesSejours(deps),
-    routesSaisons(deps), routesImport(deps), routesArgent(deps), routesParametres(deps),
+    routesSaisons(deps), routesImport(deps), routesArgent(deps), routesEntretien(deps),
+    routesMaison(deps), routesCoffre(deps), routesParametres(deps),
     routesFichiers(deps), routesExport(deps), routesSysteme(deps),
   ]) app.use('/api', routeur.router);
 
@@ -132,6 +136,7 @@ function demarrer(): void {
 
   const app = construireApp(deps);
   const arreterOrdonnanceur = demarrerOrdonnanceur(db, config);
+  const arreterEntretien = demarrerEntretien(db, config);
 
   const serveur = app.listen(config.port, () => {
     log.info(`Maison de Famille ${config.version} écoute sur le port ${config.port}.`);
@@ -147,6 +152,7 @@ function demarrer(): void {
   const arreter = (signal: string) => (): void => {
     log.info(`${signal} reçu, arrêt en cours.`);
     arreterOrdonnanceur();
+    arreterEntretien();
     serveur.close(() => { db.close(); process.exit(0); });
     // Si une connexion pend, on ne reste pas bloqué indéfiniment.
     setTimeout(() => { db.close(); process.exit(0); }, 10_000).unref();

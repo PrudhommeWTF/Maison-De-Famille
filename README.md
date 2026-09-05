@@ -9,8 +9,8 @@ Instance unique, une seule famille, données chez vous.
 
 ## État
 
-**Tranches 1, 1.5 et 2 livrées : le planning, les comptes et l'argent.** Le coffre-fort, les
-votes et la location saisonnière suivront, tranche par tranche (voir
+**Tranches 1, 1.5, 2 et 3 livrées : le planning, les comptes, l'argent et la
+maison.** Les votes et la location saisonnière suivront, tranche par tranche (voir
 [`docs/plan-des-tranches.md`](docs/plan-des-tranches.md)).
 
 Ce qui fonctionne aujourd'hui :
@@ -31,6 +31,14 @@ Ce qui fonctionne aujourd'hui :
 - soldes calculés (jamais stockés), virements proposés en nombre minimal,
   appels de fonds ;
 - notifications par courriel, en file durable avec reprise ;
+- **carnet d'entretien** : récurrences engendrant leurs échéances, tâches
+  datées à la réalisation avec facture, checklist de départ envoyée la veille ;
+- **fiche complète** du bien : caractéristiques, guide d'arrivée, inventaire et
+  signalement de casse ;
+- **carnet d'adresses** du bien : artisans, voisins, mairie, urgences ;
+- **coffre-fort** : documents versionnés avec portée, **codes chiffrés au
+  repos**, journal de chaque affichage, et la portée « pendant le séjour » qui
+  se ferme le lendemain du départ ;
 - export CSV des séjours et export complet de l'instance ;
 - interface responsive, utilisable au doigt.
 
@@ -92,6 +100,7 @@ icônes sont dans le dépôt.
 | [`docs/recette-t1.md`](docs/recette-t1.md) | **Ce que vous vérifiez vous-même** pour le planning |
 | [`docs/recette-t15.md`](docs/recette-t15.md) | **Ce que vous vérifiez vous-même** pour les comptes et les rôles |
 | [`docs/recette-t2.md`](docs/recette-t2.md) | **Ce que vous vérifiez vous-même** pour l'argent |
+| [`docs/recette-t3.md`](docs/recette-t3.md) | **Ce que vous vérifiez vous-même** pour la maison et le coffre-fort |
 | [`docs/design/handoff/`](docs/design/handoff/) | Le paquet de design. Contractuel pour l'apparence et les libellés |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions du dépôt |
 

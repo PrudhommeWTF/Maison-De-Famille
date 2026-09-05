@@ -1,5 +1,5 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 4
+-- Version du schéma : 5
 -- Régénérer : cd backend && npm run docs:schema
 
 CREATE TABLE appel_de_fonds (
@@ -35,6 +35,45 @@ CREATE TABLE categorie_depense (
         libelle TEXT NOT NULL,
         ordre   INTEGER NOT NULL,
         actif   INTEGER NOT NULL DEFAULT 1 CHECK (actif IN (0,1))
+      );
+CREATE TABLE checklist_ligne (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        libelle    TEXT NOT NULL,
+        ordre      INTEGER NOT NULL DEFAULT 0,
+        cree_le    TEXT NOT NULL,
+        archive_le TEXT
+      );
+CREATE TABLE code_acces (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id         INTEGER NOT NULL REFERENCES bien(id),
+        libelle         TEXT NOT NULL,
+        valeur_chiffree BLOB NOT NULL,
+        portee          TEXT NOT NULL CHECK (portee IN ('gerant','detenteur','membres','sejour')),
+        note            TEXT NOT NULL DEFAULT '',
+        cree_le         TEXT NOT NULL,
+        cree_par        INTEGER REFERENCES personne(id),
+        maj_le          TEXT,
+        archive_le      TEXT
+      );
+CREATE TABLE code_affichage (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        code_id     INTEGER NOT NULL REFERENCES code_acces(id),
+        personne_id INTEGER NOT NULL REFERENCES personne(id),
+        affiche_le  TEXT NOT NULL,
+        adresse_ip  TEXT NOT NULL DEFAULT ''
+      );
+CREATE TABLE contact (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        nom        TEXT NOT NULL,
+        role       TEXT NOT NULL CHECK (role IN ('artisan','voisin','mairie','urgence','autre')),
+        telephone  TEXT NOT NULL DEFAULT '',
+        email      TEXT NOT NULL DEFAULT '',
+        notes      TEXT NOT NULL DEFAULT '',
+        cree_le    TEXT NOT NULL,
+        cree_par   INTEGER REFERENCES personne(id),
+        archive_le TEXT
       );
 CREATE TABLE depense (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,6 +122,35 @@ CREATE TABLE detention (
         cree_par     INTEGER REFERENCES personne(id),
         CHECK (effet_au IS NULL OR effet_au > effet_du)
       );
+CREATE TABLE document (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        nom        TEXT NOT NULL,
+        portee     TEXT NOT NULL CHECK (portee IN ('gerant','detenteur','membres','sejour')),
+        note       TEXT NOT NULL DEFAULT '',
+        cree_le    TEXT NOT NULL,
+        cree_par   INTEGER REFERENCES personne(id),
+        archive_le TEXT
+      );
+CREATE TABLE document_version (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        document_id   INTEGER NOT NULL REFERENCES document(id),
+        fichier_id    INTEGER NOT NULL REFERENCES fichier(id),
+        version       INTEGER NOT NULL,
+        note          TEXT NOT NULL DEFAULT '',
+        depose_le     TEXT NOT NULL,
+        depose_par_id INTEGER REFERENCES personne(id)
+      );
+CREATE TABLE fiche_ligne (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        section    TEXT NOT NULL CHECK (section IN ('caracteristique','guide')),
+        cle        TEXT NOT NULL,
+        valeur     TEXT NOT NULL DEFAULT '',
+        ordre      INTEGER NOT NULL DEFAULT 0,
+        cree_le    TEXT NOT NULL,
+        archive_le TEXT
+      );
 CREATE TABLE fichier (
         id           TEXT PRIMARY KEY,
         sha256       TEXT NOT NULL,
@@ -111,6 +179,15 @@ CREATE TABLE import_run (
         refusees     INTEGER NOT NULL,
         rapport_json TEXT NOT NULL,
         annule_le    TEXT
+      );
+CREATE TABLE inventaire (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        libelle    TEXT NOT NULL,
+        etat       TEXT NOT NULL DEFAULT '',
+        ordre      INTEGER NOT NULL DEFAULT 0,
+        cree_le    TEXT NOT NULL,
+        archive_le TEXT
       );
 CREATE TABLE journal_audit (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -172,6 +249,22 @@ CREATE TABLE quota (
         foyer_id  INTEGER NOT NULL REFERENCES foyer(id),
         nuits_max INTEGER NOT NULL CHECK (nuits_max >= 0),
         UNIQUE (saison_id, foyer_id)
+      );
+CREATE TABLE recurrence (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id      INTEGER NOT NULL REFERENCES bien(id),
+        libelle      TEXT NOT NULL,
+        categorie    TEXT NOT NULL CHECK (categorie IN ('obligatoire','saison','courant','inventaire')),
+        periodicite  TEXT NOT NULL CHECK (periodicite IN ('annuelle','mensuelle','sejour')),
+        -- Pour une récurrence annuelle : la date limite, en 'MM-JJ'.
+        limite_mmjj  TEXT,
+        -- Pour une récurrence mensuelle : la saison, bornes comprises (1 à 12).
+        mois_debut   INTEGER CHECK (mois_debut BETWEEN 1 AND 12),
+        mois_fin     INTEGER CHECK (mois_fin BETWEEN 1 AND 12),
+        actif        INTEGER NOT NULL DEFAULT 1,
+        cree_le      TEXT NOT NULL,
+        cree_par     INTEGER REFERENCES personne(id),
+        archive_le   TEXT
       );
 CREATE TABLE regle_decision (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -278,7 +371,7 @@ CREATE TABLE sejour (
         decision_note TEXT NOT NULL DEFAULT '',
         import_run_id INTEGER REFERENCES import_run(id),
         import_ligne  INTEGER,
-        archive_le    TEXT,
+        archive_le    TEXT, checklist_envoyee_le TEXT,
         CHECK (depart > arrivee)
       );
 CREATE TABLE session (
@@ -300,6 +393,32 @@ CREATE TABLE structure (
         cree_le    TEXT NOT NULL,
         cree_par   INTEGER REFERENCES personne(id),
         archive_le TEXT
+      );
+CREATE TABLE tache (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id       INTEGER NOT NULL REFERENCES bien(id),
+        recurrence_id INTEGER REFERENCES recurrence(id),
+        libelle       TEXT NOT NULL,
+        detail        TEXT NOT NULL DEFAULT '',
+        categorie     TEXT NOT NULL CHECK (categorie IN ('obligatoire','saison','courant','inventaire')),
+        echeance      TEXT,
+        statut        TEXT NOT NULL CHECK (statut IN ('ouverte','faite','annulee')),
+        -- Cocher une tâche demande la date de réalisation : « fait le 12 juin
+        -- par Thomas » n'a pas le même sens que « coché aujourd'hui ».
+        fait_le       TEXT,
+        fait_par_id   INTEGER REFERENCES personne(id),
+        cout_cents    INTEGER,
+        -- La facture, et la dépense qu'elle a éventuellement créée.
+        fichier_id    INTEGER REFERENCES fichier(id),
+        depense_id    INTEGER REFERENCES depense(id),
+        -- Une tâche née d'un signalement de casse pointe la ligne d'inventaire.
+        inventaire_id INTEGER REFERENCES inventaire(id),
+        signale_par_id INTEGER REFERENCES personne(id),
+        cree_le       TEXT NOT NULL,
+        cree_par      INTEGER REFERENCES personne(id),
+        archive_le    TEXT,
+        -- Une tâche faite porte forcément sa date : sans elle, l'historique ment.
+        CHECK ((statut = 'faite') = (fait_le IS NOT NULL))
       );
 CREATE TABLE ventilation (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -333,15 +452,22 @@ CREATE TABLE voeu (
         UNIQUE (saison_id, foyer_id, rang),
         CHECK (au > du)
       );
+CREATE INDEX idx_affichage_code ON code_affichage(code_id, affiche_le);
 CREATE INDEX idx_audit_date ON journal_audit(fait_le);
 CREATE INDEX idx_audit_objet ON journal_audit(objet_kind, objet_id);
 CREATE INDEX idx_bien_structure ON bien(structure_id);
+CREATE INDEX idx_checklist_bien ON checklist_ligne(bien_id) WHERE archive_le IS NULL;
+CREATE INDEX idx_code_bien ON code_acces(bien_id) WHERE archive_le IS NULL;
+CREATE INDEX idx_contact_bien ON contact(bien_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_depense_bien_bien ON depense_bien(bien_id);
 CREATE INDEX idx_depense_groupe ON depense(groupe_id) WHERE groupe_id IS NOT NULL;
 CREATE INDEX idx_depense_structure ON depense(structure_id, date_depense) WHERE archive_le IS NULL;
 CREATE INDEX idx_detention_periode ON detention(structure_id, effet_du, effet_au);
 CREATE INDEX idx_detention_personne ON detention(personne_id);
+CREATE INDEX idx_document_bien ON document(bien_id) WHERE archive_le IS NULL;
+CREATE INDEX idx_fiche_bien ON fiche_ligne(bien_id, section) WHERE archive_le IS NULL;
 CREATE INDEX idx_fichier_sha ON fichier(sha256);
+CREATE INDEX idx_inventaire_bien ON inventaire(bien_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_notification_a_envoyer ON notification(prochaine_tentative)
         WHERE envoye_le IS NULL AND abandonne_le IS NULL;
 CREATE INDEX idx_personne_active ON personne(archive_le);
@@ -358,4 +484,8 @@ CREATE UNIQUE INDEX idx_sejour_import ON sejour(import_run_id, import_ligne)
 CREATE INDEX idx_sejour_plage ON sejour(bien_id, arrivee, depart) WHERE archive_le IS NULL;
 CREATE INDEX idx_sejour_statut ON sejour(bien_id, statut) WHERE archive_le IS NULL;
 CREATE INDEX idx_session_personne ON session(personne_id) WHERE revoque_le IS NULL;
+CREATE INDEX idx_tache_bien ON tache(bien_id, statut) WHERE archive_le IS NULL;
+CREATE UNIQUE INDEX idx_tache_occurrence ON tache(recurrence_id, echeance)
+        WHERE recurrence_id IS NOT NULL AND archive_le IS NULL;
 CREATE INDEX idx_ventilation_personne ON ventilation(personne_id);
+CREATE UNIQUE INDEX idx_version_unique ON document_version(document_id, version);

@@ -14,7 +14,8 @@ export type TypeNotification =
   | 'demande_decidee'
   | 'appel_de_fonds'
   | 'mot_de_passe'
-  | 'invitation';
+  | 'invitation'
+  | 'checklist_depart';
 
 export interface Declaration {
   type: TypeNotification;
@@ -50,6 +51,10 @@ export const TYPES: readonly Declaration[] = [
   {
     type: 'invitation', libelle: "Invitation à rejoindre l'instance", defaut: true, obligatoire: true,
     description: "Envoyé quand un gérant vous ouvre un compte, pour que vous choisissiez votre mot de passe. Ce message ne peut pas être désactivé.",
+  },
+  {
+    type: 'checklist_depart', libelle: 'Checklist de départ', defaut: true,
+    description: "Envoyé la veille de la fin de votre séjour, avec la liste de ce qu'il reste à faire avant de partir (compteurs, volets, poubelles).",
   },
 ];
 
@@ -184,6 +189,34 @@ export function invitation(c: ContexteInvitation): Message {
       `<p style="margin:0 0 8px">${echapper(l2)}</p>`,
       `<p style="margin:0 0 8px;color:#4a443c">${echapper(l3)}</p>`,
     ].join(''), lien, 'Choisir mon mot de passe'),
+  };
+}
+
+export interface ContexteChecklist {
+  instance: string; urlBase: string; bien: string; depart: string; lignes: readonly string[];
+}
+
+/**
+ * La checklist de départ, la veille de la fin du séjour.
+ *
+ * Le contenu est **dans le courriel**, pas seulement derrière un lien. La
+ * personne qui ferme la maison le fait souvent une clé à la main et le
+ * téléphone dans l'autre, parfois sans réseau au fond d'une vallée : un message
+ * qui oblige à ouvrir l'application pour savoir quoi faire ne sert à rien.
+ */
+export function checklistDepart(c: ContexteChecklist): Message {
+  const lien = `${c.urlBase}/bien/entretien`;
+  const l1 = `Votre séjour à ${c.bien} se termine le ${dateLisible(c.depart)}. Voici ce qu'il reste à faire avant de partir.`;
+  return {
+    sujet: `Départ de ${c.bien} demain : la checklist`,
+    lien,
+    texte: [l1, '', ...c.lignes.map((l) => `- ${l}`), '', `Le carnet d'entretien : ${lien}`].join('\n'),
+    html: envelopper(c.instance, 'Avant de partir', [
+      `<p style="margin:0 0 10px">${echapper(l1)}</p>`,
+      '<ul style="margin:0;padding-left:20px;color:#4a443c">',
+      ...c.lignes.map((l) => `<li style="margin-bottom:6px">${echapper(l)}</li>`),
+      '</ul>',
+    ].join(''), lien, "Voir le carnet d'entretien"),
   };
 }
 

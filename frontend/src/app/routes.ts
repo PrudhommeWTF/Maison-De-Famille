@@ -82,6 +82,8 @@ export const ROUTES: Routes = [
           { path: 'depenses', loadComponent: () => import('./ecrans/depenses').then((m) => m.Depenses), title: 'Dépenses et répartition' },
           { path: 'soldes', loadComponent: () => import('./ecrans/soldes').then((m) => m.Soldes), title: 'Soldes et remboursements' },
           { path: 'membres', loadComponent: () => import('./ecrans/membres').then((m) => m.Membres), title: 'Membres et quotes-parts' },
+          { path: 'entretien', loadComponent: () => import('./ecrans/entretien').then((m) => m.Entretien), title: "Carnet d'entretien" },
+          { path: 'coffre', loadComponent: () => import('./ecrans/coffre').then((m) => m.CoffreFort), title: 'Coffre-fort' },
           { path: 'fiche', loadComponent: () => import('./ecrans/fiche').then((m) => m.Fiche), title: 'Fiche du bien' },
           { path: '', pathMatch: 'full', redirectTo: 'calendrier' },
         ],
