@@ -27,6 +27,7 @@ import { biensVisibles } from '../acces/roles';
 import type { Db } from '../noyau/db';
 import type { Config } from '../noyau/config';
 import { rappelerClotures } from '../decisions/routes';
+import { creerAlbumsDesSejoursFinis } from '../location/routes';
 import { Categorie, Periodicite, lisible, urgence } from './recurrences';
 import {
   archiverChecklist, archiverInventaire, archiverRecurrence, archiverTache, checklist,
@@ -234,8 +235,8 @@ export function envoyerChecklists(db: Db, config: Config, jour = aujourdhui()): 
 }
 
 /**
- * Le passage quotidien : checklists, rappels de clôture de vote, et échéances
- * d'entretien à engendrer.
+ * Le passage quotidien : checklists, rappels de clôture de vote, échéances
+ * d'entretien à engendrer, et albums des séjours terminés.
  *
  * Une fois au démarrage, puis toutes les heures. L'heure plutôt que la journée
  * parce qu'un service redémarré à 23 h 50 ne doit pas sauter le passage du
@@ -247,6 +248,7 @@ export function demarrerEntretien(db: Db, config: Config): () => void {
     try {
       envoyerChecklists(db, config);
       rappelerClotures(db, config);
+      creerAlbumsDesSejoursFinis(db);
       for (const b of db.prepare('SELECT id FROM bien WHERE archive_le IS NULL').all() as { id: number }[]) {
         engendrer(db, b.id, 0);
       }

@@ -25,6 +25,7 @@ import { demarrerEntretien, routesEntretien } from './entretien/routes';
 import { routesCoffre } from './coffre/routes';
 import { routesMaison } from './maison/routes';
 import { routesDecisions } from './decisions/routes';
+import { routesLocation } from './location/routes';
 import { routesSaisons } from './sejours/saisons';
 import { routesImport } from './sejours/import/routes';
 import { routesParametres } from './parametres/routes';
@@ -79,12 +80,14 @@ export function construireApp(deps: Deps): express.Express {
   app.use('/api/biens/:bienId/photo', brut);
   app.use('/api/import/analyse', brut);
   app.use('/api/structures/:structureId/justificatif', brut);
+  app.use('/api/biens/:bienId/albums/:albumId/photos', brut);
   app.use(express.json({ limit: '1mb' }));
 
   for (const routeur of [
     routesAuth(deps), routesAcces(deps), routesPatrimoine(deps), routesSejours(deps),
     routesSaisons(deps), routesImport(deps), routesArgent(deps), routesEntretien(deps),
-    routesMaison(deps), routesCoffre(deps), routesDecisions(deps), routesParametres(deps),
+    routesMaison(deps), routesCoffre(deps), routesDecisions(deps), routesLocation(deps),
+    routesParametres(deps),
     routesFichiers(deps), routesExport(deps), routesSysteme(deps),
   ]) app.use('/api', routeur.router);
 
