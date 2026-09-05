@@ -89,7 +89,7 @@ interface LigneHistorique {
                 </label>
                 <select [attr.id]="'c-' + c.champ" [(ngModel)]="correspondance[c.champ]" [name]="'c-' + c.champ"
                         (ngModelChange)="simuler()">
-                  <option [ngValue]="-1">— aucune —</option>
+                  <option [ngValue]="-1">Aucune colonne</option>
                   @for (e of analyse()!.entetes; track $index) {
                     <option [ngValue]="$index">{{ e || 'colonne ' + ($index + 1) }}</option>
                   }

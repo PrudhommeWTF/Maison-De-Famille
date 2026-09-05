@@ -9,13 +9,16 @@ Instance unique, une seule famille, données chez vous.
 
 ## État
 
-**Tranches 1 et 2 livrées : le planning et l'argent.** Le coffre-fort, les
+**Tranches 1, 1.5 et 2 livrées : le planning, les comptes et l'argent.** Le coffre-fort, les
 votes et la location saisonnière suivront, tranche par tranche (voir
 [`docs/plan-des-tranches.md`](docs/plan-des-tranches.md)).
 
 Ce qui fonctionne aujourd'hui :
 
-- comptes, rôles par structure, mot de passe oublié, second facteur ;
+- comptes, **invitation par courriel ou par lien transmis à la main**, mot de
+  passe oublié, second facteur ;
+- personnes, foyers et rôles par structure, avec **deux gérants obligatoires**
+  par structure ;
 - structures (indivision, SCI, nom propre) avec leurs règles de décision ;
 - biens, fiche, photo, archivage réversible ;
 - **quotes-parts historisées** avec date d'effet et motif ;
@@ -87,6 +90,7 @@ icônes sont dans le dépôt.
 | [`docs/parametres.md`](docs/parametres.md) | Tous les réglages, engendrés depuis le registre |
 | [`docs/plan-des-tranches.md`](docs/plan-des-tranches.md) | Ce qui est livré quand |
 | [`docs/recette-t1.md`](docs/recette-t1.md) | **Ce que vous vérifiez vous-même** pour le planning |
+| [`docs/recette-t15.md`](docs/recette-t15.md) | **Ce que vous vérifiez vous-même** pour les comptes et les rôles |
 | [`docs/recette-t2.md`](docs/recette-t2.md) | **Ce que vous vérifiez vous-même** pour l'argent |
 | [`docs/design/handoff/`](docs/design/handoff/) | Le paquet de design. Contractuel pour l'apparence et les libellés |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions du dépôt |

@@ -77,6 +77,37 @@ Le regroupement à l'affichage est prévu au schéma (`depense_groupe`).
 
 ---
 
+## Tranche 1.5 : inscrire la famille (**livrée**)
+
+Une correction, pas une nouvelle fonction. La tranche 1 avait livré la moitié
+serveur de la gestion des personnes sans l'écran qui va avec : une gérante
+fraîchement installée restait seule et ne pouvait inscrire personne. Le plan
+renvoyait l'écran Membres à la tranche 4, ce qui aurait laissé l'application
+inutilisable par la famille pendant deux tranches entières.
+
+- écran **Personnes et rôles** : créer une personne, la rattacher à un foyer,
+  attribuer et retirer un rôle sur une structure ;
+- **parcours d'invitation** : la personne choisit son mot de passe elle-même, le
+  gérant ne le connaît jamais. Il ne fonctionnait pas : « mot de passe oublié »
+  excluait les comptes sans empreinte, c'est-à-dire exactement ceux qui venaient
+  d'être créés ;
+- **repli sans relais de courriel** : le lien d'invitation s'affiche en clair,
+  son affichage est daté en base et journalisé, et chaque demande périme le
+  lien précédent ;
+- **second gérant obligatoire** : le serveur refuse tout retrait qui ferait
+  descendre une structure sous deux gérants, et la carte de démarrage le
+  signale tant que ce n'est pas fait ;
+- **carte « Pour démarrer »** sur le tableau de bord, qui dit par où commencer
+  et s'efface étape par étape ;
+- suppression des sept tirets cadratins de l'interface, avec un test de CI qui
+  les refuse désormais.
+
+**Ce que vous vérifiez vous-même** : la liste complète est dans
+`docs/recette-t15.md`. En une phrase, votre mère installe l'instance, inscrit la
+fratrie, et chacun choisit son mot de passe et se connecte.
+
+---
+
 ## Tranche 3 : la maison
 
 - carnet d'entretien, tâches, récurrences engendrant leurs échéances ;
@@ -103,7 +134,8 @@ lendemain de son départ, et vous retrouvez qui l'a affiché et quand.
 - seuils lus dans `regle_decision`, jamais codés en dur ;
 - carte « aucun vote » et convocation d'assemblée pour la SCI, décision sans vote en nom propre ;
 - historique des décisions avec majorité requise et résultat ;
-- écran Membres et quotes-parts, avec la carte des rôles ;
+- carte des rôles sur l'écran Membres (les personnes et les rôles sont livrés
+  en tranche 1.5) ;
 - accès temporaires : invités et locataires par lien limité dans le temps, révocable ;
 - notifications `vote_ouvert` et `vote_cloture_proche`.
 

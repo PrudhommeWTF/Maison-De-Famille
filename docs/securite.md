@@ -26,6 +26,9 @@ l'est pas, et pourquoi.
 | Réseau sortant | **Aucun**, sauf le relais SMTP configuré. Polices et icônes sont dans le dépôt. | |
 | Validation | Chaque champ est lu par une fonction qui rend une valeur typée ou lève. Aucune concaténation de SQL, requêtes préparées partout. | `noyau/valider.ts` |
 | Journal | Toute décision, tout passage en force sur un conflit, tout changement de parts est horodaté avec son auteur. | `journal_audit` |
+| Invitation | Le gérant crée le compte, la personne **choisit son mot de passe elle-même** : aucun gérant ne connaît celui d'un autre. Lien valable sept jours, à usage unique, périmé dès qu'un nouveau est demandé. | `auth/invitations.ts` |
+| Lien affiché en clair | Repli assumé pour le jour de l'installation, quand aucun relais SMTP n'est configuré. **Afficher le lien, c'est pouvoir choisir le mot de passe de quelqu'un d'autre** : réservé au gérant, daté en base (`vu_le`) et écrit au journal avec le nom de qui a regardé. | idem |
+| Deux gérants par structure | Le serveur refuse tout retrait qui ferait descendre sous deux, y compris pour soi-même. Une structure à gérant unique est une instance dont l'accès se perd avec un téléphone, et dont la seule issue est une restauration. | `acces/gouvernance.ts` |
 
 ## Ce que la CI vérifie, à chaque poussée
 
@@ -39,6 +42,13 @@ l'est pas, et pourquoi.
 - **Refus réel** : un détenteur d'un bien se voit refuser chaque route de
   l'autre bien, y compris en tapant l'adresse directement.
 - **Audit des dépendances** de production, bloquant à partir de « high ».
+- **Parcours d'inscription complet**, des routes jusqu'à la connexion effective :
+  créer une personne, recevoir l'invitation, choisir un mot de passe, se
+  connecter. Le contournement de ce parcours dans le banc d'essai avait laissé
+  passer un défaut qui le rendait entièrement inopérant.
+- **Discipline de validation** : un champ lu sans `fin()` acceptait une valeur
+  invalide en silence. La CI compte les lectures et les clôtures de chaque
+  fichier de routes.
 
 ---
 

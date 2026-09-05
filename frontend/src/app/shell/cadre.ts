@@ -180,6 +180,7 @@ export class Cadre {
     const e: Entree[] = [{ chemin: '/', libelle: 'Tableau de bord', icone: 'bi-grid-1x2' }];
     if (this.etat.estGerant()) {
       e.push({ chemin: '/biens', libelle: 'Biens gérés', icone: 'bi-houses' });
+      e.push({ chemin: '/personnes', libelle: 'Personnes et rôles', icone: 'bi-people' });
       e.push({ chemin: '/import', libelle: 'Import du planning', icone: 'bi-box-arrow-in-right' });
       e.push({ chemin: '/reglages', libelle: 'Réglages', icone: 'bi-sliders' });
       e.push({ chemin: '/etat', libelle: 'État du service', icone: 'bi-activity' });

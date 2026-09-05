@@ -13,7 +13,11 @@ import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api';
 import { Etat, TOUS } from '../core/etat';
 import { euros, nuitsLisible, personnesLisible, plage } from '../core/format';
-import type { BienResume, ListeDepenses, Sejour, Soldes } from '../core/modeles';
+import { etapes } from '../core/demarrage';
+import type { Etape } from '../core/demarrage';
+import type { BienResume, Etat as EtatSysteme, ListeDepenses, Sejour, Soldes } from '../core/modeles';
+
+interface Gouvernance { alertes: { structureNom: string }[] }
 
 @Component({
   selector: 'app-tableau-de-bord',
@@ -36,6 +40,15 @@ import type { BienResume, ListeDepenses, Sejour, Soldes } from '../core/modeles'
     .resume .valeur { font-family: var(--titre); font-size: 25px; font-weight: 500; }
     .acces-rapide { display: flex; gap: 8px; flex-wrap: wrap; }
     .plage { width: 78px; flex: none; font-size: 12px; color: var(--encre-3); }
+    .demarrage { border-left: 3px solid var(--accent); }
+    .etape { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--separateur); }
+    .etape:first-of-type { border-top: none; }
+    .etape .puce { width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center;
+                   background: var(--actif); color: var(--encre-3); font-size: 11px; margin-top: 2px; }
+    .etape .puce.urgent { background: var(--accent); color: #fff; }
+    .etape .quoi { flex: 1; min-width: 200px; }
+    .etape .titre-e { font-size: 14px; display: block; }
+    .etape .pourquoi { font-size: 12.5px; color: var(--encre-3); margin: 2px 0 0; }
   `],
   template: `
     <div class="colonne">
@@ -50,10 +63,34 @@ import type { BienResume, ListeDepenses, Sejour, Soldes } from '../core/modeles'
           </p>
         </div>
 
+        @if (demarrage().length) {
+          <section class="carte demarrage">
+            <h2>Pour démarrer</h2>
+            <p class="secondaire" style="margin:4px 0 10px">
+              Ce qu'il reste à faire pour que la famille puisse s'en servir. Cette carte
+              disparaît d'elle-même, étape par étape.
+            </p>
+            @for (e of demarrage(); track e.cle) {
+              <div class="etape">
+                <span class="puce" [class.urgent]="e.bloquante" aria-hidden="true">
+                  <i class="bi" [class.bi-exclamation]="e.bloquante" [class.bi-arrow-right]="!e.bloquante"></i>
+                </span>
+                <span class="quoi">
+                  <span class="titre-e">{{ e.titre }}</span>
+                  <p class="pourquoi">{{ e.pourquoi }}</p>
+                </span>
+                @if (e.lien) {
+                  <a class="btn" [routerLink]="e.lien">Y aller</a>
+                }
+              </div>
+            }
+          </section>
+        }
+
         <div class="carte entre">
           <div class="resume">
             <div class="stat">
-              <div class="valeur">{{ prochain() ? plage(prochain()!.arrivee, prochain()!.depart) : '—' }}</div>
+              <div class="valeur">{{ prochain() ? plage(prochain()!.arrivee, prochain()!.depart) : 'Aucun' }}</div>
               <div class="quoi">Prochain séjour</div>
             </div>
             <div class="stat">
@@ -198,6 +235,14 @@ export class TableauDeBord {
   private readonly demandes = signal<Sejour[]>([]);
   private readonly depenses = signal<ListeDepenses | null>(null);
   private readonly soldes = signal<Soldes | null>(null);
+  private readonly faits = signal<Etape[]>([]);
+
+  /**
+   * Les étapes de démarrage. Le tableau de bord **compose** ici aussi : il
+   * assemble des faits que chaque module rend sur ses propres routes, il ne
+   * calcule rien lui-même, et le classement vit dans un module pur testé seul.
+   */
+  readonly demarrage = computed(() => (this.etat.estGerant() ? this.faits() : []));
 
   /**
    * Ce que le module argent a à dire au tableau de bord. Absent tant qu'aucune
@@ -285,6 +330,29 @@ export class TableauDeBord {
     this.demandes.set(demandes.filter((d) => this.etat.contexte() === TOUS || d.bienId === this.etat.contexte()));
     this.depenses.set(depenses);
     this.soldes.set(soldes);
+    if (this.etat.estGerant()) void this.chargerDemarrage(sejours.length);
+  }
+
+  private async chargerDemarrage(sejoursVus: number): Promise<void> {
+    const bien = this.etat.bien();
+    const [systeme, gouvernance, detentions] = await Promise.all([
+      this.api.get<EtatSysteme>('/etat').catch(() => null),
+      this.api.get<Gouvernance>('/gouvernance').catch(() => null),
+      bien
+        ? this.api.get<{ actuelle: unknown[] }>(`/structures/${bien.structureId}/detentions`).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    if (!systeme) return;
+    this.faits.set(etapes({
+      personnes: systeme.donnees.personnes,
+      structuresSansSecondGerant: (gouvernance?.alertes ?? []).map((a) => a.structureNom),
+      // Sans bien ouvert (vue consolidée), on ne réclame pas une saisie qu'on
+      // ne saurait pas où faire.
+      quotesPartsSaisies: !bien || !!detentions?.actuelle.length,
+      relaisConfigure: !!systeme.courriel.relais,
+      adressePubliqueRenseignee: !!systeme.courriel.adressePublique,
+      sejours: systeme.donnees.sejours || sejoursVus,
+    }));
   }
 
   ico(type: string): string {
