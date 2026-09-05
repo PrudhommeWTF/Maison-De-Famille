@@ -86,6 +86,7 @@ export const ROUTES: Routes = [
           { path: '', pathMatch: 'full', redirectTo: 'calendrier' },
         ],
       },
+      { path: 'personnes', canActivate: [gerant], loadComponent: () => import('./ecrans/personnes').then((m) => m.Personnes), title: 'Personnes et rôles' },
       { path: 'reglages', canActivate: [gerant], loadComponent: () => import('./ecrans/reglages').then((m) => m.Reglages), title: 'Réglages' },
       { path: 'import', canActivate: [gerant], loadComponent: () => import('./ecrans/import').then((m) => m.Import), title: 'Import du planning' },
       { path: 'etat', canActivate: [gerant], loadComponent: () => import('./ecrans/etat').then((m) => m.EtatSysteme), title: 'État du service' },

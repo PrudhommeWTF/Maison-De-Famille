@@ -276,7 +276,12 @@ export function routesAuth(deps: Deps): Routeur {
     if (parAdresse.attente(ctx.ip, now) > 0) throw attenteEnMessage(parAdresse.attente(ctx.ip, now));
     parAdresse.echec(ctx.ip, now);
 
-    const compte = ctx.db.prepare('SELECT id, nom FROM personne WHERE email = ? AND archive_le IS NULL AND mot_de_passe_hash IS NOT NULL')
+    // Pas de filtre sur `mot_de_passe_hash` : un compte **jamais activé** doit
+    // pouvoir obtenir un lien, sinon quelqu'un dont l'invitation a expiré reste
+    // dehors sans comprendre pourquoi, et le gérant doit intervenir pour un cas
+    // que la personne pouvait régler seule. Le filtre avait exactement cet
+    // effet, et rendait le parcours d'invitation entier inopérant.
+    const compte = ctx.db.prepare('SELECT id, nom FROM personne WHERE email = ? AND archive_le IS NULL')
       .get(email) as { id: number; nom: string } | undefined;
 
     if (compte) {

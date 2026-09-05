@@ -13,15 +13,20 @@ import { log } from '../noyau/log';
 import { lire } from '../noyau/valider';
 import { parametre } from '../parametres/repo';
 import { deposer } from '../stockage/fichiers';
+import { etatInvalide } from '../noyau/erreurs';
+import { GouvernanceImpossible, alertes, controlerRetraitGerant } from '../acces/gouvernance';
+import { inviter, marquerLienVu } from '../auth/invitations';
 import { partsALaDate } from './parts';
 import {
   ModeStructure, TypeBien, VOCABULAIRE, archiverBien, attribuerRole, bien, changerDetentions,
-  creerBien, creerFoyer, creerPersonne, creerStructure, detentionsDe, detenteursALaDate,
-  foyers, modifierBien, personnes, regleCourante, reglesDe, structure,
+  compterGerants, creerBien, creerFoyer, creerPersonne, creerStructure, detentionsDe,
+  detenteursALaDate, foyers, modifierBien, personne, personnes, regleCourante, reglesDe,
+  retirerRole, rolesAttribues, structure,
 } from './repo';
 
 const MODES: readonly ModeStructure[] = ['indivision', 'sci', 'nom_propre'];
 const TYPES: readonly TypeBien[] = ['mer', 'montagne', 'campagne', 'ville'];
+const ROLES = ['gerant', 'detenteur', 'membre_foyer', 'invite'] as const;
 
 export function routesPatrimoine(deps: Deps): Routeur {
   const r = new Routeur('patrimoine', deps);
@@ -198,7 +203,9 @@ export function routesPatrimoine(deps: Deps): Routeur {
 
   // ---------- Personnes et foyers ----------
 
-  r.get('/personnes', { acces: 'gerant' }, (ctx) => personnes(ctx.db));
+  r.get('/personnes', { acces: 'gerant' }, (ctx) => personnes(ctx.db).map((p) => ({
+    ...p, roles: rolesAttribues(ctx.db, p.id),
+  })));
   r.get('/foyers', { acces: 'gerant' }, (ctx) => foyers(ctx.db));
 
   r.post('/foyers', { acces: 'gerant' }, (ctx) => {
@@ -224,23 +231,93 @@ export function routesPatrimoine(deps: Deps): Routeur {
     }
     const id = creerPersonne(ctx.db, nom, email || null, foyerId, null, ctx.personneId);
     log.info(`Personne « ${nom} » créée (${id}) par la personne ${ctx.personneId}.`);
-    return { id };
+    // Sans adresse, la personne existe comme nom (pour les quotes-parts et les
+    // répartitions) mais n'a pas de compte. C'est un cas légitime, pas un
+    // oubli : une part peut appartenir à quelqu'un qui n'ouvrira jamais
+    // l'application. L'écran le dit, plutôt que de laisser croire à une
+    // invitation perdue.
+    const inv = email ? inviter(ctx.db, id, ctx.personneId, ctx.config.publicUrl ?? '') : null;
+    return { id, courrielEnFile: inv?.courrielEnFile ?? false, expireLe: inv?.expireLe ?? null };
+  });
+
+  /**
+   * Réinviter, et éventuellement **afficher le lien en clair**.
+   *
+   * Le repli existe parce que le jour de l'installation, aucun relais SMTP
+   * n'est encore configuré : sans lui, personne ne pourrait créer de comptes ce
+   * jour-là. Il a un prix, dit ici sans détour : afficher le lien, c'est
+   * pouvoir choisir le mot de passe de quelqu'un d'autre. L'affichage est donc
+   * réservé au gérant, daté en base et journalisé, et chaque demande engendre
+   * un jeton neuf qui périme le précédent.
+   */
+  r.post('/personnes/:personneId/invitation', { acces: 'gerant' }, (ctx) => {
+    const cible = personne(ctx.db, Number(ctx.req.params.personneId));
+    if (cible.archiveLe) throw invalide('Cette personne est archivée.');
+    const l = lire(ctx.corps);
+    const afficherLien = l.booleen('afficherLien', false);
+    l.fin();
+    if (!cible.email && !afficherLien) {
+      throw invalide(
+        `${cible.nom} n'a pas d'adresse de courriel : aucune invitation ne peut partir. `
+        + 'Renseignez son adresse, ou affichez le lien pour le lui transmettre vous-même.');
+    }
+    const inv = inviter(ctx.db, cible.id, ctx.personneId, ctx.config.publicUrl ?? '');
+    if (!afficherLien) return { courrielEnFile: inv.courrielEnFile, expireLe: inv.expireLe, lien: null };
+    marquerLienVu(ctx.db, cible.id, ctx.personneId);
+    return { courrielEnFile: inv.courrielEnFile, expireLe: inv.expireLe, lien: inv.lien };
   });
 
   /** Attribuer un rôle sur une structure. La détention suffit pour être détenteur. */
   r.post('/structures/:structureId/roles', { acces: 'structure', role: 'gerant' }, (ctx) => {
     const l = lire(ctx.corps);
     const personneId = l.entier('personneId', { min: 1 });
-    const role = l.choix('role', ['gerant', 'detenteur', 'membre_foyer', 'invite'] as const);
+    const role = l.choix('role', ROLES);
     l.fin();
-    if (role === 'gerant') {
-      // Une instance dont le seul gérant perd son accès n'a plus de porte
-      // d'entrée. Le contrôle inverse (retirer le dernier gérant) vit au même
-      // endroit quand cette route saura retirer un rôle.
-      log.info(`Rôle gérant attribué à la personne ${personneId} sur la structure ${ctx.structureId}.`);
+    personne(ctx.db, personneId);
+    if (rolesAttribues(ctx.db, personneId).some((x) => x.structureId === ctx.structureId && x.role === role)) {
+      return undefined;
     }
     attribuerRole(ctx.db, personneId, { structureId: ctx.structureId }, role, aujourdhui(), ctx.personneId);
+    log.info(`Rôle ${role} attribué à la personne ${personneId} sur la structure ${ctx.structureId}.`);
     return undefined;
+  });
+
+  /**
+   * Retirer un rôle. C'est ici que vit la règle des deux gérants : elle
+   * s'applique au serveur, pas seulement à l'écran, sinon elle ne s'applique
+   * pas du tout.
+   */
+  r.post('/structures/:structureId/roles/retrait', { acces: 'structure', role: 'gerant' }, (ctx) => {
+    const l = lire(ctx.corps);
+    const personneId = l.entier('personneId', { min: 1 });
+    const role = l.choix('role', ROLES);
+    l.fin();
+    if (role === 'gerant') {
+      try {
+        controlerRetraitGerant(compterGerants(ctx.db, ctx.structureId), structure(ctx.db, ctx.structureId).nom);
+      } catch (e) {
+        if (e instanceof GouvernanceImpossible) throw etatInvalide(e.message);
+        throw e;
+      }
+    }
+    if (!retirerRole(ctx.db, personneId, ctx.structureId, role, ctx.personneId)) {
+      throw invalide("Cette personne n'a pas ce rôle sur cette structure.");
+    }
+    return undefined;
+  });
+
+  /**
+   * L'état de gouvernance de toutes les structures que la personne voit. Sert à
+   * la carte qui ne se masque pas tant qu'une structure n'a pas deux gérants.
+   */
+  r.get('/gouvernance', { acces: 'authentifie' }, (ctx) => {
+    const vues = [...new Set([...ctx.portee.structures.keys()])];
+    return {
+      alertes: alertes(vues.map((id) => {
+        const s = structure(ctx.db, id);
+        return { id: s.id, nom: s.nom, gerants: compterGerants(ctx.db, id) };
+      })),
+    };
   });
 
   return r;

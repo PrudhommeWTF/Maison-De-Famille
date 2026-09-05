@@ -133,9 +133,9 @@ interface Arbitrage {
                 @for (f of foyersDe(s); track f.foyerId) {
                   <div class="ligne-t">
                     <span>{{ f.foyerNom }}</span>
-                    <span class="chiffres">{{ f.choix1 || '—' }}</span>
-                    <span class="chiffres">{{ f.choix2 || '—' }}</span>
-                    <span class="chiffres">{{ f.quota === null ? '—' : nuitsLisible(f.quota) }}</span>
+                    <span class="chiffres">{{ f.choix1 || 'Aucun voeu' }}</span>
+                    <span class="chiffres">{{ f.choix2 || 'Aucun voeu' }}</span>
+                    <span class="chiffres">{{ f.quota === null ? 'Sans quota' : nuitsLisible(f.quota) }}</span>
                   </div>
                 }
                 @if (!s.voeux.length) { <p class="vide">Aucun voeu déposé pour l'instant.</p> }

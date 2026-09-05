@@ -13,7 +13,8 @@ export type TypeNotification =
   | 'demande_nouvelle'
   | 'demande_decidee'
   | 'appel_de_fonds'
-  | 'mot_de_passe';
+  | 'mot_de_passe'
+  | 'invitation';
 
 export interface Declaration {
   type: TypeNotification;
@@ -45,6 +46,10 @@ export const TYPES: readonly Declaration[] = [
   {
     type: 'mot_de_passe', libelle: 'Réinitialisation de mot de passe', defaut: true, obligatoire: true,
     description: "Envoyé uniquement quand vous demandez vous-même à réinitialiser votre mot de passe. Ce message ne peut pas être désactivé.",
+  },
+  {
+    type: 'invitation', libelle: "Invitation à rejoindre l'instance", defaut: true, obligatoire: true,
+    description: "Envoyé quand un gérant vous ouvre un compte, pour que vous choisissiez votre mot de passe. Ce message ne peut pas être désactivé.",
   },
 ];
 
@@ -150,6 +155,35 @@ export function motDePasseOublie(c: ContexteReinit): Message {
       `<p style="margin:0 0 8px">${echapper(l1)}</p>`,
       `<p style="margin:0 0 8px;color:#4a443c">${echapper(l2)}</p>`,
     ].join(''), lien, 'Choisir un mot de passe'),
+  };
+}
+
+export interface ContexteInvitation {
+  instance: string; urlBase: string; jeton: string; jours: number; invitePar: string;
+}
+
+/**
+ * L'invitation. Elle mène au même écran que la réinitialisation (choisir un mot
+ * de passe), mais elle n'en dit pas la même chose : quelqu'un qui reçoit
+ * « nouveau mot de passe » sans avoir jamais eu de compte croit à une erreur,
+ * ou pire, à une tentative d'hameçonnage. Le message nomme donc la personne qui
+ * invite : c'est la seule chose qui le rende crédible pour un destinataire qui
+ * n'attendait rien.
+ */
+export function invitation(c: ContexteInvitation): Message {
+  const lien = `${c.urlBase}/reinitialiser?jeton=${encodeURIComponent(c.jeton)}`;
+  const l1 = `${c.invitePar} vous a ouvert un accès à ${c.instance}, pour suivre le calendrier des séjours et les comptes de la famille.`;
+  const l2 = `Choisissez votre mot de passe avec le lien ci-dessous. Il est valable ${c.jours} jours.`;
+  const l3 = "Si ce lien a expiré, l'écran de connexion propose « mot de passe oublié » : il vaut aussi pour un premier mot de passe.";
+  return {
+    sujet: `${c.invitePar} vous invite sur ${c.instance}`,
+    lien,
+    texte: [l1, '', l2, '', lien, '', l3].join('\n'),
+    html: envelopper(c.instance, 'Bienvenue', [
+      `<p style="margin:0 0 8px">${echapper(l1)}</p>`,
+      `<p style="margin:0 0 8px">${echapper(l2)}</p>`,
+      `<p style="margin:0 0 8px;color:#4a443c">${echapper(l3)}</p>`,
+    ].join(''), lien, 'Choisir mon mot de passe'),
   };
 }
 

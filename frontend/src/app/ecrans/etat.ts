@@ -42,8 +42,8 @@ import type { Etat as EtatModele } from '../core/modeles';
                 <span class="cle">Relais SMTP</span>
                 <span>{{ e.courriel.relais || 'aucun' }}</span>
               </div>
-              <div class="kv"><span class="cle">Expéditeur</span><span>{{ e.courriel.adresseExpediteur || '—' }}</span></div>
-              <div class="kv"><span class="cle">Adresse publique</span><span>{{ e.courriel.adressePublique || '—' }}</span></div>
+              <div class="kv"><span class="cle">Expéditeur</span><span>{{ e.courriel.adresseExpediteur || 'Non renseigné' }}</span></div>
+              <div class="kv"><span class="cle">Adresse publique</span><span>{{ e.courriel.adressePublique || 'Non renseignée' }}</span></div>
               <div class="kv"><span class="cle">En attente</span><span class="chiffres">{{ e.courriel.file.enAttente }}</span></div>
               <div class="kv"><span class="cle">Abandonnées</span><span class="chiffres">{{ e.courriel.file.abandonnees }}</span></div>
               <div class="kv"><span class="cle">Envoyées (24 h)</span><span class="chiffres">{{ e.courriel.file.envoyees24h }}</span></div>
