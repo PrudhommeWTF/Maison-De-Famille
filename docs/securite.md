@@ -28,6 +28,9 @@ l'est pas, et pourquoi.
 | Journal | Toute décision, tout passage en force sur un conflit, tout changement de parts est horodaté avec son auteur. | `journal_audit` |
 | Invitation | Le gérant crée le compte, la personne **choisit son mot de passe elle-même** : aucun gérant ne connaît celui d'un autre. Lien valable sept jours, à usage unique, périmé dès qu'un nouveau est demandé. | `auth/invitations.ts` |
 | Lien affiché en clair | Repli assumé pour le jour de l'installation, quand aucun relais SMTP n'est configuré. **Afficher le lien, c'est pouvoir choisir le mot de passe de quelqu'un d'autre** : réservé au gérant, daté en base (`vu_le`) et écrit au journal avec le nom de qui a regardé. | idem |
+| Codes d'accès | Chiffrés au repos en **AES-256-GCM**. La clé (`MDF_CLE_COFFRE`) vit dans le fichier d'environnement, **hors du répertoire de données** : une base qui fuit ou une sauvegarde recopiée ne rend aucun code. Une racine sur la machine lit la clé comme le reste : c'est une frontière réelle, pas un coffre-fort. | `coffre/chiffrement.ts` |
+| Portée des codes | Quatre portées. « Pendant le séjour » ouvre deux jours avant l'arrivée et se ferme **le lendemain du jour de départ**, jamais avant : il faut pouvoir refermer la maison. Un gérant et un détenteur ne dépendent pas d'un séjour. | `coffre/portee.ts` |
+| Affichage d'un code | La liste ne porte **jamais** la valeur. Chaque affichage passe par une route qui déchiffre et journalise dans la même transaction, avec le nom et l'horodatage. | `coffre/repo.ts`, `code_affichage` |
 | Deux gérants par structure | Le serveur refuse tout retrait qui ferait descendre sous deux, y compris pour soi-même. Une structure à gérant unique est une instance dont l'accès se perd avec un téléphone, et dont la seule issue est une restauration. | `acces/gouvernance.ts` |
 
 ## Ce que la CI vérifie, à chaque poussée
@@ -46,6 +49,9 @@ l'est pas, et pourquoi.
   créer une personne, recevoir l'invitation, choisir un mot de passe, se
   connecter. Le contournement de ce parcours dans le banc d'essai avait laissé
   passer un défaut qui le rendait entièrement inopérant.
+- **Portée du coffre-fort**, cas par cas : la veille, pendant, le jour du départ
+  et le lendemain, pour chacun des quatre rôles, avec les rotations le même jour
+  et les séjours à cheval sur le changement d'année.
 - **Discipline de validation** : un champ lu sans `fin()` acceptait une valeur
   invalide en silence. La CI compte les lectures et les clôtures de chaque
   fichier de routes.

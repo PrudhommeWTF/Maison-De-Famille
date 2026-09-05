@@ -11,6 +11,17 @@ les scripts ci-dessous passent par `VACUUM INTO`.
 
 ---
 
+> **La clé du coffre-fort ne vit pas dans le répertoire de données.**
+> `MDF_CLE_COFFRE` est dans `/etc/maison-de-famille/mdf.env`, volontairement à
+> l'écart : c'est ce qui fait qu'une sauvegarde des données recopiée sur un NAS
+> ne contient aucun code d'accès. La contrepartie est qu'une restauration sur
+> une machine neuve **sans reporter cette clé** rend tout, sauf les codes.
+> Sauvegardez-la séparément, une fois, le jour de l'installation.
+>
+> ```bash
+> grep MDF_CLE_COFFRE /etc/maison-de-famille/mdf.env
+> ```
+
 ## Sauvegarder
 
 ```bash

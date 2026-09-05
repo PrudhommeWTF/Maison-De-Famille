@@ -42,6 +42,9 @@ export class Etat {
   /** Le rôle sur le bien ouvert. Sert à masquer ce qui répondrait 403. */
   readonly estGeranteIci = computed(() => this.bien()?.role === 'gerant');
 
+  /** Le rôle effectif sur le bien ouvert. « invite » quand rien n'est plus large. */
+  readonly roleIci = computed(() => this.bien()?.role ?? 'invite');
+
   /**
    * Les écrans d'argent sont réservés aux détenteurs. Un membre de foyer les
    * verrait répondre 403 : mieux vaut ne pas lui proposer l'entrée que lui

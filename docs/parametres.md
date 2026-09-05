@@ -81,6 +81,24 @@ Quand ce réglage est inactif, le conjoint d'un indivisaire ne voit ni la liste 
 
 Quand ce réglage est inactif, le conjoint d'un indivisaire voit qui compose l'indivision mais pas la répartition chiffrée des parts. C'est une information patrimoniale, d'où le défaut prudent.
 
+### Jours d'avance sur un code de séjour
+
+- **Clé** : `codesAvantSejourJours`
+- **Portée** : Instance
+- **Par défaut** : `2`
+- **Bornes** : de 0 à 30
+
+Combien de jours avant l'arrivée un code de portée « pendant le séjour » devient visible. On prépare un départ à l'avance, et un code reçu la veille au soir ne sert à rien quand on roule de nuit. Zéro ferme la fenêtre jusqu'au jour d'arrivée.
+
+### Jours de grâce après un départ
+
+- **Clé** : `codesApresSejourJours`
+- **Portée** : Instance
+- **Par défaut** : `0`
+- **Bornes** : de 0 à 30
+
+Combien de jours après le départ un code de portée « pendant le séjour » reste visible. Zéro par défaut, et c'est le point : un code d'accès affiché à quelqu'un dont le séjour est terminé est une faille. Le jour du départ lui-même reste toujours ouvert, il faut bien refermer derrière soi.
+
 ## Courriel
 
 Envoi des notifications et reprise en cas de panne.

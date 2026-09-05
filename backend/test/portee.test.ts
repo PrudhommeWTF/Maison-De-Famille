@@ -59,11 +59,38 @@ test('un séjour ne se désigne jamais en dehors de son bien', () => {
   }
 });
 
+/**
+ * Les seules écritures ouvertes aux invités, nommées une par une.
+ *
+ * La règle générale est qu'un invité ne modifie rien. L'exception ici n'écrit
+ * pas une donnée métier : elle écrit **le journal de sa propre lecture**.
+ * Afficher un code de portée « pendant le séjour » est une lecture autorisée
+ * par `coffre/portee.ts` ; elle se fait en POST parce qu'elle laisse une trace,
+ * et qu'un GET journalisé serait rejoué par un préchargement de navigateur, ce
+ * qui rendrait la trace inexploitable le jour où on la consulte vraiment.
+ *
+ * Toute addition à cette liste doit se justifier de la même façon : la route
+ * n'écrit que la trace de sa propre lecture.
+ */
+const ECRITURES_INVITE_AUTORISEES = new Set([
+  'POST /biens/:bienId/coffre/codes/:codeId/affichage',
+]);
+
 test('les écritures ne sont jamais accessibles en simple lecture', () => {
   for (const r of ROUTES) {
     if (r.methode === 'GET' || r.exigence.acces !== 'bien') continue;
+    if (ECRITURES_INVITE_AUTORISEES.has(`${r.methode} ${r.chemin}`)) continue;
     assert.notEqual(r.exigence.role, 'invite',
       `${r.methode} /api${r.chemin} laisse écrire un invité.`);
+  }
+});
+
+test('la liste des écritures ouvertes aux invités ne contient rien de périmé', () => {
+  // Une exception qui survit à la route qu'elle couvrait rouvrirait la porte en
+  // silence le jour où un chemin identique réapparaîtrait pour autre chose.
+  const existants = new Set(ROUTES.map((r) => `${r.methode} ${r.chemin}`));
+  for (const e of ECRITURES_INVITE_AUTORISEES) {
+    assert.ok(existants.has(e), `L'exception « ${e} » ne correspond à aucune route.`);
   }
 });
 

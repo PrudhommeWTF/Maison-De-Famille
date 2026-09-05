@@ -10,12 +10,29 @@ import { Api, ErreurAppel } from '../core/api';
 import { Etat } from '../core/etat';
 import type { FicheBien } from '../core/modeles';
 
+interface LigneFiche { id: number; cle: string; valeur: string }
+interface Contact {
+  id: number; nom: string; role: string; telephone: string; email: string; notes: string;
+}
+
 @Component({
   selector: 'app-fiche',
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
+    .contact { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+               padding: 11px 0; border-bottom: 1px solid var(--separateur); }
+    .contact:last-of-type { border-bottom: none; }
+    .contact .meta { font-size: 12.5px; color: var(--encre-3); }
+    .ajout { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 12px; }
+    .ajout-contact { display: grid; grid-template-columns: 1.2fr 130px 140px 1.2fr auto; gap: 8px; margin-top: 14px; }
+    .lien { border: none; background: none; padding: 0 0 0 8px; font: inherit; font-size: 12.5px;
+            color: var(--encre-3); text-decoration: underline; cursor: pointer; }
+    .lien:hover { color: var(--accent); }
+    @media (max-width: 860px) {
+      .ajout, .ajout-contact { grid-template-columns: 1fr; }
+    }
     .photo {
       height: 250px; border-radius: 18px; background: var(--actif);
       display: grid; place-items: center; color: var(--encre-3); overflow: hidden; position: relative;
@@ -134,6 +151,108 @@ import type { FicheBien } from '../core/modeles';
           </section>
         </div>
 
+        <div class="deux">
+          <section class="carte">
+            <h2><i class="bi bi-signpost-split" aria-hidden="true"></i> Guide d'arrivée</h2>
+            <p class="secondaire" style="margin:4px 0 10px">
+              Ce qu'il faut savoir en arrivant. Visible de tous ceux qui séjournent, sans les codes,
+              qui vivent au coffre-fort avec leur propre portée.
+            </p>
+            @for (g of guide(); track g.id) {
+              <div class="kv">
+                <span class="cle">{{ g.cle }}</span>
+                <span style="text-align:right">
+                  {{ g.valeur }}
+                  @if (peutModifierFiche()) {
+                    <button class="lien" type="button" (click)="retirerLigneFiche(g.id)">retirer</button>
+                  }
+                </span>
+              </div>
+            }
+            @if (!guide().length) {
+              <p class="secondaire" style="margin:0">
+                Rien pour l'instant. Les clés, l'eau, les poubelles, les voisins, le wifi.
+              </p>
+            }
+            @if (peutModifierFiche()) {
+              <form class="ajout" (ngSubmit)="ajouterLigneFiche('guide')">
+                <input name="gcle" [(ngModel)]="fGuideCle" placeholder="Eau" aria-label="Intitulé">
+                <input name="gval" [(ngModel)]="fGuideValeur" aria-label="Valeur"
+                       placeholder="vanne générale sous l'escalier">
+                <button class="btn" type="submit" [disabled]="occupe() || !fGuideCle.trim()">Ajouter</button>
+              </form>
+            }
+          </section>
+
+          <section class="carte">
+            <h2>Inventaire</h2>
+            @for (i of inventaire(); track i.id) {
+              <div class="kv"><span class="cle">{{ i.libelle }}</span><span>{{ i.etat || 'Bon' }}</span></div>
+            }
+            @if (!inventaire().length) {
+              <p class="secondaire" style="margin:8px 0 0">Aucune ligne d'inventaire.</p>
+            }
+            <button class="btn" type="button" style="margin-top:12px"
+                    (click)="casse.set(!casse())">
+              {{ casse() ? 'Fermer' : 'Signaler une casse' }}
+            </button>
+            @if (casse()) {
+              <form class="ajout" style="margin-top:10px" (ngSubmit)="signalerCasse()">
+                <input name="klib" [(ngModel)]="fCasseLibelle" aria-label="Ce qui est cassé"
+                       placeholder="le matelas de la chambre nord">
+                <input name="kdet" [(ngModel)]="fCasseDetail" aria-label="Détail"
+                       placeholder="affaissé au milieu">
+                <button class="btn btn-primaire" type="submit"
+                        [disabled]="occupe() || !fCasseLibelle.trim()">Signaler</button>
+              </form>
+              <p class="secondaire" style="margin:8px 0 0;font-size:12.5px">
+                Le signalement crée une tâche dans le carnet d'entretien et marque la ligne
+                d'inventaire à remplacer.
+              </p>
+            }
+          </section>
+        </div>
+
+        <section class="carte">
+          <div class="entre">
+            <h2><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Carnet d'adresses</h2>
+            <span class="pastille">{{ contacts().length }}</span>
+          </div>
+          <p class="secondaire" style="margin:4px 0 10px">
+            Artisans, voisins, mairie, urgences. Utile le jour où la chaudière lâche pendant le
+            séjour de quelqu'un qui ne connaît pas le plombier.
+          </p>
+          @for (c of contacts(); track c.id) {
+            <div class="contact">
+              <span class="pastille">{{ libelleRoleContact(c.role) }}</span>
+              <span style="flex:1;min-width:150px">
+                <span style="display:block;font-size:14px">{{ c.nom }}</span>
+                @if (c.notes) { <span class="meta">{{ c.notes }}</span> }
+              </span>
+              @if (c.telephone) { <a class="btn" [href]="'tel:' + c.telephone">{{ c.telephone }}</a> }
+              @if (c.email) { <a class="btn" [href]="'mailto:' + c.email">Courriel</a> }
+              @if (peutModifierContacts()) {
+                <button class="lien" type="button" (click)="retirerContact(c.id)">retirer</button>
+              }
+            </div>
+          }
+          @if (!contacts().length) {
+            <p class="secondaire" style="margin:0">Aucun contact enregistré.</p>
+          }
+          @if (peutModifierContacts()) {
+            <form class="ajout-contact" (ngSubmit)="ajouterContact()">
+              <input name="cnom" [(ngModel)]="fContactNom" aria-label="Nom" placeholder="Le Bihan, plombier">
+              <select name="crole" [(ngModel)]="fContactRole" aria-label="Rôle">
+                @for (r of rolesContact(); track r.cle) { <option [value]="r.cle">{{ r.libelle }}</option> }
+              </select>
+              <input name="ctel" [(ngModel)]="fContactTel" aria-label="Téléphone" placeholder="02 98 00 00 00">
+              <input name="cnotes" [(ngModel)]="fContactNotes" aria-label="Notes"
+                     placeholder="Connaît la chaudière depuis 2009">
+              <button class="btn" type="submit" [disabled]="occupe() || !fContactNom.trim()">Ajouter</button>
+            </form>
+          }
+        </section>
+
         @if (f.bien.notes) {
           <section class="carte">
             <h2>Notes</h2>
@@ -156,12 +275,51 @@ export class Fiche {
 
   e = { nom: '', commune: '', codePostal: '', adresse: '', type: 'mer', couchages: 2, notes: '' };
 
+  // La fiche **compose** : le guide vient du module maison, l'inventaire du
+  // module entretien, le carnet d'adresses du module maison. L'écran ne calcule
+  // rien et ne connaît l'intérieur d'aucun d'eux, comme le tableau de bord.
+  readonly guide = signal<LigneFiche[]>([]);
+  readonly peutModifierFiche = signal(false);
+  readonly inventaire = signal<{ id: number; libelle: string; etat: string }[]>([]);
+  readonly contacts = signal<Contact[]>([]);
+  readonly rolesContact = signal<{ cle: string; libelle: string }[]>([]);
+  readonly peutModifierContacts = signal(false);
+  readonly casse = signal(false);
+
+  fGuideCle = '';
+  fGuideValeur = '';
+  fCasseLibelle = '';
+  fCasseDetail = '';
+  fContactNom = '';
+  fContactRole = 'artisan';
+  fContactTel = '';
+  fContactNotes = '';
+
+  readonly libelleRoleContact = (r: string): string =>
+    this.rolesContact().find((x) => x.cle === r)?.libelle ?? r;
+
   constructor() {
     effect(() => { const b = this.etat.bien(); if (b) void this.charger(b.id); });
   }
 
   private async charger(bienId: number): Promise<void> {
-    const f = await this.api.get<FicheBien>(`/biens/${bienId}`).catch(() => null);
+    const [f, fic, inv, con] = await Promise.all([
+      this.api.get<FicheBien>(`/biens/${bienId}`).catch(() => null),
+      this.api.get<{ guide: LigneFiche[]; peutModifier: boolean }>(`/biens/${bienId}/fiche`)
+        .catch(() => null),
+      this.api.get<{ id: number; libelle: string; etat: string }[]>(`/biens/${bienId}/inventaire`)
+        .catch(() => []),
+      // Le carnet d'adresses est réservé aux membres : un invité reçoit un 403,
+      // et l'absence de carte est la bonne réponse, pas un message d'erreur.
+      this.api.get<{ contacts: Contact[]; roles: { cle: string; libelle: string }[]; peutModifier: boolean }>(
+        `/biens/${bienId}/contacts`).catch(() => null),
+    ]);
+    this.guide.set(fic?.guide ?? []);
+    this.peutModifierFiche.set(fic?.peutModifier ?? false);
+    this.inventaire.set(inv);
+    this.contacts.set(con?.contacts ?? []);
+    this.rolesContact.set(con?.roles ?? []);
+    this.peutModifierContacts.set(con?.peutModifier ?? false);
     this.fiche.set(f);
     if (f) {
       this.e = {
@@ -218,5 +376,85 @@ export class Fiche {
     } catch (e) {
       this.erreur.set(e instanceof ErreurAppel ? e.message : "Le téléversement a échoué.");
     }
+  }
+
+  private async agir(quoi: () => Promise<string>): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || this.occupe()) return;
+    this.occupe.set(true);
+    this.erreur.set('');
+    this.message.set('');
+    try {
+      this.message.set(await quoi());
+      await this.charger(b.id);
+    } catch (e) {
+      this.erreur.set(e instanceof ErreurAppel ? e.message : "L'opération a échoué.");
+    } finally {
+      this.occupe.set(false);
+    }
+  }
+
+  ajouterLigneFiche(section: 'caracteristique' | 'guide'): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || !this.fGuideCle.trim()) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/fiche`, {
+        section, cle: this.fGuideCle.trim(), valeur: this.fGuideValeur.trim(),
+        ordre: this.guide().length + 1,
+      });
+      const cle = this.fGuideCle.trim();
+      this.fGuideCle = '';
+      this.fGuideValeur = '';
+      return `« ${cle} » ajouté au guide d'arrivée.`;
+    });
+  }
+
+  retirerLigneFiche(id: number): Promise<void> {
+    const b = this.etat.bien();
+    if (!b) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/fiche/${id}/archivage`, {});
+      return 'Ligne retirée du guide.';
+    });
+  }
+
+  signalerCasse(): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || !this.fCasseLibelle.trim()) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/casse`, {
+        libelle: this.fCasseLibelle.trim(), detail: this.fCasseDetail.trim(),
+      });
+      const quoi = this.fCasseLibelle.trim();
+      this.fCasseLibelle = '';
+      this.fCasseDetail = '';
+      this.casse.set(false);
+      return `Casse signalée : une tâche « Remplacer ${quoi} » attend dans le carnet d'entretien.`;
+    });
+  }
+
+  ajouterContact(): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || !this.fContactNom.trim()) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/contacts`, {
+        nom: this.fContactNom.trim(), role: this.fContactRole,
+        telephone: this.fContactTel.trim(), email: '', notes: this.fContactNotes.trim(),
+      });
+      const nom = this.fContactNom.trim();
+      this.fContactNom = '';
+      this.fContactTel = '';
+      this.fContactNotes = '';
+      return `${nom} ajouté au carnet d'adresses.`;
+    });
+  }
+
+  retirerContact(id: number): Promise<void> {
+    const b = this.etat.bien();
+    if (!b) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/contacts/${id}/archivage`, {});
+      return 'Contact retiré.';
+    });
   }
 }

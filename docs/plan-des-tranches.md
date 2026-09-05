@@ -108,7 +108,7 @@ fratrie, et chacun choisit son mot de passe et se connecte.
 
 ---
 
-## Tranche 3 : la maison
+## Tranche 3 : la maison (**livrée**)
 
 - carnet d'entretien, tâches, récurrences engendrant leurs échéances ;
 - **carnet d'adresses** du bien : artisans, voisins, mairie, contacts d'urgence.
@@ -125,6 +125,15 @@ fratrie, et chacun choisit son mot de passe et se connecte.
 **Ce que vous vérifiez vous-même** : un membre de foyer voit le guide d'arrivée mais pas la
 convention d'indivision ; un code de portail affiché pendant un séjour ne l'est plus le
 lendemain de son départ, et vous retrouvez qui l'a affiché et quand.
+La liste complète est dans `docs/recette-t3.md`.
+
+**Une décision prise en chemin** : les codes sont chiffrés (AES-256-GCM), les documents ne le
+sont pas. Un code tient en quelques caractères et se lit d'un coup d'oeil dans un fichier de
+base volé ; un document est un fichier du disque, servi derrière autorisation et portant un nom
+non devinable. Chiffrer les documents demanderait de garder la clé à côté d'eux pour les servir,
+ce qui ne protégerait de rien, et empêcherait l'export en archive que la maquette demande.
+La clé vit dans `MDF_CLE_COFFRE`, **hors du répertoire de données** : une sauvegarde de la base
+seule ne rend aucun code, et il faut donc en garder une copie ailleurs.
 
 ---
 
