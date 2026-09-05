@@ -3,7 +3,7 @@
 // se teste sur ses cas limites, pas sur son cas nominal.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chevauche, decale, estDate, nuits, nuitsDe } from '../src/noyau/dates';
+import { chevauche, dateLisible, decale, estDate, nuits, nuitsDe, plageLisible } from '../src/noyau/dates';
 
 test('estDate refuse ce qui ressemble à une date sans en être une', () => {
   assert.equal(estDate('2026-08-08'), true);
@@ -55,4 +55,18 @@ test('decale traverse les mois et les années', () => {
   assert.equal(decale('2026-08-31', 1), '2026-09-01');
   assert.equal(decale('2026-01-01', -1), '2025-12-31');
   assert.equal(decale('2026-08-08', 0), '2026-08-08');
+});
+
+test('les dates destinées à un humain sont écrites en français', () => {
+  assert.equal(dateLisible('2026-08-08'), '8 août 2026');
+  assert.equal(dateLisible('2026-01-01'), '1 janvier 2026');
+  // Une valeur qui n'est pas une date ressort telle quelle plutôt que « NaN » :
+  // un message d'erreur ne doit pas devenir illisible à cause de son gabarit.
+  assert.equal(dateLisible('pas une date'), 'pas une date');
+});
+
+test('une plage ne répète le mois et l\'année que s\'ils changent', () => {
+  assert.equal(plageLisible('2026-08-10', '2026-08-11'), 'du 10 au 11 août 2026');
+  assert.equal(plageLisible('2026-07-30', '2026-08-05'), 'du 30 juillet au 5 août 2026');
+  assert.equal(plageLisible('2026-12-28', '2027-01-04'), 'du 28 décembre 2026 au 4 janvier 2027');
 });

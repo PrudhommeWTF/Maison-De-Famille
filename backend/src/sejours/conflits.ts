@@ -14,7 +14,7 @@
 // elle ne l'utilisera pas et la famille reviendra au téléphone. L'outil
 // enregistre, signale et rend visible, elle décide. Un passage en force est
 // possible et journalisé.
-import { chevauche, nuits, nuitsDe } from '../noyau/dates';
+import { chevauche, dateLisible, nuits, nuitsDe, plageLisible } from '../noyau/dates';
 
 export interface Occupation {
   id: number;
@@ -62,11 +62,11 @@ export function detecter(d: Demande, existantes: readonly Occupation[], couchage
     out.push(o.statut === 'valide'
       ? {
         nature: 'sejour_valide', sejourId: o.id, nuits: communes,
-        message: `Chevauche ${quoi} « ${o.titre} », du ${o.arrivee} au ${o.depart}.`,
+        message: `Chevauche ${quoi} « ${o.titre} », ${plageLisible(o.arrivee, o.depart)}.`,
       }
       : {
         nature: 'demande_concurrente', sejourId: o.id, nuits: communes,
-        message: `Une autre demande porte sur les mêmes dates : « ${o.titre} », du ${o.arrivee} au ${o.depart}.`,
+        message: `Une autre demande porte sur les mêmes dates : « ${o.titre} », ${plageLisible(o.arrivee, o.depart)}.`,
       });
   }
 
@@ -83,9 +83,13 @@ export function detecter(d: Demande, existantes: readonly Occupation[], couchage
   const saturees = [...parNuit.entries()].filter(([, total]) => total > couchages);
   if (saturees.length) {
     const pire = Math.max(...saturees.map(([, t]) => t));
+    const nuitsSaturees = saturees.map(([n]) => n).sort();
     out.push({
-      nature: 'capacite', nuits: saturees.map(([n]) => n),
-      message: `Capacité dépassée : ${pire} personnes attendues pour ${couchages} couchages, sur ${saturees.length} nuit${saturees.length > 1 ? 's' : ''}.`,
+      nature: 'capacite', nuits: nuitsSaturees,
+      message: `Capacité dépassée : ${pire} personnes attendues pour ${couchages} couchages, `
+        + (nuitsSaturees.length === 1
+          ? `la nuit du ${dateLisible(nuitsSaturees[0])}.`
+          : `sur ${nuitsSaturees.length} nuits, ${plageLisible(nuitsSaturees[0], nuitsSaturees[nuitsSaturees.length - 1])}.`),
     });
   }
 

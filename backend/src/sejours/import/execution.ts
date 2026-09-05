@@ -17,7 +17,7 @@
 //      Une correspondance de colonnes mal choisie se défait en une action, au
 //      lieu de laisser trois cents lignes fausses dans le calendrier.
 import type { Db } from '../../noyau/db';
-import { horodatage } from '../../noyau/dates';
+import { dateLisible, horodatage } from '../../noyau/dates';
 import { log } from '../../noyau/log';
 import { Champ, Nature, Statut, normaliser, versDate, versEntier, versNature, versStatut } from './correspondance';
 
@@ -84,7 +84,8 @@ export function preparer(o: Options): Rapport {
     const depart = versDate(col(l, 'depart'));
     if (!depart) { refus(`Date de départ illisible : « ${col(l, 'depart')} »`); continue; }
     if (depart <= arrivee) {
-      refus(`Le départ (${depart}) doit être après l'arrivée (${arrivee}). Une ligne d'une seule nuit s'écrit du 8 au 9.`);
+      refus(`Le départ (${dateLisible(depart)}) doit être après l'arrivée (${dateLisible(arrivee)}). `
+        + "Une ligne d'une seule nuit s'écrit du 8 au 9.");
       continue;
     }
 

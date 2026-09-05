@@ -27,7 +27,7 @@ test('les premiers choix sont servis dans l\'ordre de priorité', () => {
   });
   assert.deepEqual(r.attributions.map((a) => a.foyerId), [HELENE]);
   assert.deepEqual(r.refus.map((x) => x.foyerId), [CLAIRE, JULIEN]);
-  for (const x of r.refus) assert.match(x.raison, /déjà attribuée, du 2026-08-01 au 2026-08-15/);
+  for (const x of r.refus) assert.match(x.raison, /déjà attribuée, du 1 au 15 août 2026/);
 });
 
 test('les seconds choix sont servis sur ce qui reste', () => {
@@ -52,7 +52,7 @@ test('ce qui est déjà posé sur la saison bloque les voeux', () => {
     deja: [{ du: '2026-07-28', au: '2026-08-04' }],
   });
   assert.equal(r.attributions.length, 0);
-  assert.match(r.refus[0].raison, /2026-07-28/);
+  assert.match(r.refus[0].raison, /28 juillet/);
 });
 
 test('la rotation le même jour reste possible dans le tour de choix', () => {

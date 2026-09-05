@@ -10,7 +10,7 @@
 // ordre de priorité, puis les seconds choix sur ce qui reste libre. L'ordre de
 // priorité tourne d'une année sur l'autre, ce qui est la seule façon connue de
 // rendre le partage d'un mois d'août supportable dans la durée.
-import { chevauche, nuits } from '../noyau/dates';
+import { chevauche, nuits, plageLisible } from '../noyau/dates';
 
 export interface Voeu {
   id: number;
@@ -89,7 +89,7 @@ export function arbitrer(e: Entrees): Resultat {
       if (conflit) {
         refus.push({
           voeuId: v.id, foyerId: v.foyerId, du: v.du, au: v.au, rang: v.rang,
-          raison: `Ces dates chevauchent une période déjà attribuée, du ${conflit.du} au ${conflit.au}.`,
+          raison: `Ces dates chevauchent une période déjà attribuée, ${plageLisible(conflit.du, conflit.au)}.`,
         });
         continue;
       }

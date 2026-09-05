@@ -53,6 +53,7 @@ test('la capacité se juge nuit par nuit, pas sur le séjour entier', () => {
   assert.ok(cap);
   assert.deepEqual(cap.nuits, ['2026-08-10', '2026-08-11']);
   assert.match(cap.message, /9 personnes attendues pour 8 couchages/);
+  assert.match(cap.message, /du 10 au 11 août 2026/, 'les dates parlent à un humain, pas en ISO');
 });
 
 test('deux séjours qui se succèdent n\'additionnent pas leurs occupants', () => {

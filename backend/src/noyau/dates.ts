@@ -52,3 +52,31 @@ export const aujourdhui = (maintenant = new Date()): string => maintenant.toISOS
 
 /** Un horodatage ISO 8601 UTC, la forme stockée partout. */
 export const horodatage = (maintenant = new Date()): string => maintenant.toISOString();
+
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+/**
+ * « 8 août 2026 ». Utilisée partout où une date part vers un humain : message
+ * de conflit, courriel, refus. Une date ISO dans un texte destiné à la famille
+ * est une négligence, pas un choix technique.
+ */
+export function dateLisible(iso: string): string {
+  if (!estDate(iso)) return iso;
+  const [a, m, j] = iso.split('-');
+  return `${Number(j)} ${MOIS[Number(m) - 1]} ${a}`;
+}
+
+/**
+ * « du 10 au 11 août 2026 », « du 30 juillet au 5 août 2026 », « du 28 décembre
+ * 2026 au 4 janvier 2027 ». Le mois et l'année ne sont répétés que s'ils
+ * changent : c'est ainsi qu'on écrit une plage de dates en français.
+ */
+export function plageLisible(du: string, au: string): string {
+  if (!estDate(du) || !estDate(au)) return `du ${du} au ${au}`;
+  if (du.slice(0, 4) !== au.slice(0, 4)) return `du ${dateLisible(du)} au ${dateLisible(au)}`;
+  if (du.slice(0, 7) !== au.slice(0, 7)) {
+    return `du ${dateLisible(du).replace(` ${du.slice(0, 4)}`, '')} au ${dateLisible(au)}`;
+  }
+  return `du ${Number(du.slice(8))} au ${dateLisible(au)}`;
+}
