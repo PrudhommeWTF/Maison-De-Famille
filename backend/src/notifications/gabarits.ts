@@ -12,6 +12,7 @@
 export type TypeNotification =
   | 'demande_nouvelle'
   | 'demande_decidee'
+  | 'appel_de_fonds'
   | 'mot_de_passe';
 
 export interface Declaration {
@@ -36,6 +37,10 @@ export const TYPES: readonly Declaration[] = [
   {
     type: 'demande_decidee', libelle: 'Réponse à votre demande', defaut: true,
     description: 'Vous recevez un courriel quand votre demande de séjour est validée ou renvoyée pour d\'autres dates.',
+  },
+  {
+    type: 'appel_de_fonds', libelle: 'Appel de fonds', defaut: true,
+    description: "Vous recevez un courriel quand un appel de fonds vous concerne, avec le montant, l'échéance et un lien vers le détail du calcul.",
   },
   {
     type: 'mot_de_passe', libelle: 'Réinitialisation de mot de passe', defaut: true, obligatoire: true,
@@ -145,5 +150,43 @@ export function motDePasseOublie(c: ContexteReinit): Message {
       `<p style="margin:0 0 8px">${echapper(l1)}</p>`,
       `<p style="margin:0 0 8px;color:#4a443c">${echapper(l2)}</p>`,
     ].join(''), lien, 'Choisir un mot de passe'),
+  };
+}
+
+export interface ContexteAppel {
+  instance: string; urlBase: string; structure: string; libelle: string;
+  echeance: string; montantCents: number; vocabulaire: string;
+}
+
+/** Un montant en euros, à la française : virgule décimale, milliers séparés. */
+const euros = (cents: number): string => {
+  const [entier, decimales] = Math.abs(cents / 100).toFixed(2).split('.');
+  return `${entier.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')},${decimales} €`;
+};
+
+/**
+ * L'appel de fonds.
+ *
+ * Il porte le montant, l'échéance, et surtout **un lien vers le détail du
+ * calcul**. C'est de l'argent entre frères et soeurs : un montant sans
+ * justification est un montant contesté, et le courriel doit mener à
+ * l'explication, pas la remplacer.
+ */
+export function appelDeFonds(c: ContexteAppel): Message {
+  const lien = `${c.urlBase}/bien/soldes`;
+  const l1 = `${c.vocabulaire} : ${euros(c.montantCents)} pour ${c.structure}.`;
+  const l2 = `Libellé : ${c.libelle}. À régler avant le ${dateLisible(c.echeance)}.`;
+  const l3 = "Le détail du calcul est consultable ligne par ligne dans l'application.";
+
+  return {
+    sujet: `${c.libelle} : ${euros(c.montantCents)}`,
+    lien,
+    texte: [l1, l2, l3, '', `Voir le détail : ${lien}`].join('\n'),
+    html: envelopper(c.instance, c.libelle, [
+      `<p style="margin:0 0 8px;font-size:19px">${echapper(euros(c.montantCents))}</p>`,
+      `<p style="margin:0 0 8px">${echapper(l1)}</p>`,
+      `<p style="margin:0 0 8px;color:#4a443c">${echapper(l2)}</p>`,
+      `<p style="margin:0;color:#4a443c">${echapper(l3)}</p>`,
+    ].join(''), lien, 'Voir le détail du calcul'),
   };
 }

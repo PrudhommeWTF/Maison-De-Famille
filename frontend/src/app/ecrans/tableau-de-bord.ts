@@ -12,8 +12,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api';
 import { Etat, TOUS } from '../core/etat';
-import { nuitsLisible, personnesLisible, plage } from '../core/format';
-import type { BienResume, Sejour } from '../core/modeles';
+import { euros, nuitsLisible, personnesLisible, plage } from '../core/format';
+import type { BienResume, ListeDepenses, Sejour, Soldes } from '../core/modeles';
 
 @Component({
   selector: 'app-tableau-de-bord',
@@ -150,6 +150,25 @@ import type { BienResume, Sejour } from '../core/modeles';
           }
         </section>
 
+        <!-- La trésorerie. Le tableau de bord ne calcule rien : il compose ce
+             que le module argent lui rend, et n'affiche la carte que s'il a
+             quelque chose à dire. -->
+        @if (tresorerie(); as t) {
+          <section class="carte">
+            <h2>{{ t.titre }}</h2>
+            <div style="font-family:var(--titre);font-size:30px;font-weight:500;margin:10px 0 2px"
+                 class="chiffres">{{ euros(t.montantCents) }}</div>
+            <p class="meta" style="margin:0 0 12px">{{ t.sousTitre }}</p>
+            @for (l of t.lignes; track l.cle) {
+              <div class="ligne" style="justify-content:space-between">
+                <span>{{ l.cle }}</span>
+                <span class="chiffres">{{ l.valeur }}</span>
+              </div>
+            }
+            <a class="btn" routerLink="/bien/soldes" style="margin-top:10px">Voir les soldes</a>
+          </section>
+        }
+
         @if (monSejour(); as s) {
           <section class="carte">
             <h2>Votre séjour</h2>
@@ -174,8 +193,33 @@ export class TableauDeBord {
   readonly nuitsLisible = nuitsLisible;
   readonly personnesLisible = personnesLisible;
 
+  readonly euros = euros;
   private readonly sejours = signal<Sejour[]>([]);
   private readonly demandes = signal<Sejour[]>([]);
+  private readonly depenses = signal<ListeDepenses | null>(null);
+  private readonly soldes = signal<Soldes | null>(null);
+
+  /**
+   * Ce que le module argent a à dire au tableau de bord. Absent tant qu'aucune
+   * dépense n'existe : une carte de trésorerie à zéro euro n'apprend rien.
+   */
+  readonly tresorerie = computed(() => {
+    const d = this.depenses();
+    const s = this.soldes();
+    if (!d || !d.depenses.length) return null;
+    const aRegulariser = (s?.soldes ?? [])
+      .filter((x) => !x.estStructure && x.montantCents < 0)
+      .reduce((t, x) => t - x.montantCents, 0);
+    return {
+      titre: s ? `Trésorerie de ${s.structure.nom}` : 'Trésorerie',
+      montantCents: d.total,
+      sousTitre: `Dépenses engagées sur l'exercice ${d.annee}`,
+      lignes: [
+        { cle: 'À régulariser', valeur: euros(aRegulariser) },
+        { cle: 'Virements proposés', valeur: String(s?.virements.length ?? 0) },
+      ],
+    };
+  });
 
   readonly prenom = computed(() => (this.etat.moi()?.personne.nom ?? '').split(' ')[0]);
 
@@ -226,12 +270,21 @@ export class TableauDeBord {
   constructor() { void this.charger(); }
 
   private async charger(): Promise<void> {
-    const [sejours, demandes] = await Promise.all([
+    const bien = this.etat.bien();
+    const [sejours, demandes, depenses, soldes] = await Promise.all([
       this.api.get<Sejour[]>('/sejours/a-venir').catch(() => [] as Sejour[]),
       this.etat.estGerant() ? this.api.get<Sejour[]>('/demandes').catch(() => [] as Sejour[]) : Promise.resolve([]),
+      this.etat.voitLArgent()
+        ? this.api.get<ListeDepenses>(`/depenses${bien ? '?bienId=' + bien.id : ''}`).catch(() => null)
+        : Promise.resolve(null),
+      bien && this.etat.voitLArgent()
+        ? this.api.get<Soldes>(`/structures/${bien.structureId}/soldes`).catch(() => null)
+        : Promise.resolve(null),
     ]);
     this.sejours.set(sejours);
     this.demandes.set(demandes.filter((d) => this.etat.contexte() === TOUS || d.bienId === this.etat.contexte()));
+    this.depenses.set(depenses);
+    this.soldes.set(soldes);
   }
 
   ico(type: string): string {

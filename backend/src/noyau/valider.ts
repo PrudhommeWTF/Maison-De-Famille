@@ -10,6 +10,15 @@
 import { ErreurApp, invalide } from './erreurs';
 import { estDate } from './dates';
 
+/**
+ * Le lecteur accumule les erreurs et ne lève qu'à l'appel de `fin()`, pour
+ * pouvoir signaler tous les champs fautifs d'un coup plutôt qu'un par un.
+ *
+ * La contrepartie est un piège : **oublier `fin()` fait accepter une valeur
+ * invalide en silence**. C'est arrivé une fois, sur un motif de recalcul
+ * obligatoire qui passait à vide. Un test de CI compte donc les lectures et les
+ * `fin()` de chaque fichier de routes, et refuse tout déséquilibre.
+ */
 export class Lecteur {
   private readonly erreurs: Record<string, string> = {};
 

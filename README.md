@@ -9,10 +9,9 @@ Instance unique, une seule famille, données chez vous.
 
 ## État
 
-**Tranche 1 livrée : le calendrier, les demandes, l'arbitrage et la reprise du
-planning existant.** C'est ce qui remplace le fichier Excel. Les dépenses, le
-coffre-fort, les votes et la location saisonnière suivront, tranche par tranche
-(voir [`docs/plan-des-tranches.md`](docs/plan-des-tranches.md)).
+**Tranches 1 et 2 livrées : le planning et l'argent.** Le coffre-fort, les
+votes et la location saisonnière suivront, tranche par tranche (voir
+[`docs/plan-des-tranches.md`](docs/plan-des-tranches.md)).
 
 Ce qui fonctionne aujourd'hui :
 
@@ -24,6 +23,10 @@ Ce qui fonctionne aujourd'hui :
   arbitrage par la gérante, saisie directe pour un tiers ;
 - tour de choix saisonnier avec voeux, quotas indicatifs et ordre rotatif ;
 - import du planning existant (.xlsx, CSV, tableau HTML), simulé puis annulable ;
+- **dépenses avec justificatif**, règles de répartition datées, ventilation
+  figée à la saisie et explicable en un clic, recalcul explicite et motivé ;
+- soldes calculés (jamais stockés), virements proposés en nombre minimal,
+  appels de fonds ;
 - notifications par courriel, en file durable avec reprise ;
 - export CSV des séjours et export complet de l'instance ;
 - interface responsive, utilisable au doigt.
@@ -83,7 +86,8 @@ icônes sont dans le dépôt.
 | [`docs/schema.sql`](docs/schema.sql) | Le schéma engendré par les migrations |
 | [`docs/parametres.md`](docs/parametres.md) | Tous les réglages, engendrés depuis le registre |
 | [`docs/plan-des-tranches.md`](docs/plan-des-tranches.md) | Ce qui est livré quand |
-| [`docs/recette-t1.md`](docs/recette-t1.md) | **Ce que vous vérifiez vous-même**, par l'usage |
+| [`docs/recette-t1.md`](docs/recette-t1.md) | **Ce que vous vérifiez vous-même** pour le planning |
+| [`docs/recette-t2.md`](docs/recette-t2.md) | **Ce que vous vérifiez vous-même** pour l'argent |
 | [`docs/design/handoff/`](docs/design/handoff/) | Le paquet de design. Contractuel pour l'apparence et les libellés |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions du dépôt |
 

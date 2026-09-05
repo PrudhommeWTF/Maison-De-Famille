@@ -193,9 +193,15 @@ export class Cadre {
     const e: Entree[] = [
       { chemin: '/bien/calendrier', libelle: 'Calendrier', icone: 'bi-calendar3' },
       { chemin: '/bien/demandes', libelle: 'Demandes', icone: 'bi-envelope-paper', badge: true },
-      { chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-house-door' },
-      { chemin: '/bien/membres', libelle: 'Membres et ' + this.etat.vocabulaire().parts, icone: 'bi-people' },
     ];
+    // L'argent n'est visible que de qui a le droit de le voir : afficher une
+    // entrée qui répondra 403 est une promesse que l'application ne tient pas.
+    if (this.etat.voitLArgent()) {
+      e.push({ chemin: '/bien/depenses', libelle: 'Dépenses', icone: 'bi-receipt' });
+      e.push({ chemin: '/bien/soldes', libelle: 'Soldes', icone: 'bi-arrow-left-right' });
+    }
+    e.push({ chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-house-door' });
+    e.push({ chemin: '/bien/membres', libelle: 'Membres et ' + this.etat.vocabulaire().parts, icone: 'bi-people' });
     return e;
   });
 

@@ -65,6 +65,14 @@ Second facteur et visibilité des informations sensibles.
 
 Un gérant qui n'a pas activé le second facteur ne peut plus se connecter tant qu'il ne l'a pas fait. À n'activer qu'une fois que chaque gérant a imprimé ses codes de secours : sans cela, vous vous verrouillez dehors.
 
+### Les membres de foyer voient les dépenses
+
+- **Clé** : `membreFoyerVoitDepenses`
+- **Portée** : Instance
+- **Par défaut** : Non
+
+Quand ce réglage est inactif, le conjoint d'un indivisaire ne voit ni la liste des dépenses ni les soldes des autres foyers. Le défaut est prudent : sinon un conjoint découvrirait le montant de la taxe foncière avant l'indivisaire concerné.
+
 ### Les membres de foyer voient les quotes-parts
 
 - **Clé** : `membreFoyerVoitParts`

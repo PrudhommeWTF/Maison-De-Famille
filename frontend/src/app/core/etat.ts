@@ -42,6 +42,16 @@ export class Etat {
   /** Le rôle sur le bien ouvert. Sert à masquer ce qui répondrait 403. */
   readonly estGeranteIci = computed(() => this.bien()?.role === 'gerant');
 
+  /**
+   * Les écrans d'argent sont réservés aux détenteurs. Un membre de foyer les
+   * verrait répondre 403 : mieux vaut ne pas lui proposer l'entrée que lui
+   * montrer une porte fermée.
+   */
+  readonly voitLArgent = computed(() => {
+    const role = this.bien()?.role;
+    return role === 'gerant' || role === 'detenteur';
+  });
+
   /** Le badge de la navigation : les demandes en attente **du bien courant**. */
   readonly demandesEnAttente = computed(() => {
     const b = this.bien();

@@ -20,9 +20,11 @@ import { aujourdhui, horodatage } from '../noyau/dates';
 import { log } from '../noyau/log';
 import { biensVisibles } from '../acces/roles';
 import { surPlage } from '../sejours/repo';
+import { surPeriode, ventilationDe } from '../argent/repo';
+import { LIBELLE_REGLE } from '../argent/repartition';
 import { versionCible } from '../noyau/migrations';
 import { parametre } from '../parametres/repo';
-import { tableau } from './csv';
+import { euros, tableau } from './csv';
 import { Entree, fichiersDe, tar } from './archive';
 
 const NATURES: Record<string, string> = { famille: 'Famille', location: 'Location', entretien: 'Entretien' };
@@ -54,6 +56,47 @@ export function routesExport(deps: Deps): Routeur {
       ]),
     );
     envoyerFichier(ctx.res, `sejours-${aujourdhui()}.csv`, 'text/csv; charset=utf-8', csv);
+    return undefined;
+  });
+
+  /**
+   * Les dépenses, avec la ventilation en colonnes.
+   *
+   * Une ligne par dépense **et par personne** : c'est la forme qui permet un
+   * tableau croisé dans un tableur, et surtout celle qui se relit à voix haute
+   * pendant une discussion de famille. La règle appliquée figure sur chaque
+   * ligne, parce que c'est la première question qui vient.
+   */
+  r.get('/export/depenses.csv', { acces: 'authentifie' }, (ctx) => {
+    const annee = Number(ctx.req.query.annee);
+    const cible = Number.isInteger(annee) && annee >= 1900 && annee <= 2200 ? annee : null;
+    const depenses = surPeriode(ctx.db, biensVisibles(ctx.portee),
+      cible ? `${cible}-01-01` : '1900-01-01', cible ? `${cible}-12-31` : '2999-12-31');
+
+    const lignes: unknown[][] = [];
+    for (const d of depenses) {
+      const v = ventilationDe(ctx.db, d.id);
+      const regle = v.justification ? LIBELLE_REGLE[v.justification.regleAppliquee] : '';
+      const biens = d.biens.map((b) => b.bienNom).join(' + ');
+      if (!v.lignes.length) {
+        lignes.push([d.dateDepense, d.libelle, d.categorieLibelle, biens, d.structureNom,
+          euros(d.montantCents), d.payePar === 'personne' ? d.avanceParNom ?? '' : 'compte commun',
+          regle, '', '', d.statut, d.note]);
+        continue;
+      }
+      for (const l of v.lignes) {
+        lignes.push([d.dateDepense, d.libelle, d.categorieLibelle, biens, d.structureNom,
+          euros(d.montantCents), d.payePar === 'personne' ? d.avanceParNom ?? '' : 'compte commun',
+          regle, l.nom, euros(l.montantCents), d.statut, d.note]);
+      }
+    }
+
+    const csv = tableau(
+      ['Date', 'Libellé', 'Catégorie', 'Biens', 'Structure', 'Montant', 'Avancé par',
+        'Règle appliquée', 'Personne', 'Part due', 'Statut', 'Note'],
+      lignes,
+    );
+    envoyerFichier(ctx.res, `depenses-${cible ?? 'tout'}-${aujourdhui()}.csv`, 'text/csv; charset=utf-8', csv);
     return undefined;
   });
 

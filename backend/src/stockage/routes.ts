@@ -18,10 +18,9 @@ export function routesFichiers(deps: Deps): Routeur {
   /**
    * Rendre un fichier.
    *
-   * L'autorisation se déduit de ce à quoi le fichier est rattaché. En tranche 1,
-   * le seul rattachement est la photo d'un bien : le fichier n'est rendu que si
-   * ce bien est dans la portée de l'appelant. Chaque module suivant (coffre-fort,
-   * justificatifs, albums) ajoutera son propre rattachement ici, et un fichier
+   * L'autorisation se déduit de ce à quoi le fichier est rattaché : la photo
+   * d'un bien, le justificatif d'une dépense. Chaque module suivant
+   * (coffre-fort, albums) ajoute son propre rattachement ici, et un fichier
    * **sans rattachement connu n'est jamais servi**. Le défaut est le refus.
    */
   r.get('/fichiers/:fichierId', { acces: 'authentifie' }, (ctx) => {
@@ -29,11 +28,18 @@ export function routesFichiers(deps: Deps): Routeur {
     if (!/^[0-9a-f]{32}$/.test(id)) throw introuvable('Ce fichier');
 
     const visibles = biensVisibles(ctx.portee);
-    const rattache = visibles.length
-      ? ctx.db.prepare(
-        `SELECT 1 AS ok FROM bien WHERE photo_fichier_id = ? AND id IN (${visibles.map(() => '?').join(',')})`,
+    const marqueurs = visibles.map(() => '?').join(',');
+    const rattache = visibles.length && (
+      ctx.db.prepare(
+        `SELECT 1 AS ok FROM bien WHERE photo_fichier_id = ? AND id IN (${marqueurs})`,
       ).get(id, ...visibles)
-      : undefined;
+      // Un justificatif suit sa dépense : il est visible de qui voit la dépense.
+      || ctx.db.prepare(`
+        SELECT 1 AS ok FROM depense d
+        WHERE d.justificatif_id = ? AND d.archive_le IS NULL
+          AND EXISTS (SELECT 1 FROM depense_bien db WHERE db.depense_id = d.id AND db.bien_id IN (${marqueurs}))
+      `).get(id, ...visibles)
+    );
     if (!rattache) throw refuse("Ce fichier ne fait pas partie de ce que vous pouvez consulter.");
 
     const f = cheminAbsolu(ctx.db, id);

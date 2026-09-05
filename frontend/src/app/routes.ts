@@ -79,6 +79,8 @@ export const ROUTES: Routes = [
         children: [
           { path: 'calendrier', loadComponent: () => import('./ecrans/calendrier').then((m) => m.Calendrier), title: 'Calendrier' },
           { path: 'demandes', loadComponent: () => import('./ecrans/demandes').then((m) => m.Demandes), title: 'Demandes de séjour' },
+          { path: 'depenses', loadComponent: () => import('./ecrans/depenses').then((m) => m.Depenses), title: 'Dépenses et répartition' },
+          { path: 'soldes', loadComponent: () => import('./ecrans/soldes').then((m) => m.Soldes), title: 'Soldes et remboursements' },
           { path: 'membres', loadComponent: () => import('./ecrans/membres').then((m) => m.Membres), title: 'Membres et quotes-parts' },
           { path: 'fiche', loadComponent: () => import('./ecrans/fiche').then((m) => m.Fiche), title: 'Fiche du bien' },
           { path: '', pathMatch: 'full', redirectTo: 'calendrier' },

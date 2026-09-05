@@ -136,3 +136,71 @@ export interface AnalyseImport {
   champs: { champ: string; libelle: string; obligatoire: boolean }[];
   biens: { id: number; nom: string }[];
 }
+
+// ---- Argent (tranche 2) ----
+
+export type Regle = 'quotes_parts' | 'nuits' | 'parts_egales_foyer';
+
+export interface Categorie { id: number; code: string; libelle: string; ordre: number; actif: boolean }
+
+export interface RegleLigne {
+  categorieId: number; categorieLibelle: string;
+  id: number; regle: Regle; applicableDu: string; parDefaut: boolean;
+}
+
+export interface Depense {
+  id: number; groupeId: number | null; structureId: number; structureNom: string;
+  dateDepense: string; libelle: string;
+  categorieId: number; categorieLibelle: string;
+  montantCents: number; payePar: 'personne' | 'structure';
+  avanceParId: number | null; avanceParNom: string | null;
+  justificatifId: string | null; statut: 'saisie' | 'validee' | 'annulee'; note: string;
+  creeLe: string; archiveLe: string | null;
+  biens: { bienId: number; bienNom: string; poidsNum: number; poidsDen: number }[];
+  regleAppliquee: Regle | null;
+  partVisibleCents: number;
+}
+
+export interface ListeDepenses { annee: number; total: number; depenses: Depense[] }
+
+export interface DetailDepense {
+  depense: Depense;
+  ventilation: { personneId: number; nom: string; montantCents: number }[];
+  justification: { regleAppliquee: Regle; repli?: string; dateReference: string } | null;
+  /** L'explication en clair, ligne à ligne, telle qu'elle se lit à voix haute. */
+  explication: string[];
+  recalculs: { motif: string; faitLe: string; parNom: string | null }[];
+  vocabulaire: Vocabulaire;
+}
+
+export interface SoldeActeur {
+  acteurId: number; nom: string; estStructure: boolean;
+  montantCents: number; avanceCents: number; duCents: number; regleCents: number;
+}
+
+export interface VirementPropose {
+  deId: number; deNom: string; versId: number; versNom: string;
+  montantCents: number; motif: string;
+}
+
+export interface Reglement {
+  id: number; deId: number; deNom: string; versId: number; versNom: string;
+  montantCents: number; dateReglement: string; statut: string; motif: string;
+  appelId: number | null; confirmeLe: string | null;
+}
+
+export interface AppelDeFonds {
+  id: number; libelle: string; dateAppel: string; echeance: string; statut: string; note: string;
+  lignes: { personneId: number; nom: string; montantCents: number; statut: string }[];
+}
+
+export interface Soldes {
+  structure: { id: number; nom: string; mode: ModeStructure };
+  vocabulaire: Vocabulaire;
+  soldes: SoldeActeur[];
+  virements: VirementPropose[];
+  reglements: Reglement[];
+  appels: AppelDeFonds[];
+  /** Doit valoir zéro. Affiché en clair si ce n'est pas le cas. */
+  controle: number;
+}
