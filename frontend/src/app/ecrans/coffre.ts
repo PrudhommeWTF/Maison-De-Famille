@@ -13,6 +13,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api, ErreurAppel } from '../core/api';
+import { Fichiers } from '../core/fichiers';
 import { Etat } from '../core/etat';
 import { horodatageLisible } from '../core/format';
 
@@ -117,7 +118,7 @@ interface Coffre {
                 <span style="display:flex;gap:8px;align-items:center">
                   <span class="pastille">{{ libellePortee(d.portee) }}</span>
                   @if (d.fichierId) {
-                    <a class="btn" [href]="urlFichier(d.fichierId)" target="_blank" rel="noopener">Ouvrir</a>
+                    <button class="btn" type="button" (click)="ouvrir(d)">Ouvrir</button>
                   }
                 </span>
               </div>
@@ -215,6 +216,7 @@ interface Coffre {
 export class CoffreFort {
   readonly etat = inject(Etat);
   private readonly api = inject(Api);
+  readonly fichiers = inject(Fichiers);
   readonly horodatageLisible = horodatageLisible;
 
   readonly coffre = signal<Coffre | null>(null);
@@ -230,7 +232,7 @@ export class CoffreFort {
   fNom = '';
   fPortee: Portee = 'detenteur';
   fFichierNom = '';
-  private fFichierContenu = '';
+  private fFichier: File | null = null;
   fCodeLibelle = '';
   fCodeValeur = '';
   fCodePortee: Portee = 'sejour';
@@ -258,8 +260,9 @@ export class CoffreFort {
     return (d.mime.split('/')[1] ?? '').slice(0, 4).toUpperCase();
   }
 
-  urlFichier(id: string): string {
-    return `${document.baseURI.replace(/\/+$/, '')}/api/fichiers/${id}`;
+  /** Télécharge la pièce jointe avec le jeton : la route ne sert rien sans lui. */
+  ouvrir(d: Doc): Promise<void> {
+    return d.fichierId ? this.fichiers.ouvrir(d.fichierId, d.nom) : Promise.resolve();
   }
 
   private async charger(bienId: number): Promise<void> {
@@ -320,32 +323,30 @@ export class CoffreFort {
     this.journalDe.set(k.id);
   }
 
+  /** Le fichier part tel quel : le lire en base64 le gonflait d'un tiers, et
+   *  un acte notarié scanné dépassait alors la taille acceptée par le serveur. */
   choisirDocument(e: Event): void {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
-    const lecteur = new FileReader();
-    lecteur.onload = () => {
-      this.fFichierNom = f.name;
-      this.fFichierContenu = String(lecteur.result).split(',')[1] ?? '';
-      if (!this.fNom) this.fNom = f.name.replace(/\.[^.]+$/, '');
-      this.depot.set(true);
-    };
-    lecteur.readAsDataURL(f);
+    this.fFichier = f;
+    this.fFichierNom = f.name;
+    if (!this.fNom) this.fNom = f.name.replace(/\.[^.]+$/, '');
+    this.depot.set(true);
   }
 
   annulerDepot(): void {
     this.depot.set(false);
     this.fNom = '';
     this.fFichierNom = '';
-    this.fFichierContenu = '';
+    this.fFichier = null;
   }
 
   deposerDocument(): Promise<void> {
     const b = this.etat.bien();
-    if (!b || !this.fFichierContenu) return Promise.resolve();
+    const fichier = this.fFichier;
+    if (!b || !fichier) return Promise.resolve();
     return this.tenter(async () => {
-      const f = await this.api.post<{ id: string }>(`/biens/${b.id}/coffre/fichier`,
-        { nom: this.fFichierNom, contenu: this.fFichierContenu });
+      const f = await this.api.deposer<{ id: string }>(`/biens/${b.id}/coffre/fichier`, fichier);
       const nom = this.fNom.trim();
       await this.api.post(`/biens/${b.id}/coffre/documents`,
         { nom, portee: this.fPortee, fichierId: f.id, note: '' });

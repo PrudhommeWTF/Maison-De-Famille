@@ -16,7 +16,7 @@
 // vérifie la portée et journalise dans la même transaction.
 import { Deps, Routeur } from '../noyau/http';
 import { aujourdhui } from '../noyau/dates';
-import { etatInvalide } from '../noyau/erreurs';
+import { etatInvalide, invalide } from '../noyau/erreurs';
 import { lire } from '../noyau/valider';
 import { parametre } from '../parametres/repo';
 import { deposer as deposerFichier } from '../stockage/fichiers';
@@ -71,12 +71,19 @@ export function routesCoffre(deps: Deps): Routeur {
     return { document: doc, versions: versions(ctx.db, id) };
   });
 
+  /**
+   * Déposer les octets d'un document. Le corps **est** le fichier.
+   *
+   * Le base64 dans du JSON était plus court à écrire, et refusait tout acte
+   * notarié scanné : la charge JSON est plafonnée à un méga-octet, et le base64
+   * gonfle de 33 %, ce qui bloquait dès 700 kilo-octets. La seule limite qui
+   * doit compter est le réglage « Taille maximale d'un fichier ».
+   */
   r.post('/biens/:bienId/coffre/fichier', { acces: 'bien', role: 'gerant' }, (ctx) => {
-    const l = lire(ctx.corps);
-    const nom = l.texte('nom', { max: 255 });
-    const contenu = l.texte('contenu', { max: 30_000_000 });
-    l.fin();
-    const d = deposerFichier(ctx.db, Buffer.from(contenu, 'base64'), nom, ctx.personneId,
+    const octets = ctx.req.body;
+    if (!Buffer.isBuffer(octets) || !octets.length) throw invalide('Aucun fichier reçu.');
+    const nom = String(ctx.req.query.nom ?? 'document').slice(0, 255);
+    const d = deposerFichier(ctx.db, octets, nom, ctx.personneId,
       parametre<number>(ctx.db, 'fichierTailleMaxMo'));
     return { id: d.fichier.id, mime: d.fichier.mime, taille: d.fichier.taille };
   });

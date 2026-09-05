@@ -7,6 +7,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api, ErreurAppel } from '../core/api';
+import { Fichiers } from '../core/fichiers';
 import { Etat } from '../core/etat';
 import type { FicheBien } from '../core/modeles';
 
@@ -51,7 +52,7 @@ interface Contact {
       @if (fiche(); as f) {
         <div class="photo">
           @if (f.bien.photoFichierId) {
-            <img [src]="urlPhoto(f.bien.photoFichierId)" [alt]="'Photo de ' + f.bien.nom">
+            <img [src]="fichiers.image(f.bien.photoFichierId)()" [alt]="'Photo de ' + f.bien.nom">
           } @else {
             <i class="bi bi-image" aria-hidden="true"></i>
           }
@@ -118,6 +119,17 @@ interface Contact {
                     <option value="ville">Ville</option>
                   </select>
                 </div>
+              </div>
+              <div class="champ">
+                <label for="f-loc">Location saisonnière</label>
+                <select id="f-loc" name="locationActivee" [(ngModel)]="e.locationActivee">
+                  <option [ngValue]="false">Non activée</option>
+                  <option [ngValue]="true">Activée</option>
+                </select>
+                <p class="meta" style="margin-top:4px">
+                  Ouvre l'écran Location saisonnière sur ce bien : réservations, loyers encaissés
+                  et net à répartir. Sans cela, le module n'existe nulle part sur ce bien.
+                </p>
               </div>
               <div class="champ">
                 <label for="f-notes">Notes</label>
@@ -266,6 +278,7 @@ interface Contact {
 export class Fiche {
   readonly etat = inject(Etat);
   private readonly api = inject(Api);
+  readonly fichiers = inject(Fichiers);
 
   readonly fiche = signal<FicheBien | null>(null);
   readonly edition = signal(false);
@@ -273,7 +286,10 @@ export class Fiche {
   readonly erreur = signal('');
   readonly message = signal('');
 
-  e = { nom: '', commune: '', codePostal: '', adresse: '', type: 'mer', couchages: 2, notes: '' };
+  e = {
+    nom: '', commune: '', codePostal: '', adresse: '', type: 'mer', couchages: 2,
+    locationActivee: false, notes: '',
+  };
 
   // La fiche **compose** : le guide vient du module maison, l'inventaire du
   // module entretien, le carnet d'adresses du module maison. L'écran ne calcule
@@ -324,13 +340,10 @@ export class Fiche {
     if (f) {
       this.e = {
         nom: f.bien.nom, commune: f.bien.commune, codePostal: f.bien.codePostal,
-        adresse: f.bien.adresse, type: f.bien.type, couchages: f.bien.couchages, notes: f.bien.notes,
+        adresse: f.bien.adresse, type: f.bien.type, couchages: f.bien.couchages,
+        locationActivee: f.bien.locationActivee, notes: f.bien.notes,
       };
     }
-  }
-
-  urlPhoto(id: string): string {
-    return `${document.baseURI.replace(/\/+$/, '')}/api/fichiers/${id}`;
   }
 
   typeLisible(t: string): string {

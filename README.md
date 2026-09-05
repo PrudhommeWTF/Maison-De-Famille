@@ -45,6 +45,12 @@ Ce qui fonctionne aujourd'hui :
 - **accès temporaires** : un invité ou un locataire entre par un lien limité
   dans le temps, sans compte, et l'accès se coupe à la révocation comme à
   l'expiration ;
+- **location saisonnière**, activable par bien : réservations qui bloquent le
+  calendrier comme n'importe quel séjour, loyers encaissés (jamais les loyers
+  seulement signés), charges déduites, net à répartir, et une alerte quand une
+  semaine est ouverte avant que la famille ait choisi ses dates ;
+- **souvenirs** : un album par bien, créé tout seul à la fin d'un séjour,
+  vignettes engendrées côté serveur, et un livre d'or par année ;
 - export CSV des séjours et export complet de l'instance ;
 - interface responsive, utilisable au doigt.
 

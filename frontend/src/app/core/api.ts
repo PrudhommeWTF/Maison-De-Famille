@@ -86,6 +86,18 @@ export class Api {
     return this.appel<T>('POST', chemin, fichier, { 'x-nom-fichier': nomSur(fichier.name) });
   }
 
+  /**
+   * Le même téléversement, mais avec le nom en paramètre d'adresse.
+   *
+   * Un en-tête HTTP ne transporte que de l'ASCII : « Été 2026.jpg » y perdait
+   * ses accents, et la famille retrouvait « Ete 2026.jpg » dans ses
+   * téléchargements. Le paramètre d'adresse, lui, est encodé en UTF-8.
+   */
+  deposer<T>(chemin: string, fichier: File, extra: Record<string, string> = {}): Promise<T> {
+    const q = new URLSearchParams({ nom: fichier.name.slice(0, 255), ...extra });
+    return this.appel<T>('POST', `${chemin}?${q}`, fichier);
+  }
+
   /** Un téléchargement : rend le contenu et le nom proposé par le serveur. */
   async telecharger(chemin: string): Promise<{ blob: Blob; nom: string }> {
     const r = await fetch(BASE() + chemin, { headers: this.entetes() });

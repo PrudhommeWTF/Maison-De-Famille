@@ -21,7 +21,7 @@ l'est pas, et pourquoi.
 | Énumération | Impossible : même message, même code, **même temps de réponse** pour un compte inconnu (un calcul argon2 factice est fait exprès). | `auth/routes.ts` |
 | Second facteur | TOTP (RFC 6238) avec dix codes de secours. Rejeu refusé : le pas validé est enregistré. Activable par chacun, rendable obligatoire pour les gérants par un réglage. | `auth/totp.ts` |
 | Autorisation | Centralisée. Chaque route déclare son exigence, les repos reçoivent la liste des biens autorisés et **filtrent en SQL**. Le serveur ne lit jamais ce qu'il n'a pas le droit de rendre. | `acces/`, `noyau/http.ts` |
-| Fichiers | Servis derrière autorisation, identifiants de 128 bits non devinables, répertoire jamais exposé par le serveur web. | `stockage/` |
+| Fichiers | Servis derrière autorisation, identifiants de 128 bits non devinables, répertoire jamais exposé par le serveur web. L'autorisation se déduit du **rattachement** du fichier (photo de bien, justificatif de dépense, version d'un document du coffre avec sa portée, photo d'album) : un fichier sans rattachement connu n'est jamais servi, et un test le vérifie. Les images de l'interface passent donc par le client, avec le jeton, et non par une adresse nue. | `stockage/`, `core/fichiers.ts` |
 | En-têtes | `helmet`, politique de sécurité de contenu stricte : `default-src 'self'`, aucun CDN. | `server.ts` |
 | Réseau sortant | **Aucun**, sauf le relais SMTP configuré. Polices et icônes sont dans le dépôt. | |
 | Validation | Chaque champ est lu par une fonction qui rend une valeur typée ou lève. Aucune concaténation de SQL, requêtes préparées partout. | `noyau/valider.ts` |

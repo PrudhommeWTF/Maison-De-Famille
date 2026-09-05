@@ -216,6 +216,18 @@ export class Cadre {
     if (this.etat.roleIci() !== 'invite') {
       e.push({ chemin: '/bien/decisions', libelle: 'Décisions et votes', icone: 'bi-check2-square' });
     }
+    // « La location est activable par bien » : sur un bien qui n'est pas loué,
+    // l'entrée ne s'affiche pas du tout. Le serveur refuse de toute façon, mais
+    // une entrée de navigation qui mène à un refus est un mensonge de plus.
+    if (this.etat.bien()?.locationActivee && this.etat.roleIci() !== 'invite'
+        && this.etat.roleIci() !== 'membre_foyer') {
+      e.push({ chemin: '/bien/location', libelle: 'Location saisonnière', icone: 'bi-key' });
+    }
+    // Les souvenirs sont ouverts aux membres de foyer : c'est ce que la famille
+    // a de plus commun. Un locataire de passage, lui, n'a rien à y faire.
+    if (this.etat.roleIci() !== 'invite') {
+      e.push({ chemin: '/bien/souvenirs', libelle: 'Souvenirs', icone: 'bi-images' });
+    }
     // Un invité ou un locataire ne voit pas la liste des membres de la famille :
     // l'écran s'appuie sur la portée de structure, qu'un rôle posé sur un seul
     // bien ne donne pas, et une entrée de navigation qui mène à un écran vide

@@ -167,16 +167,42 @@ est arrivé par un lien : portées, journal des codes, notifications. Le prix es
 
 ---
 
-## Tranche 5 : location saisonnière et souvenirs
+## Tranche 5 : location saisonnière et souvenirs (**livrée**)
 
-- module activable **par bien**, invisible ailleurs ;
+- module activable **par bien**, invisible ailleurs, et qui refuse au lieu de rendre vide ;
 - réservations locatives (qui bloquent le calendrier comme n'importe quel séjour), loyers
   encaissés, charges déduites, net à répartir ;
-- accès locataire par lien limité, sans création de compte ;
-- albums photo par bien, avec vignettes engendrées côté serveur.
+- alerte quand une semaine est ouverte à la location sur une année où la famille n'a encore
+  rien posé, sans rien bloquer ;
+- accès locataire par lien limité, sans création de compte (le mécanisme vient de la tranche 4) ;
+- albums photo par bien, album créé tout seul à la fin d'un séjour, vignettes engendrées côté
+  serveur, livre d'or par année.
 
 **Ce que vous vérifiez vous-même** : le module location n'existe nulle part sur le bien de
 montagne, et une photo déposée sur un bien n'apparaît pas dans l'album de l'autre.
+La liste complète est dans `docs/recette-t5.md`.
+
+**Deux décisions prises en chemin.**
+
+Les vignettes sont fabriquées avec `jpeg-js` et `pngjs`, **purement JavaScript** et sans aucune
+dépendance transitive, et non avec `sharp`. `sharp` est plus rapide d'un ordre de grandeur, et
+c'est trente méga-octets de binaires natifs qui échouent d'une façon désagréable à comprendre
+dans un conteneur LXC minimal. Une vignette se fabrique une fois, au dépôt, jamais à
+l'affichage : la lenteur ne coûte rien, la dépendance aurait coûté une soirée un jour de panne.
+WEBP et GIF n'ont pas de vignette, faute de décodeur léger, et sont servis tels quels.
+
+Le net locatif ne se répartit pas d'un bouton sur cet écran : il se verse depuis l'écran
+Dépenses, qui a déjà les règles datées, les arrondis et l'historique. Un second chemin de
+répartition, c'est un second arrondi, donc deux tables qui ne tombent pas sur le même centime et
+deux personnes qui ne sont pas d'accord.
+
+**Quatre défauts antérieurs, corrigés au passage.** Un écran plein d'images a révélé que les
+images ne s'affichaient nulle part : la balise `img` demandait le fichier sans jeton et recevait
+un refus. Dans la foulée : un document du coffre n'était téléchargeable par personne, faute de
+rattachement dans la route des fichiers ; un acte notarié scanné ne se déposait pas, parce que le
+fichier voyageait encodé en base64 dans du JSON, ce qui le gonfle d'un tiers ; et un locataire
+arrivé par lien ouvrait un coffre vide, alors que le code de la boîte à clés est ce que ce lien
+promet. Les quatre sont couverts par `backend/test/fichiers-acces.test.ts`.
 
 ---
 

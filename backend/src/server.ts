@@ -81,6 +81,7 @@ export function construireApp(deps: Deps): express.Express {
   app.use('/api/import/analyse', brut);
   app.use('/api/structures/:structureId/justificatif', brut);
   app.use('/api/biens/:bienId/albums/:albumId/photos', brut);
+  app.use('/api/biens/:bienId/coffre/fichier', brut);
   app.use(express.json({ limit: '1mb' }));
 
   for (const routeur of [

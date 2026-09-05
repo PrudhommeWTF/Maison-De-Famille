@@ -19,8 +19,19 @@ export function sejoursDe(db: Db, bienId: number, personneId: number): { arrivee
     `SELECT s.arrivee, s.depart FROM sejour s
      LEFT JOIN personne p ON p.id = s.demandeur_id
      WHERE s.bien_id = ? AND s.statut = 'valide' AND s.archive_le IS NULL
-       AND (s.demandeur_id = ? OR (s.foyer_id IS NOT NULL AND s.foyer_id = p.foyer_id AND p.id = ?))`,
-  ).all(bienId, personneId, personneId) as { arrivee: string; depart: string }[];
+       AND (s.demandeur_id = ? OR (s.foyer_id IS NOT NULL AND s.foyer_id = p.foyer_id AND p.id = ?)
+            -- Un accès temporaire rattaché à un séjour EST la déclaration que
+            -- cette personne dort là cette semaine. Sans cette branche, le
+            -- locataire à qui la gérante envoie un lien ouvrait un coffre vide
+            -- et n'obtenait pas le code de la boîte à clés, ce qui est
+            -- exactement ce que le lien promet. Le lien révoqué ou périmé ne
+            -- compte plus : c'est la même date que celle qui ferme le rôle.
+            OR EXISTS (
+              SELECT 1 FROM acces_temporaire a
+              WHERE a.sejour_id = s.id AND a.personne_id = ? AND a.bien_id = s.bien_id
+                AND a.revoque_le IS NULL AND a.expire_le >= ?))`,
+  ).all(bienId, personneId, personneId, personneId, aujourdhui()) as
+    { arrivee: string; depart: string }[];
 }
 
 /**
