@@ -5,8 +5,9 @@
 // garantir les invariants (les périodes de détention ne se chevauchent pas, une
 // structure a toujours ses règles de décision) à un seul endroit.
 import type { Db } from '../noyau/db';
-import { horodatage } from '../noyau/dates';
+import { aujourdhui, horodatage } from '../noyau/dates';
 import { conflit, etatInvalide, introuvable } from '../noyau/erreurs';
+import { log } from '../noyau/log';
 import { ChangementImpossible, LigneDetention, anomalies, partsALaDate, preparerChangement } from './parts';
 
 export type ModeStructure = 'indivision' | 'sci' | 'nom_propre';
@@ -302,6 +303,45 @@ export function creerFoyer(db: Db, nom: string): number {
 
 export function foyers(db: Db): { id: number; nom: string }[] {
   return db.prepare('SELECT id, nom FROM foyer WHERE archive_le IS NULL ORDER BY nom').all() as { id: number; nom: string }[];
+}
+
+/**
+ * Les rôles explicitement attribués à une personne, par structure. Ne comprend
+ * pas les rôles déduits (une détention fait un détenteur, un foyer fait un
+ * membre de foyer) : ceux-là se calculent, ils ne se retirent pas.
+ */
+export function rolesAttribues(db: Db, personneId: number): { structureId: number; role: string }[] {
+  return db.prepare(
+    `SELECT structure_id AS structureId, role FROM role_attribue
+     WHERE personne_id = ? AND structure_id IS NOT NULL AND archive_le IS NULL AND fin IS NULL`,
+  ).all(personneId) as { structureId: number; role: string }[];
+}
+
+/** Combien de gérants une structure compte-t-elle, ici et maintenant ? */
+export function compterGerants(db: Db, structureId: number): number {
+  const l = db.prepare(
+    `SELECT COUNT(DISTINCT r.personne_id) AS n
+     FROM role_attribue r JOIN personne p ON p.id = r.personne_id
+     WHERE r.structure_id = ? AND r.role = 'gerant' AND r.archive_le IS NULL AND r.fin IS NULL
+       AND p.archive_le IS NULL`,
+  ).get(structureId) as { n: number };
+  return l.n;
+}
+
+/**
+ * Retire un rôle. Archivage daté, jamais de suppression : on veut pouvoir dire
+ * qui a été gérant, et jusqu'à quand.
+ */
+export function retirerRole(db: Db, personneId: number, structureId: number, role: string, parQui: number): boolean {
+  const r = db.prepare(
+    `UPDATE role_attribue SET archive_le = ?, fin = ?
+     WHERE personne_id = ? AND structure_id = ? AND role = ? AND archive_le IS NULL AND fin IS NULL`,
+  ).run(horodatage(), aujourdhui(), personneId, structureId, role);
+  if (r.changes) {
+    db.prepare('UPDATE personne SET token_version = token_version + 1 WHERE id = ?').run(personneId);
+    log.info(`Rôle ${role} retiré à la personne ${personneId} sur la structure ${structureId} par ${parQui}.`);
+  }
+  return r.changes > 0;
 }
 
 export function attribuerRole(

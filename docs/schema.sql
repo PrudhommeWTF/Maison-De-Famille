@@ -1,5 +1,5 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 3
+-- Version du schéma : 4
 -- Régénérer : cd backend && npm run docs:schema
 
 CREATE TABLE appel_de_fonds (
@@ -225,7 +225,7 @@ CREATE TABLE reinit_mot_de_passe (
         expire_le   TEXT NOT NULL,
         utilise_le  TEXT,
         adresse_ip  TEXT
-      );
+      , motif TEXT NOT NULL DEFAULT 'oubli', cree_par INTEGER REFERENCES personne(id), vu_le TEXT);
 CREATE TABLE role_attribue (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         personne_id  INTEGER NOT NULL REFERENCES personne(id),
@@ -347,6 +347,8 @@ CREATE INDEX idx_notification_a_envoyer ON notification(prochaine_tentative)
 CREATE INDEX idx_personne_active ON personne(archive_le);
 CREATE INDEX idx_regle_periode ON regle_repartition(bien_id, categorie_id, applicable_du, applicable_au);
 CREATE INDEX idx_reglement_structure ON reglement(structure_id, statut);
+CREATE INDEX idx_reinit_personne ON reinit_mot_de_passe(personne_id, motif)
+        WHERE utilise_le IS NULL;
 CREATE INDEX idx_role_personne ON role_attribue(personne_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_role_structure ON role_attribue(structure_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_saison_bien ON saison(bien_id);
