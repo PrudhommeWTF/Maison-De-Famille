@@ -15,7 +15,9 @@ export type TypeNotification =
   | 'appel_de_fonds'
   | 'mot_de_passe'
   | 'invitation'
-  | 'checklist_depart';
+  | 'checklist_depart'
+  | 'vote_ouvert'
+  | 'vote_cloture_proche';
 
 export interface Declaration {
   type: TypeNotification;
@@ -55,6 +57,14 @@ export const TYPES: readonly Declaration[] = [
   {
     type: 'checklist_depart', libelle: 'Checklist de départ', defaut: true,
     description: "Envoyé la veille de la fin de votre séjour, avec la liste de ce qu'il reste à faire avant de partir (compteurs, volets, poubelles).",
+  },
+  {
+    type: 'vote_ouvert', libelle: 'Ouverture d\'un vote', defaut: true,
+    description: "Envoyé quand un vote s'ouvre sur une structure dont vous détenez des parts, avec la question posée, la majorité requise et la date de clôture.",
+  },
+  {
+    type: 'vote_cloture_proche', libelle: 'Clôture de vote imminente', defaut: true,
+    description: "Rappel envoyé trois jours avant la clôture d'un vote, uniquement si vous ne vous êtes pas encore prononcé. Une abstention compte dans le corps électoral : ne pas répondre n'est pas neutre.",
   },
 ];
 
@@ -217,6 +227,55 @@ export function checklistDepart(c: ContexteChecklist): Message {
       ...c.lignes.map((l) => `<li style="margin-bottom:6px">${echapper(l)}</li>`),
       '</ul>',
     ].join(''), lien, "Voir le carnet d'entretien"),
+  };
+}
+
+export interface ContexteVote {
+  instance: string; urlBase: string; titre: string; structure: string;
+  regle: string; clotureLe: string; expose: string;
+}
+
+/**
+ * L'ouverture d'un vote. Le message porte la question **et la règle**, parce
+ * que « deux tiers des parts » et « unanimité » n'appellent pas la même
+ * attention, et qu'on ne va pas ouvrir l'application pour le découvrir.
+ */
+export function voteOuvert(c: ContexteVote): Message {
+  const lien = `${c.urlBase}/bien/decisions`;
+  const l1 = `${c.structure} : un vote est ouvert sur « ${c.titre} ».`;
+  const l2 = `Majorité requise : ${c.regle}. Clôture le ${dateLisible(c.clotureLe)}.`;
+  return {
+    sujet: `Vote ouvert : ${c.titre}`,
+    lien,
+    texte: [l1, c.expose, '', l2, '', `Voter : ${lien}`].filter(Boolean).join('\n'),
+    html: envelopper(c.instance, 'Un vote est ouvert', [
+      `<p style="margin:0 0 8px">${echapper(l1)}</p>`,
+      c.expose ? `<p style="margin:0 0 8px;color:#4a443c">${echapper(c.expose)}</p>` : '',
+      `<p style="margin:0 0 8px">${echapper(l2)}</p>`,
+    ].join(''), lien, 'Donner ma voix'),
+  };
+}
+
+/**
+ * Le rappel avant clôture, envoyé **seulement à qui n'a pas voté**.
+ *
+ * Il dit pourquoi le silence n'est pas neutre : le seuil porte sur les droits
+ * détenus, pas sur les voix exprimées, si bien qu'une abstention pèse comme un
+ * refus. Quelqu'un qui l'ignore croit s'abstenir alors qu'il bloque.
+ */
+export function voteClotureProche(c: ContexteVote & { jours: number }): Message {
+  const lien = `${c.urlBase}/bien/decisions`;
+  const l1 = `Le vote « ${c.titre} » se clôt ${c.jours <= 1 ? 'demain' : `dans ${c.jours} jours`}, le ${dateLisible(c.clotureLe)}.`;
+  const l2 = 'Vous ne vous êtes pas encore prononcé. La majorité requise se calcule sur les parts '
+    + 'détenues, pas sur les voix exprimées : ne pas répondre revient à voter contre.';
+  return {
+    sujet: `Vote à clore : ${c.titre}`,
+    lien,
+    texte: [l1, '', l2, '', `Voter : ${lien}`].join('\n'),
+    html: envelopper(c.instance, 'Il reste peu de temps', [
+      `<p style="margin:0 0 8px">${echapper(l1)}</p>`,
+      `<p style="margin:0 0 8px;color:#4a443c">${echapper(l2)}</p>`,
+    ].join(''), lien, 'Donner ma voix'),
   };
 }
 

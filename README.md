@@ -9,8 +9,8 @@ Instance unique, une seule famille, données chez vous.
 
 ## État
 
-**Tranches 1, 1.5, 2 et 3 livrées : le planning, les comptes, l'argent et la
-maison.** Les votes et la location saisonnière suivront, tranche par tranche (voir
+**Tranches 1 à 4 livrées : le planning, les comptes, l'argent, la maison et la
+famille.** La location saisonnière et les albums suivront (voir
 [`docs/plan-des-tranches.md`](docs/plan-des-tranches.md)).
 
 Ce qui fonctionne aujourd'hui :
@@ -39,6 +39,12 @@ Ce qui fonctionne aujourd'hui :
 - **coffre-fort** : documents versionnés avec portée, **codes chiffrés au
   repos**, journal de chaque affichage, et la portée « pendant le séjour » qui
   se ferme le lendemain du départ ;
+- **décisions et votes** : voix pondérées par les parts et figées à l'ouverture,
+  seuils lus dans la table des règles, quorum de SCI, aucun vote en nom propre,
+  historique dont chaque résultat s'explique en un clic ;
+- **accès temporaires** : un invité ou un locataire entre par un lien limité
+  dans le temps, sans compte, et l'accès se coupe à la révocation comme à
+  l'expiration ;
 - export CSV des séjours et export complet de l'instance ;
 - interface responsive, utilisable au doigt.
 
@@ -101,6 +107,7 @@ icônes sont dans le dépôt.
 | [`docs/recette-t15.md`](docs/recette-t15.md) | **Ce que vous vérifiez vous-même** pour les comptes et les rôles |
 | [`docs/recette-t2.md`](docs/recette-t2.md) | **Ce que vous vérifiez vous-même** pour l'argent |
 | [`docs/recette-t3.md`](docs/recette-t3.md) | **Ce que vous vérifiez vous-même** pour la maison et le coffre-fort |
+| [`docs/recette-t4.md`](docs/recette-t4.md) | **Ce que vous vérifiez vous-même** pour les votes et les accès temporaires |
 | [`docs/design/handoff/`](docs/design/handoff/) | Le paquet de design. Contractuel pour l'apparence et les libellés |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions du dépôt |
 

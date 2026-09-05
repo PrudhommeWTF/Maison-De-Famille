@@ -26,6 +26,7 @@ import { checklistDepart } from '../notifications/gabarits';
 import { biensVisibles } from '../acces/roles';
 import type { Db } from '../noyau/db';
 import type { Config } from '../noyau/config';
+import { rappelerClotures } from '../decisions/routes';
 import { Categorie, Periodicite, lisible, urgence } from './recurrences';
 import {
   archiverChecklist, archiverInventaire, archiverRecurrence, archiverTache, checklist,
@@ -233,7 +234,8 @@ export function envoyerChecklists(db: Db, config: Config, jour = aujourdhui()): 
 }
 
 /**
- * Le passage quotidien : checklists à envoyer et échéances à engendrer.
+ * Le passage quotidien : checklists, rappels de clôture de vote, et échéances
+ * d'entretien à engendrer.
  *
  * Une fois au démarrage, puis toutes les heures. L'heure plutôt que la journée
  * parce qu'un service redémarré à 23 h 50 ne doit pas sauter le passage du
@@ -244,6 +246,7 @@ export function demarrerEntretien(db: Db, config: Config): () => void {
   const passer = (): void => {
     try {
       envoyerChecklists(db, config);
+      rappelerClotures(db, config);
       for (const b of db.prepare('SELECT id FROM bien WHERE archive_le IS NULL').all() as { id: number }[]) {
         engendrer(db, b.id, 0);
       }

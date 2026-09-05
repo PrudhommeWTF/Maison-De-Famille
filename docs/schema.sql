@@ -1,7 +1,25 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 5
+-- Version du schéma : 6
 -- Régénérer : cd backend && npm run docs:schema
 
+CREATE TABLE acces_temporaire (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id       INTEGER NOT NULL REFERENCES bien(id),
+        personne_id   INTEGER NOT NULL REFERENCES personne(id),
+        role_id       INTEGER NOT NULL REFERENCES role_attribue(id),
+        sejour_id     INTEGER REFERENCES sejour(id),
+        jeton_hash    TEXT NOT NULL UNIQUE,
+        libelle       TEXT NOT NULL,
+        -- Le jour inclus jusqu'auquel le lien vaut. La date de fin du rôle porte
+        -- la même valeur : le jeton empêche d'ouvrir une session, le rôle coupe
+        -- celles déjà ouvertes. Il faut les deux.
+        expire_le     TEXT NOT NULL,
+        revoque_le    TEXT,
+        derniere_utilisation TEXT,
+        utilisations  INTEGER NOT NULL DEFAULT 0,
+        cree_le       TEXT NOT NULL,
+        cree_par      INTEGER REFERENCES personne(id)
+      );
 CREATE TABLE appel_de_fonds (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         structure_id INTEGER NOT NULL REFERENCES structure(id),
@@ -242,7 +260,7 @@ CREATE TABLE personne (
         cree_le           TEXT NOT NULL,
         cree_par          INTEGER REFERENCES personne(id),
         archive_le        TEXT
-      , totp_secret TEXT, totp_pending TEXT, totp_recovery TEXT NOT NULL DEFAULT '[]', totp_last_step INTEGER NOT NULL DEFAULT 0, totp_active_le TEXT);
+      , totp_secret TEXT, totp_pending TEXT, totp_recovery TEXT NOT NULL DEFAULT '[]', totp_last_step INTEGER NOT NULL DEFAULT 0, totp_active_le TEXT, acces_lien_seul INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE quota (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
         saison_id INTEGER NOT NULL REFERENCES saison(id),
@@ -351,6 +369,41 @@ CREATE TABLE schema_migration (
     applique_le TEXT NOT NULL,
     duree_ms    INTEGER NOT NULL
   );
+CREATE TABLE scrutin (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        structure_id  INTEGER NOT NULL REFERENCES structure(id),
+        bien_id       INTEGER REFERENCES bien(id),
+        regle_id      INTEGER NOT NULL REFERENCES regle_decision(id),
+        titre         TEXT NOT NULL,
+        expose        TEXT NOT NULL DEFAULT '',
+        -- Le montant en jeu, quand la décision porte sur une dépense.
+        montant_cents INTEGER,
+        ouvert_le     TEXT NOT NULL,
+        cloture_le    TEXT NOT NULL,
+        statut        TEXT NOT NULL CHECK (statut IN ('ouvert','adopte','rejete','annule')),
+        -- Le dépouillement, figé lui aussi : recalculer un résultat des années
+        -- plus tard, avec un code qui a changé, donnerait une autre réponse.
+        depouille_le  TEXT,
+        resultat_json TEXT,
+        -- La convocation d'assemblée, pour une SCI dont les statuts l'exigent.
+        convoque_le   TEXT,
+        -- Ce que la décision a engendré, le cas échéant.
+        depense_id    INTEGER REFERENCES depense(id),
+        tache_id      INTEGER REFERENCES tache(id),
+        cree_par      INTEGER REFERENCES personne(id),
+        cree_le       TEXT NOT NULL,
+        archive_le    TEXT,
+        CHECK (cloture_le > ouvert_le)
+      );
+CREATE TABLE scrutin_voix (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        scrutin_id   INTEGER NOT NULL REFERENCES scrutin(id),
+        personne_id  INTEGER NOT NULL REFERENCES personne(id),
+        poids        INTEGER NOT NULL CHECK (poids > 0),
+        sens         TEXT CHECK (sens IN ('pour','contre','abstention')),
+        vote_le      TEXT,
+        UNIQUE (scrutin_id, personne_id)
+      );
 CREATE TABLE sejour (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         bien_id       INTEGER NOT NULL REFERENCES bien(id),
@@ -452,6 +505,7 @@ CREATE TABLE voeu (
         UNIQUE (saison_id, foyer_id, rang),
         CHECK (au > du)
       );
+CREATE INDEX idx_acces_bien ON acces_temporaire(bien_id) WHERE revoque_le IS NULL;
 CREATE INDEX idx_affichage_code ON code_affichage(code_id, affiche_le);
 CREATE INDEX idx_audit_date ON journal_audit(fait_le);
 CREATE INDEX idx_audit_objet ON journal_audit(objet_kind, objet_id);
@@ -478,6 +532,7 @@ CREATE INDEX idx_reinit_personne ON reinit_mot_de_passe(personne_id, motif)
 CREATE INDEX idx_role_personne ON role_attribue(personne_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_role_structure ON role_attribue(structure_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_saison_bien ON saison(bien_id);
+CREATE INDEX idx_scrutin_structure ON scrutin(structure_id, statut) WHERE archive_le IS NULL;
 CREATE INDEX idx_sejour_demandeur ON sejour(demandeur_id) WHERE archive_le IS NULL;
 CREATE UNIQUE INDEX idx_sejour_import ON sejour(import_run_id, import_ligne)
         WHERE import_run_id IS NOT NULL;

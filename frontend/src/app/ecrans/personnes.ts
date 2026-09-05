@@ -25,6 +25,10 @@ import type { Foyer, Personne } from '../core/modeles';
 interface RoleAttribue { structureId: number; role: string }
 interface PersonneEtRoles extends Personne { roles: RoleAttribue[] }
 interface Invitation { courrielEnFile: boolean; expireLe: string | null; lien: string | null }
+interface AccesTemporaire {
+  id: number; libelle: string; expireLe: string; etat: 'actif' | 'expire' | 'revoque';
+  derniereUtilisation: string | null; utilisations: number;
+}
 
 const LIBELLES: Record<string, string> = {
   gerant: 'Gérant', detenteur: 'Détenteur', membre_foyer: 'Membre de foyer', invite: 'Invité',
@@ -45,6 +49,11 @@ const LIBELLES: Record<string, string> = {
     .personne .actions select { width: auto; min-width: 150px; }
     .roles-de { display: flex; gap: 6px; flex-wrap: wrap; }
     .saisie { display: grid; grid-template-columns: 1fr 1fr 160px auto; gap: 10px; align-items: end; }
+    .acces { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 11px 0;
+             border-bottom: 1px solid var(--separateur); }
+    .acces:last-of-type { border-bottom: none; }
+    .acces .quoi { flex: 1; min-width: 170px; }
+    .pastille.expire, .pastille.revoque { background: var(--pastille-neutre); color: var(--encre-3); }
     .lien-repli { background: var(--fond-2); border: 1px solid var(--separateur); border-radius: var(--rayon-2);
                   padding: 12px; margin-top: 10px; }
     .lien-repli code { display: block; word-break: break-all; font-size: 12px; margin: 8px 0;
@@ -136,6 +145,74 @@ const LIBELLES: Record<string, string> = {
         </section>
       }
 
+      @if (bienOuvert()) {
+        <section class="carte">
+          <div class="entre">
+            <h2><i class="bi bi-hourglass-split" aria-hidden="true"></i> Accès temporaires</h2>
+            <button class="btn" type="button" (click)="saisieAcces.set(!saisieAcces())">
+              {{ saisieAcces() ? 'Fermer' : 'Ouvrir un accès' }}
+            </button>
+          </div>
+          <p class="secondaire" style="margin:4px 0 10px">
+            Un invité ou un locataire entre par un lien, sans compte ni mot de passe, pour la durée
+            que vous fixez. Il ne voit que le calendrier du bien et ce que le coffre-fort lui ouvre
+            pendant son séjour. Vous pouvez révoquer à tout moment, et l'accès se coupe aussitôt.
+          </p>
+
+          @if (saisieAcces()) {
+            <form class="saisie" style="grid-template-columns:1.4fr 1fr 150px auto;margin-bottom:12px"
+                  (ngSubmit)="ouvrirAcces()">
+              <div>
+                <label for="t-lib">Pour qui</label>
+                <input id="t-lib" name="tlib" [(ngModel)]="fAccesLibelle"
+                       placeholder="Famille Berger, locataires">
+              </div>
+              <div>
+                <label for="t-mail">Courriel (facultatif)</label>
+                <input id="t-mail" name="tmail" type="email" [(ngModel)]="fAccesEmail">
+              </div>
+              <div>
+                <label for="t-fin">Valable jusqu'au</label>
+                <input id="t-fin" name="tfin" type="date" [(ngModel)]="fAccesExpire" [min]="demain()">
+              </div>
+              <button class="btn btn-primaire" type="submit"
+                      [disabled]="occupe() || !fAccesLibelle.trim() || !fAccesExpire">Créer le lien</button>
+            </form>
+          }
+
+          @if (lienAcces(); as la) {
+            <div class="lien-repli">
+              <p style="margin:0;font-size:13px">
+                Transmettez ce lien. Il vaut jusqu'au {{ dateLongue(la.expireLe) }}, et personne
+                n'aura besoin de mot de passe pour s'en servir : ne le publiez nulle part.
+              </p>
+              <code>{{ la.lien }}</code>
+              <button class="btn" type="button" (click)="lienAcces.set(null)">Fermer</button>
+            </div>
+          }
+
+          @for (a of acces(); track a.id) {
+            <div class="acces">
+              <span class="quoi">
+                <span style="display:block;font-size:14px">{{ a.libelle }}</span>
+                <span class="meta">
+                  Jusqu'au {{ dateLongue(a.expireLe) }}
+                  @if (a.utilisations) { · utilisé {{ a.utilisations }} fois }
+                  @else { · jamais utilisé }
+                </span>
+              </span>
+              <span class="pastille" [class]="'pastille ' + a.etat">{{ etatAcces(a.etat) }}</span>
+              @if (a.etat === 'actif') {
+                <button class="btn" type="button" [disabled]="occupe()" (click)="revoquer(a)">Révoquer</button>
+              }
+            </div>
+          }
+          @if (!acces().length) {
+            <p class="secondaire" style="margin:0">Aucun accès temporaire ouvert.</p>
+          }
+        </section>
+      }
+
       <section class="carte">
         <div class="entre">
           <h2>{{ personnes().length }} personne{{ personnes().length > 1 ? 's' : '' }}</h2>
@@ -200,6 +277,9 @@ export class Personnes {
   readonly personnes = signal<PersonneEtRoles[]>([]);
   readonly foyers = signal<Foyer[]>([]);
   readonly invitation = signal<Invitation | null>(null);
+  readonly acces = signal<AccesTemporaire[]>([]);
+  readonly lienAcces = signal<{ lien: string; expireLe: string } | null>(null);
+  readonly saisieAcces = signal(false);
   readonly invitePour = signal('');
   readonly occupe = signal(false);
   readonly erreur = signal('');
@@ -209,8 +289,15 @@ export class Personnes {
   fEmail = '';
   fFoyerId = 0;
   fFoyerNom = '';
+  fAccesLibelle = '';
+  fAccesEmail = '';
+  fAccesExpire = '';
 
   readonly structureId = computed(() => this.etat.bien()?.structureId ?? 0);
+  readonly bienOuvert = computed(() => this.etat.bien());
+  readonly demain = (): string => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  readonly etatAcces = (e: string): string =>
+    e === 'actif' ? 'Actif' : e === 'expire' ? 'Expiré' : 'Révoqué';
 
   constructor() { void this.charger(); }
 
@@ -233,6 +320,10 @@ export class Personnes {
     ]);
     this.personnes.set(p);
     this.foyers.set(f);
+    const b = this.etat.bien();
+    this.acces.set(b
+      ? await this.api.get<AccesTemporaire[]>(`/biens/${b.id}/acces`).catch(() => [])
+      : []);
   }
 
   private async tenter(quoi: () => Promise<string>): Promise<void> {
@@ -304,6 +395,33 @@ export class Personnes {
     return this.tenter(async () => {
       await this.api.post(`/structures/${this.structureId()}/roles/retrait`, { personneId: p.id, role });
       return `Rôle ${this.libelle(role).toLowerCase()} retiré à ${p.nom}.`;
+    });
+  }
+
+  ouvrirAcces(): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || !this.fAccesLibelle.trim() || !this.fAccesExpire) return Promise.resolve();
+    return this.tenter(async () => {
+      const r = await this.api.post<{ lien: string; acces: { expireLe: string } }>(
+        `/biens/${b.id}/acces`, {
+          libelle: this.fAccesLibelle.trim(), email: this.fAccesEmail.trim(),
+          expireLe: this.fAccesExpire,
+        });
+      const nom = this.fAccesLibelle.trim();
+      this.fAccesLibelle = '';
+      this.fAccesEmail = '';
+      this.saisieAcces.set(false);
+      this.lienAcces.set({ lien: r.lien, expireLe: r.acces.expireLe });
+      return `Accès ouvert pour ${nom}. Le lien s'affiche ci-dessous, il n'est rendu qu'une fois.`;
+    });
+  }
+
+  revoquer(a: AccesTemporaire): Promise<void> {
+    const b = this.etat.bien();
+    if (!b) return Promise.resolve();
+    return this.tenter(async () => {
+      await this.api.post(`/biens/${b.id}/acces/${a.id}/revocation`, {});
+      return `Accès de ${a.libelle} révoqué. Sa session en cours est coupée immédiatement.`;
     });
   }
 

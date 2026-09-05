@@ -20,6 +20,7 @@ import { lire } from '../noyau/valider';
 import { SEUILS_ADRESSE, SEUILS_COMPTE, Temporisation } from './temporisation';
 import { aRehacher, controlerPolitique, hacher, verifier } from './mots-de-passe';
 import { ouvrirSession, renouveler, revoquer, revoquerTout, signer } from './jetons';
+import { AccesRefuse, ouvrirSession as ouvrirLien } from '../acces/temporaire';
 import {
   empreinteSecours, genererSecours, genererSecret, otpauthUri, secretLisible, verifierCode,
 } from './totp';
@@ -261,6 +262,47 @@ export function routesAuth(deps: Deps): Routeur {
   });
 
   /**
+   * L'entrée par un lien temporaire, sans compte ni mot de passe.
+   *
+   * Publique par nature : c'est le jeton qui authentifie. La temporisation par
+   * adresse s'applique quand même, sinon cette route permettrait d'essayer des
+   * jetons au rythme du réseau.
+   *
+   * La session rendue est une session ordinaire, pour une personne ordinaire :
+   * tout le contrôle d'accès passe ensuite par le rôle `invite` daté, comme
+   * pour n'importe qui. Il n'y a pas de second chemin d'autorisation à tenir.
+   */
+  r.post('/auth/lien', { acces: 'public' }, (ctx) => {
+    const l = lire(ctx.corps);
+    const jeton = l.texte('jeton', { max: 200 });
+    l.fin();
+    const now = Date.now();
+    if (parAdresse.attente(ctx.ip, now) > 0) throw attenteEnMessage(parAdresse.attente(ctx.ip, now));
+
+    let ouvert;
+    try {
+      ouvert = ouvrirLien(ctx.db, jeton);
+    } catch (e) {
+      parAdresse.echec(ctx.ip, now);
+      if (e instanceof AccesRefuse) throw invalide(e.message);
+      throw e;
+    }
+    parAdresse.reussite(ctx.ip);
+
+    const p = ctx.db.prepare('SELECT token_version FROM personne WHERE id = ?')
+      .get(ouvert.personneId) as { token_version: number };
+    const session = ouvrirSession(ctx.db, ouvert.personneId, agentDe(ctx.req), ctx.ip);
+    log.info(`Session ouverte par lien temporaire pour la personne ${ouvert.personneId}.`);
+    return {
+      acces: signer(ctx.config.jwtSecret, ouvert.personneId, p.token_version),
+      renouvellement: session.jeton,
+      expireLe: session.expireLe,
+      bienId: ouvert.bienId,
+      libelle: ouvert.libelle,
+    };
+  });
+
+  /**
    * Mot de passe oublié. La réponse est **toujours** la même, que l'adresse
    * existe ou non : c'est ce qui empêche d'utiliser cet écran pour savoir qui a
    * un compte. Le cas est nominal, pas exceptionnel : une partie de la famille
@@ -281,7 +323,13 @@ export function routesAuth(deps: Deps): Routeur {
     // dehors sans comprendre pourquoi, et le gérant doit intervenir pour un cas
     // que la personne pouvait régler seule. Le filtre avait exactement cet
     // effet, et rendait le parcours d'invitation entier inopérant.
-    const compte = ctx.db.prepare('SELECT id, nom FROM personne WHERE email = ? AND archive_le IS NULL')
+    // `acces_lien_seul` exclut les comptes ouverts par un lien d'invité. Sans
+    // ce filtre, un locataire ayant reçu un lien pourrait demander un mot de
+    // passe et se transformer en compte permanent, puisque cette route sert
+    // désormais les comptes jamais activés. La réponse reste la même : aucune
+    // différence observable entre « adresse inconnue » et « lien seulement ».
+    const compte = ctx.db.prepare(
+      'SELECT id, nom FROM personne WHERE email = ? AND archive_le IS NULL AND acces_lien_seul = 0')
       .get(email) as { id: number; nom: string } | undefined;
 
     if (compte) {

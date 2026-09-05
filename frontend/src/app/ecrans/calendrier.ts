@@ -73,9 +73,13 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
             nuit d'arrivée incluse, nuit de départ libre
           </p>
         </div>
-        <button class="btn btn-primaire" (click)="ouvrirDemande()">
-          <i class="bi bi-calendar-plus" aria-hidden="true"></i> Demander un séjour
-        </button>
+        <!-- Un locataire ou un invité ne demande pas de séjour : il en a un,
+             c'est même la raison de son accès. Le bouton le mènerait à un refus. -->
+        @if (etat.roleIci() !== 'invite') {
+          <button class="btn btn-primaire" (click)="ouvrirDemande()">
+            <i class="bi bi-calendar-plus" aria-hidden="true"></i> Demander un séjour
+          </button>
+        }
       </div>
 
       @if (conflits().length) {
