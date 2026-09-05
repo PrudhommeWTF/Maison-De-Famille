@@ -111,7 +111,9 @@ export function routesAuth(deps: Deps): Routeur {
     // plus à qui l'a saisi.
     let limite = false;
     if (compte.totp_secret) {
-      const code = lire(ctx.corps).texte('code', { max: 40, defaut: '' });
+      const lc = lire(ctx.corps);
+      const code = lc.texte('code', { max: 40, defaut: '' });
+      lc.fin();
       if (!code) {
         throw new ErreurApp('SECOND_FACTEUR_REQUIS',
           'Saisissez le code à six chiffres de votre application d\'authentification.');
@@ -173,7 +175,9 @@ export function routesAuth(deps: Deps): Routeur {
    * il reste la commande d'administration dans le conteneur.
    */
   r.post('/auth/totp/activation', { acces: 'authentifie' }, (ctx) => {
-    const code = lire(ctx.corps).texte('code', { max: 40 });
+    const l = lire(ctx.corps);
+    const code = l.texte('code', { max: 40 });
+    l.fin();
     const p = ctx.db.prepare('SELECT totp_pending, totp_secret FROM personne WHERE id = ?')
       .get(ctx.personneId) as { totp_pending: string | null; totp_secret: string | null };
     if (p.totp_secret) throw invalide('Le second facteur est déjà actif sur ce compte.');
@@ -211,7 +215,9 @@ export function routesAuth(deps: Deps): Routeur {
   });
 
   r.post('/auth/totp/desactivation', { acces: 'authentifie' }, async (ctx) => {
-    const motDePasse = lire(ctx.corps).texte('motDePasse', { max: 200, min: 1 });
+    const l = lire(ctx.corps);
+    const motDePasse = l.texte('motDePasse', { max: 200, min: 1 });
+    l.fin();
     const p = ctx.db.prepare('SELECT mot_de_passe_hash FROM personne WHERE id = ?')
       .get(ctx.personneId) as { mot_de_passe_hash: string | null };
     // Le mot de passe est redemandé : sans cela, un jeton volé suffirait à
@@ -247,7 +253,9 @@ export function routesAuth(deps: Deps): Routeur {
   });
 
   r.post('/auth/deconnexion', { acces: 'public' }, (ctx) => {
-    const jeton = lire(ctx.corps).texte('renouvellement', { max: 200, defaut: '' });
+    const l = lire(ctx.corps);
+    const jeton = l.texte('renouvellement', { max: 200, defaut: '' });
+    l.fin();
     if (jeton) revoquer(ctx.db, jeton);
     return undefined;
   });
@@ -259,7 +267,9 @@ export function routesAuth(deps: Deps): Routeur {
    * se connecte trois fois par an.
    */
   r.post('/auth/mot-de-passe-oublie', { acces: 'public' }, (ctx) => {
-    const email = lire(ctx.corps).texte('email', { max: 200 }).toLowerCase();
+    const l = lire(ctx.corps);
+    const email = l.texte('email', { max: 200 }).toLowerCase();
+    l.fin();
     const now = Date.now();
     // Une temporisation ici aussi : sans elle, cette route enverrait autant de
     // courriels qu'on le lui demande.

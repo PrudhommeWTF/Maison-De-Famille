@@ -9,7 +9,7 @@ Chaque tranche se termine par : un tag Git, une note de version, un fichier
 
 ---
 
-## Tranche 1 : remplacer le fichier Excel — **livrée**
+## Tranche 1 : remplacer le fichier Excel (**livrée**)
 
 C'est la seule tranche qui compte tant qu'elle n'est pas faite.
 
@@ -48,7 +48,7 @@ apparaît avant l'envoi et dans sa file ; elle valide, vous recevez le courriel,
 
 ---
 
-## Tranche 2 : l'argent
+## Tranche 2 : l'argent (**livrée**)
 
 - catégories et règles de répartition **datées**, la pastille cyclable écrivant une nouvelle
   ligne au lieu d'écraser ;
@@ -67,6 +67,13 @@ apparaît avant l'envoi et dans sa file ; elle valide, vous recevez le courriel,
 **Ce que vous vérifiez vous-même** : vous saisissez la taxe foncière, la répartition suit les
 quotes-parts et vous pouvez afficher le détail du calcul ; vous modifiez ensuite une quote-part
 avec une date d'effet dans le passé, et cette dépense garde sa ventilation d'origine.
+La liste complète est dans `docs/recette-t2.md`.
+
+**Une décision prise en chemin** : une dépense qui sert à deux structures s'enregistre en deux
+dépenses, une par structure. L'application le refuse explicitement et dit pourquoi. L'argent est
+dû dans deux pots distincts, et une dépense de SCI n'entre jamais dans les comptes de
+l'indivision : une écriture unique aurait donné des soldes que personne n'aurait su expliquer.
+Le regroupement à l'affichage est prévu au schéma (`depense_groupe`).
 
 ---
 

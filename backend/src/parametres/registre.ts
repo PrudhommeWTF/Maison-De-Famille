@@ -113,6 +113,12 @@ export const REGISTRE: readonly Declaration[] = [
     defaut: false,
   },
   {
+    cle: 'membreFoyerVoitDepenses', type: 'bool', portee: 'instance', section: 'securite', module: 'Sécurité',
+    libelle: 'Les membres de foyer voient les dépenses',
+    description: "Quand ce réglage est inactif, le conjoint d'un indivisaire ne voit ni la liste des dépenses ni les soldes des autres foyers. Le défaut est prudent : sinon un conjoint découvrirait le montant de la taxe foncière avant l'indivisaire concerné.",
+    defaut: false,
+  },
+  {
     cle: 'membreFoyerVoitParts', type: 'bool', portee: 'instance', section: 'securite', module: 'Sécurité',
     libelle: 'Les membres de foyer voient les quotes-parts',
     description: "Quand ce réglage est inactif, le conjoint d'un indivisaire voit qui compose l'indivision mais pas la répartition chiffrée des parts. C'est une information patrimoniale, d'où le défaut prudent.",

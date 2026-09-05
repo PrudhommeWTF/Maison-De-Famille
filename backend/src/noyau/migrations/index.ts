@@ -18,6 +18,7 @@ import { log } from '../log';
 import { horodatage } from '../dates';
 import { migration001 } from './001-socle';
 import { migration002 } from './002-totp';
+import { migration003 } from './003-argent';
 
 export interface Migration {
   version: number;
@@ -26,7 +27,7 @@ export interface Migration {
 }
 
 /** Dans l'ordre. Ajouter une migration, c'est ajouter une ligne ici. */
-export const MIGRATIONS: readonly Migration[] = [migration001, migration002];
+export const MIGRATIONS: readonly Migration[] = [migration001, migration002, migration003];
 
 export const versionCible = (): number => Math.max(...MIGRATIONS.map((m) => m.version));
 

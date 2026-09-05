@@ -20,6 +20,7 @@ import { routesAcces } from './acces/routes';
 import { routesAuth } from './auth/routes';
 import { routesPatrimoine } from './patrimoine/routes';
 import { routesSejours } from './sejours/routes';
+import { routesArgent } from './argent/routes';
 import { routesSaisons } from './sejours/saisons';
 import { routesImport } from './sejours/import/routes';
 import { routesParametres } from './parametres/routes';
@@ -73,12 +74,13 @@ export function construireApp(deps: Deps): express.Express {
   const brut = express.raw({ type: () => true, limit: `${parametre<number>(deps.db, 'fichierTailleMaxMo')}mb` });
   app.use('/api/biens/:bienId/photo', brut);
   app.use('/api/import/analyse', brut);
+  app.use('/api/structures/:structureId/justificatif', brut);
   app.use(express.json({ limit: '1mb' }));
 
   for (const routeur of [
     routesAuth(deps), routesAcces(deps), routesPatrimoine(deps), routesSejours(deps),
-    routesSaisons(deps), routesImport(deps), routesParametres(deps), routesFichiers(deps),
-    routesExport(deps), routesSysteme(deps),
+    routesSaisons(deps), routesImport(deps), routesArgent(deps), routesParametres(deps),
+    routesFichiers(deps), routesExport(deps), routesSysteme(deps),
   ]) app.use('/api', routeur.router);
 
   app.use('/api', routeInconnue);

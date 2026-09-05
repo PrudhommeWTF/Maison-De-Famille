@@ -108,7 +108,9 @@ export function routesPatrimoine(deps: Deps): Routeur {
    * quelle boîte de dialogue de confirmation.
    */
   r.post('/biens/:bienId/archivage', { acces: 'bien', role: 'gerant' }, (ctx) => {
-    const archiver = lire(ctx.corps).booleen('archiver', true);
+    const l = lire(ctx.corps);
+    const archiver = l.booleen('archiver', true);
+    l.fin();
     archiverBien(ctx.db, ctx.bienId, archiver);
     log.info(`Bien ${ctx.bienId} ${archiver ? 'archivé' : 'réactivé'} par la personne ${ctx.personneId}.`);
     return undefined;
@@ -200,7 +202,9 @@ export function routesPatrimoine(deps: Deps): Routeur {
   r.get('/foyers', { acces: 'gerant' }, (ctx) => foyers(ctx.db));
 
   r.post('/foyers', { acces: 'gerant' }, (ctx) => {
-    const nom = lire(ctx.corps).texte('nom', { max: 120 });
+    const l = lire(ctx.corps);
+    const nom = l.texte('nom', { max: 120 });
+    l.fin();
     return { id: creerFoyer(ctx.db, nom) };
   });
 
