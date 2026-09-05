@@ -436,6 +436,16 @@ Une récurrence engendre une tâche à sa date, une seule fois, à l'échéance 
 en paramètre. Cocher une tâche demande la date de réalisation et accepte une facture, qui peut
 créer la dépense correspondante (`tache.depense_id`).
 
+```sql
+CREATE TABLE contact (id INTEGER PRIMARY KEY, bien_id INTEGER NOT NULL REFERENCES bien(id),
+  nom TEXT NOT NULL, role TEXT NOT NULL, telephone TEXT, email TEXT, note TEXT,
+  urgence INTEGER NOT NULL DEFAULT 0, cree_le TEXT NOT NULL, cree_par INTEGER, archive_le TEXT);
+```
+
+Le carnet d'adresses : artisans, voisins, mairie, contacts d'urgence. Portée
+« membres », parce que celui qui occupe la maison est justement celui qui aura
+besoin du plombier. `urgence` remonte une ligne en tête de liste.
+
 ### Coffre-fort
 
 ```sql

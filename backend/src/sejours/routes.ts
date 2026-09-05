@@ -140,13 +140,16 @@ export function routesSejours(deps: Deps): Routeur {
 
     const demandeurId = pourQui ?? ctx.personneId;
     const demandeur = personne(ctx.db, demandeurId);
-    const statut = estGerante && nature !== 'famille' ? 'valide' : (estGerante && pourQui ? 'valide' : 'demande');
+    // Ce que la gérante saisit est décidé : elle arbitre, il n'y a personne
+    // au-dessus d'elle pour valider. La faire passer par sa propre file
+    // d'attente lui donnerait un geste de plus à chaque appel téléphonique.
+    const statut = estGerante ? 'valide' : 'demande';
 
     const id = creer(ctx.db, {
       bienId: ctx.bienId, demandeurId: nature === 'famille' ? demandeurId : null,
       foyerId: demandeur.foyerId, titre: titre || demandeur.nom,
       arrivee, depart, occupants, nature, note,
-      origine: estGerante && (pourQui || nature !== 'famille') ? 'gerante' : 'app',
+      origine: estGerante ? 'gerante' : 'app',
       statut,
     }, ctx.personneId);
 

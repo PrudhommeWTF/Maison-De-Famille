@@ -86,9 +86,25 @@ export function construireApp(deps: Deps): express.Express {
   if (deps.config.staticDir && fs.existsSync(deps.config.staticDir)) {
     const racine = deps.config.staticDir;
     app.use(express.static(racine, { index: false, maxAge: '7d', etag: true }));
-    // L'application Angular gère ses propres routes : tout ce qui n'est pas un
-    // fichier existant rend index.html, et le navigateur prend la suite.
-    app.get('*', (_req, res) => res.sendFile(path.join(racine, 'index.html')));
+
+    // L'index est lu une fois et sa balise `base` réécrite selon le chemin de
+    // montage. Ce n'est pas un détail de confort : sans base absolue, un
+    // rechargement sur /bien/calendrier fait chercher les fichiers de
+    // l'application dans /bien/, le serveur répond l'index à leur place, et le
+    // navigateur affiche une page blanche. C'est ce qui arrive à la première
+    // personne qui met le calendrier en favori.
+    let index = fs.readFileSync(path.join(racine, 'index.html'), 'utf8');
+    if (deps.config.baseHref !== '/') {
+      index = index.replace(/<base href="[^"]*">/, `<base href="${deps.config.baseHref}">`);
+      log.info(`Application servie sous ${deps.config.baseHref}`);
+    }
+    app.get('*', (_req, res) => {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      // L'index ne se met jamais en cache : il porte le nom des fichiers
+      // compilés, qui change à chaque version.
+      res.setHeader('Cache-Control', 'no-store');
+      res.send(index);
+    });
   }
 
   app.use(traiterErreurs);

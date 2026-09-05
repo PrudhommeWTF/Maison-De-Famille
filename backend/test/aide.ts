@@ -76,7 +76,7 @@ export async function demarrer(surcharges: Partial<Config> = {}): Promise<Instan
   const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'mdf-test-'));
   const config: Config = {
     production: false, port: 0, dataDir: dossier,
-    dbPath: path.join(dossier, 'maison.db'), staticDir: null,
+    dbPath: path.join(dossier, 'maison.db'), staticDir: null, baseHref: '/',
     jwtSecret: 'secret-de-test-suffisamment-long-pour-passer',
     publicUrl: 'https://maison.test', smtp: null, version: '0.0.0-test',
     ...surcharges,

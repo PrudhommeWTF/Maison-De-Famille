@@ -183,6 +183,50 @@ test('un jeton falsifié ou signé avec un autre secret est refusé', async () =
   } finally { await i.fermer(); }
 });
 
+test('l\'application se recharge correctement sur une route imbriquée', async () => {
+  // Sans base absolue, un rechargement sur /bien/calendrier fait chercher les
+  // fichiers de l'application dans /bien/, le serveur répond l'index à leur
+  // place, et le navigateur affiche une page blanche. C'est ce qui arrive à la
+  // première personne qui met le calendrier en favori.
+  const fs = await import('fs');
+  const os = await import('os');
+  const path = await import('path');
+  const statique = fs.mkdtempSync(path.join(os.tmpdir(), 'mdf-statique-'));
+  fs.writeFileSync(path.join(statique, 'index.html'),
+    '<!doctype html><html><head><base href="/"><link rel="stylesheet" href="styles.css"></head><body></body></html>');
+  fs.writeFileSync(path.join(statique, 'styles.css'), 'body{}');
+
+  const i = await demarrer({ staticDir: statique, baseHref: '/' });
+  try {
+    const imbrique = await fetch(`${i.url}/bien/calendrier`);
+    assert.match(imbrique.headers.get('content-type') ?? '', /text\/html/);
+    assert.match(await imbrique.text(), /<base href="\/">/);
+
+    const feuille = await fetch(`${i.url}/styles.css`);
+    assert.match(feuille.headers.get('content-type') ?? '', /text\/css/,
+      'la feuille de style doit rester une feuille de style, pas l\'index');
+  } finally {
+    await i.fermer();
+    fs.rmSync(statique, { recursive: true, force: true });
+  }
+});
+
+test('un montage sous un sous-chemin réécrit la base de l\'application', async () => {
+  const fs = await import('fs');
+  const os = await import('os');
+  const path = await import('path');
+  const statique = fs.mkdtempSync(path.join(os.tmpdir(), 'mdf-statique-'));
+  fs.writeFileSync(path.join(statique, 'index.html'), '<!doctype html><html><head><base href="/"></head><body></body></html>');
+
+  const i = await demarrer({ staticDir: statique, baseHref: '/maison/' });
+  try {
+    assert.match(await (await fetch(`${i.url}/`)).text(), /<base href="\/maison\/">/);
+  } finally {
+    await i.fermer();
+    fs.rmSync(statique, { recursive: true, force: true });
+  }
+});
+
 test('changer de mot de passe révoque les sessions ouvertes', async () => {
   const i = await demarrer();
   try {

@@ -1,0 +1,37 @@
+# Maison de Famille, en Docker.
+#
+# Avant le premier démarrage :
+#   cp .env.exemple .env
+#   openssl rand -hex 32        # puis collez le résultat dans MDF_JWT_SECRET
+#
+# Le service refuse de démarrer si le secret est absent ou trop court, et le
+# message dit quoi faire. C'est délibéré : un secret par défaut finit toujours
+# en production.
+
+services:
+  maison-de-famille:
+    build:
+      context: .
+      args:
+        MDF_VERSION: ${MDF_VERSION:-dev}
+    image: maison-de-famille
+    container_name: maison-de-famille
+    restart: unless-stopped
+    ports:
+      # N'écoute que sur la boucle locale : c'est le reverse-proxy qui expose,
+      # avec le certificat. Ouvrir 8099 sur l'extérieur contournerait le TLS.
+      - "127.0.0.1:8099:8099"
+    environment:
+      NODE_ENV: production
+      MDF_JWT_SECRET: ${MDF_JWT_SECRET:?MDF_JWT_SECRET est obligatoire, engendrez-le avec openssl rand -hex 32}
+      MDF_PUBLIC_URL: ${MDF_PUBLIC_URL:-}
+      MDF_SMTP_HOST: ${MDF_SMTP_HOST:-}
+      MDF_SMTP_PORT: ${MDF_SMTP_PORT:-587}
+      MDF_SMTP_USER: ${MDF_SMTP_USER:-}
+      MDF_SMTP_PASS: ${MDF_SMTP_PASS:-}
+      MDF_SMTP_FROM: ${MDF_SMTP_FROM:-}
+      MDF_BASE_HREF: ${MDF_BASE_HREF:-/}
+    volumes:
+      # La base, les pièces jointes et les sauvegardes automatiques vivent ici :
+      # un tar de ce répertoire est une sauvegarde complète.
+      - ./data:/data

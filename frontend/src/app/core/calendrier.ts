@@ -1,0 +1,107 @@
+// La grille du calendrier. Module PUR, testé.
+//
+// La convention des nuits gouverne tout : une occupation est `[arrivee, depart)`,
+// nuit d'arrivée incluse, nuit de départ exclue. Une case porte donc la NUIT qui
+// commence ce jour-là, ce qui fait que deux séjours qui se succèdent le même jour
+// n'occupent pas la même case.
+//
+// Le libellé n'est affiché que le premier jour d'une plage, comme dans la
+// maquette : répéter le nom sur huit cases rendrait la grille illisible.
+import { decale, premierDuMois } from './format';
+import type { Nature, StatutSejour } from './modeles';
+
+/** Les couleurs de la maquette, par nature d'occupation. */
+export interface Teinte { fond: string; bordure: string; encre: string; tirets: boolean }
+
+export const TEINTES: Record<string, Teinte> = {
+  famille: { fond: '#f0e0d5', bordure: '#ddc3b0', encre: '#8d4a2e', tirets: false },
+  location: { fond: '#e4e9dc', bordure: '#c3cfb1', encre: '#556340', tirets: false },
+  entretien: { fond: '#e5e8ea', bordure: '#c3ccd1', encre: '#3f545f', tirets: false },
+  demande: { fond: '#fffdf9', bordure: '#b0603f', encre: '#8d4a2e', tirets: true },
+  libre: { fond: '#fffdf9', bordure: '#efe8de', encre: '#6b6157', tirets: false },
+};
+
+/** La teinte d'une occupation : une demande se distingue de ce qui est acquis. */
+export const teinteDe = (nature: Nature, statut: StatutSejour): Teinte =>
+  statut === 'demande' ? TEINTES['demande'] : TEINTES[nature] ?? TEINTES['libre'];
+
+export interface OccupationGrille {
+  id: number; arrivee: string; depart: string; titre: string;
+  nature: Nature; statut: StatutSejour;
+}
+
+export interface Case {
+  /** Vide sur les cases de remplissage avant le 1er et après le dernier. */
+  jour: number | null;
+  date: string;
+  teinte: Teinte;
+  /** Affiché uniquement le premier jour de la plage. */
+  libelle: string;
+  /** Toutes les occupations de cette nuit : le titre du survol les nomme. */
+  occupations: OccupationGrille[];
+  enConflit: boolean;
+  aujourdhui: boolean;
+}
+
+export interface Semaine { cases: Case[] }
+
+/**
+ * La grille d'un mois.
+ *
+ * `nuitsEnConflit` vient du serveur : la détection de chevauchement n'est jamais
+ * refaite ici. Deux implémentations d'une même règle finissent toujours par
+ * diverger, et c'est celle du serveur qui fait autorité.
+ */
+export function grilleDuMois(
+  annee: number, mois: number, occupations: readonly OccupationGrille[],
+  options: { dimancheDabord?: boolean; nuitsEnConflit?: readonly string[]; aujourdhui?: string } = {},
+): Semaine[] {
+  const premier = premierDuMois(annee, mois);
+  const jourSemaine = new Date(`${premier}T00:00:00Z`).getUTCDay();          // 0 = dimanche
+  const decalage = options.dimancheDabord ? jourSemaine : (jourSemaine + 6) % 7;
+  const nbJours = new Date(Date.UTC(annee, mois + 1, 0)).getUTCDate();
+  const conflits = new Set(options.nuitsEnConflit ?? []);
+
+  const vide = (): Case => ({
+    jour: null, date: '', teinte: { fond: 'transparent', bordure: 'transparent', encre: 'inherit', tirets: false },
+    libelle: '', occupations: [], enConflit: false, aujourdhui: false,
+  });
+
+  const cases: Case[] = [];
+  for (let i = 0; i < decalage; i++) cases.push(vide());
+
+  for (let j = 1; j <= nbJours; j++) {
+    const date = decale(premier, j - 1);
+    // La nuit du jour J appartient à un séjour si arrivee <= J < depart.
+    const ici = occupations.filter((o) => o.arrivee <= date && date < o.depart);
+    // Quand plusieurs se recouvrent, la teinte montre ce qui est acquis avant ce
+    // qui est demandé : une case colorée « demande » sur un séjour validé
+    // laisserait croire que la date est libre.
+    const principale = ici.find((o) => o.statut === 'valide') ?? ici[0];
+    cases.push({
+      jour: j,
+      date,
+      teinte: principale ? teinteDe(principale.nature, principale.statut) : TEINTES['libre'],
+      libelle: ici.find((o) => o.arrivee === date)?.titre ?? '',
+      occupations: ici,
+      enConflit: conflits.has(date),
+      aujourdhui: date === options.aujourdhui,
+    });
+  }
+
+  while (cases.length % 7) cases.push(vide());
+
+  const semaines: Semaine[] = [];
+  for (let i = 0; i < cases.length; i += 7) semaines.push({ cases: cases.slice(i, i + 7) });
+  return semaines;
+}
+
+/** Les occupations qui touchent le mois affiché, pour la liste sous la grille. */
+export function occupationsDuMois<T extends { arrivee: string; depart: string }>(
+  annee: number, mois: number, occupations: readonly T[],
+): T[] {
+  const debut = premierDuMois(annee, mois);
+  const fin = premierDuMois(mois === 11 ? annee + 1 : annee, mois === 11 ? 0 : mois + 1);
+  return occupations.filter((o) => o.arrivee < fin && o.depart > debut)
+    .sort((a, b) => a.arrivee.localeCompare(b.arrivee));
+}

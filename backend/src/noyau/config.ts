@@ -24,6 +24,15 @@ export interface Config {
   dbPath: string;
   /** Répertoire de l'application Angular compilée, servie par ce même service. */
   staticDir: string | null;
+  /**
+   * Le chemin sous lequel l'application est servie, terminé par une barre.
+   *
+   * « / » dans le cas normal (un sous-domaine dédié derrière le reverse-proxy).
+   * « /maison/ » si NGINX la monte sous un sous-chemin : l'index est alors
+   * réécrit avec cette base, sans quoi le navigateur irait chercher les
+   * fichiers de l'application à la racine du domaine.
+   */
+  baseHref: string;
   jwtSecret: string;
   /** Adresse publique, obligatoire dès qu'un courriel part : ses liens sont absolus. */
   publicUrl: string | null;
@@ -92,6 +101,7 @@ export function construire(env: NodeJS.ProcessEnv = process.env): Config {
     dataDir,
     dbPath: env.MDF_DB_PATH || path.join(dataDir, 'maison.db'),
     staticDir: env.MDF_STATIC_DIR || null,
+    baseHref: `/${(env.MDF_BASE_HREF || '/').replace(/^\/+|\/+$/g, '')}/`.replace('//', '/'),
     jwtSecret: secretJwt(production),
     publicUrl: (env.MDF_PUBLIC_URL || '').trim().replace(/\/+$/, '') || null,
     smtp: smtp(),

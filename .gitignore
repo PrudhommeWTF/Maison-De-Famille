@@ -7,3 +7,6 @@ dist/
 data/
 .DS_Store
 package-lock.json.orig
+.env
+frontend/.angular/
+frontend/dist/
