@@ -98,6 +98,7 @@ npm --prefix "${APP_DIR}/backend" prune --omit=dev --silent
 mkdir -p "$(dirname "${ENV_FILE}")" "${DATA_DIR}"
 if [[ ! -f "${ENV_FILE}" ]]; then
   SECRET="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  CLE_COFFRE="$(openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   log "Création de ${ENV_FILE} avec un secret JWT engendré"
   cat > "${ENV_FILE}" <<EOF
 # Configuration de Maison de Famille.
@@ -110,6 +111,12 @@ MDF_STATIC_DIR=${APP_DIR}/frontend/dist/frontend/browser
 
 # Engendré à l'installation. Le changer déconnecte toute la famille.
 MDF_JWT_SECRET=${SECRET}
+
+# Clé du coffre-fort des codes d'accès, engendrée à l'installation.
+# Elle vit ICI et pas dans ${DATA_DIR} : une sauvegarde des données seule ne
+# rend aucun code. GARDEZ-EN UNE COPIE AILLEURS, sinon une restauration sur une
+# machine neuve rendra tout sauf les codes.
+MDF_CLE_COFFRE=${CLE_COFFRE}
 
 # À RENSEIGNER : l'adresse que la famille tape dans son navigateur.
 # Obligatoire dès qu'un courriel part, ses liens sont absolus.
@@ -196,6 +203,8 @@ if systemctl is-active --quiet "${UNITE}"; then
   echo
   echo "  À faire maintenant :"
   echo "    1. renseigner MDF_PUBLIC_URL et le relais SMTP dans ${ENV_FILE}"
+  echo "    1 bis. sauvegarder MDF_CLE_COFFRE ailleurs : sans elle, les codes"
+  echo "           d'accès ne se relisent pas après une restauration"
   echo "    2. systemctl restart ${UNITE}"
   echo "    3. ouvrir l'application et créer le premier compte"
   echo

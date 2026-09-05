@@ -137,6 +137,18 @@ export const REGISTRE: readonly Declaration[] = [
     defaut: 5, min: 1, max: 20,
   },
   {
+    cle: 'codesAvantSejourJours', type: 'int', portee: 'instance', section: 'securite', module: 'Coffre-fort',
+    libelle: "Jours d'avance sur un code de séjour",
+    description: "Combien de jours avant l'arrivée un code de portée « pendant le séjour » devient visible. On prépare un départ à l'avance, et un code reçu la veille au soir ne sert à rien quand on roule de nuit. Zéro ferme la fenêtre jusqu'au jour d'arrivée.",
+    defaut: 2, min: 0, max: 30,
+  },
+  {
+    cle: 'codesApresSejourJours', type: 'int', portee: 'instance', section: 'securite', module: 'Coffre-fort',
+    libelle: 'Jours de grâce après un départ',
+    description: "Combien de jours après le départ un code de portée « pendant le séjour » reste visible. Zéro par défaut, et c'est le point : un code d'accès affiché à quelqu'un dont le séjour est terminé est une faille. Le jour du départ lui-même reste toujours ouvert, il faut bien refermer derrière soi.",
+    defaut: 0, min: 0, max: 30,
+  },
+  {
     cle: 'fichierTailleMaxMo', type: 'int', portee: 'instance', section: 'fichiers', module: 'Fichiers',
     libelle: 'Taille maximale d\'un fichier (Mo)',
     description: "S'applique aux photos et aux pièces jointes. Une photo de téléphone récente pèse entre 3 et 8 Mo. Monter cette valeur consomme l'espace disque du conteneur.",

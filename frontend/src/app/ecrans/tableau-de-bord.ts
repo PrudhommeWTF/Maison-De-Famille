@@ -236,6 +236,7 @@ export class TableauDeBord {
   private readonly depenses = signal<ListeDepenses | null>(null);
   private readonly soldes = signal<Soldes | null>(null);
   private readonly faits = signal<Etape[]>([]);
+  private readonly echeances = signal<{ id: number; libelle: string; bienNom: string; echeance: string; urgence: string }[]>([]);
 
   /**
    * Les étapes de démarrage. Le tableau de bord **compose** ici aussi : il
@@ -301,6 +302,16 @@ export class TableauDeBord {
         lien: '/bien/demandes', icone: 'bi-envelope-paper',
       });
     }
+    // « La liste agrège demandes, votes ouverts et échéances d'entretien, triés
+    // par date limite » : note de comportement de la maquette. Le tableau de
+    // bord compose, il ne calcule rien : chaque module rend déjà sa liste.
+    for (const e of this.echeances()) {
+      out.push({
+        titre: e.libelle,
+        sous: `${e.bienNom} · ${e.urgence === 'en_retard' ? 'en retard depuis le' : 'avant le'} ${plage(e.echeance, e.echeance).replace('du ', '')}`,
+        lien: '/bien/entretien', icone: e.urgence === 'en_retard' ? 'bi-exclamation-triangle' : 'bi-tools',
+      });
+    }
     const mien = this.sejours().find((s) => s.demandeurId === this.etat.moi()?.personne.id && s.statut === 'demande');
     if (mien) {
       out.push({
@@ -316,7 +327,7 @@ export class TableauDeBord {
 
   private async charger(): Promise<void> {
     const bien = this.etat.bien();
-    const [sejours, demandes, depenses, soldes] = await Promise.all([
+    const [sejours, demandes, depenses, soldes, echeances] = await Promise.all([
       this.api.get<Sejour[]>('/sejours/a-venir').catch(() => [] as Sejour[]),
       this.etat.estGerant() ? this.api.get<Sejour[]>('/demandes').catch(() => [] as Sejour[]) : Promise.resolve([]),
       this.etat.voitLArgent()
@@ -325,7 +336,10 @@ export class TableauDeBord {
       bien && this.etat.voitLArgent()
         ? this.api.get<Soldes>(`/structures/${bien.structureId}/soldes`).catch(() => null)
         : Promise.resolve(null),
+      this.api.get<{ id: number; libelle: string; bienNom: string; echeance: string; urgence: string }[]>(
+        '/entretien/echeances').catch(() => []),
     ]);
+    this.echeances.set(echeances.filter((e) => e.urgence !== 'plus_tard'));
     this.sejours.set(sejours);
     this.demandes.set(demandes.filter((d) => this.etat.contexte() === TOUS || d.bienId === this.etat.contexte()));
     this.depenses.set(depenses);

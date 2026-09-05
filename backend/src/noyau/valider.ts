@@ -97,6 +97,23 @@ export class Lecteur {
     return v;
   }
 
+  /**
+   * Un entier facultatif : la valeur, ou null si le champ est absent.
+   *
+   * Distinct de `entier(champ, { defaut: 0 })` : un coût de zéro euro et un
+   * coût non renseigné ne veulent pas dire la même chose, et les confondre
+   * ferait apparaître des interventions gratuites dans l'historique.
+   */
+  entierFacultatif(champ: string, opts: { min?: number; max?: number } = {}): number | null {
+    const brut = this.source[champ];
+    if (brut === undefined || brut === null || brut === '') return null;
+    const v = typeof brut === 'number' ? brut : Number(brut);
+    if (!Number.isInteger(v)) return this.echec(champ, 'Un nombre entier est attendu.', null);
+    if (opts.min !== undefined && v < opts.min) return this.echec(champ, `Au minimum ${opts.min}.`, null);
+    if (opts.max !== undefined && v > opts.max) return this.echec(champ, `Au maximum ${opts.max}.`, null);
+    return v;
+  }
+
   /** Lève si un champ au moins a échoué. À appeler après toutes les lectures. */
   fin(): void {
     const cles = Object.keys(this.erreurs);

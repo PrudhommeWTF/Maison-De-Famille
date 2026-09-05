@@ -34,6 +34,13 @@ export interface Config {
    */
   baseHref: string;
   jwtSecret: string;
+  /**
+   * La clé du coffre-fort des codes d'accès. Facultative : une instance qui
+   * n'enregistre aucun code tourne sans, et une mise à jour ne doit pas
+   * empêcher un service existant de redémarrer. Le coffre lève au premier usage
+   * en disant quoi faire.
+   */
+  cleCoffre: string | null;
   /** Adresse publique, obligatoire dès qu'un courriel part : ses liens sont absolus. */
   publicUrl: string | null;
   smtp: { host: string; port: number; user: string; pass: string; from: string } | null;
@@ -103,6 +110,7 @@ export function construire(env: NodeJS.ProcessEnv = process.env): Config {
     staticDir: env.MDF_STATIC_DIR || null,
     baseHref: `/${(env.MDF_BASE_HREF || '/').replace(/^\/+|\/+$/g, '')}/`.replace('//', '/'),
     jwtSecret: secretJwt(production),
+    cleCoffre: (env.MDF_CLE_COFFRE || '').trim() || null,
     publicUrl: (env.MDF_PUBLIC_URL || '').trim().replace(/\/+$/, '') || null,
     smtp: smtp(),
     version: version(),
