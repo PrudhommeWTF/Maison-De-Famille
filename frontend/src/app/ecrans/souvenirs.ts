@@ -57,7 +57,9 @@ interface Vue { albums: Album[]; mots: Mot[] }
     .couverture { display: flex; width: 100%; height: 122px; background: var(--pastille-neutre);
                   align-items: center; justify-content: center; color: var(--encre-3); }
     .couverture img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .album .dessous { padding: 12px 14px; }
+    /* Un span reste en ligne, et sa marge verticale ne pousse rien : sans
+       display block, la légende dépassait du bas de la carte. */
+    .album .dessous { display: block; padding: 12px 14px; }
     .album .titre { font: 500 15px 'Bricolage Grotesque', sans-serif; }
     .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
     .vignette { position: relative; border-radius: 12px; overflow: hidden; background: var(--pastille-neutre);
