@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+<script src="./image-slot.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #f2ede5; }
+  * { box-sizing: border-box; }
+  a { color: #b0603f; text-decoration: none; }
+  a:hover { color: #8d4a2e; text-decoration: underline; }
+  button { font-family: 'Instrument Sans', sans-serif; }
+  ::selection { background: #f0ddd0; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f2ede5;font-family:'Instrument Sans',system-ui,sans-serif;color:#24201b">
+
+  <header style="display:flex;align-items:center;gap:20px;padding:14px 22px;background:#fffdf9;border-bottom:1px solid #e4dcd1;position:sticky;top:0;z-index:40">
+    <div style="display:flex;align-items:center;gap:11px;min-width:0">
+      <div style="width:30px;height:30px;border-radius:8px;background:#b0603f;display:grid;place-items:center;color:#fffdf9;font:600 14px 'Bricolage Grotesque',sans-serif">P</div>
+      <div style="min-width:0">
+        <div style="font:500 15px/1.1 'Bricolage Grotesque',sans-serif;letter-spacing:-.01em">Patrimoine Prudhomme</div>
+        <div style="font-size:11.5px;color:#6b6157;margin-top:2px">{{ bienCount }} biens · indivision, SCI, nom propre</div>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:6px;padding:3px;background:#f2ede5;border-radius:9px">
+      <button onClick="{{ setDesktop }}" style="position:relative;border:none;background:transparent;padding:6px 12px;border-radius:7px;font:500 12.5px 'Instrument Sans';color:#4a443c;cursor:pointer">
+        <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;inset:0;background:#fffdf9;border-radius:7px;box-shadow:0 1px 2px rgba(36,32,27,.08)"></span></sc-if>
+        <span style="position:relative;display:flex;align-items:center;gap:7px"><i class="bi bi-display" style="font-size:13px"></i>Bureau</span>
+      </button>
+      <button onClick="{{ setMobile }}" style="position:relative;border:none;background:transparent;padding:6px 12px;border-radius:7px;font:500 12.5px 'Instrument Sans';color:#4a443c;cursor:pointer">
+        <sc-if value="{{ isMobile }}"><span style="position:absolute;inset:0;background:#fffdf9;border-radius:7px;box-shadow:0 1px 2px rgba(36,32,27,.08)"></span></sc-if>
+        <span style="position:relative;display:flex;align-items:center;gap:7px"><i class="bi bi-phone" style="font-size:13px"></i>Mobile</span>
+      </button>
+    </div>
+    <button onClick="{{ toggleNotes }}" style="border:1px solid #d9cfc2;background:#fffdf9;padding:7px 13px;border-radius:9px;font:500 12.5px 'Instrument Sans';color:#4a443c;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="border-color:#b0603f;color:#b0603f"><i class="bi bi-journal-text" style="font-size:13.5px"></i>Notes de comportement</button>
+    <div style="display:flex;align-items:center;gap:9px;padding-left:16px;border-left:1px solid #e4dcd1">
+      <div style="width:29px;height:29px;border-radius:50%;background:#e6ded1;display:grid;place-items:center;font:500 12px 'Instrument Sans';color:#6b6157">HP</div>
+      <div style="font-size:12.5px;line-height:1.25">Hélène<br /><span style="color:#6b6157;font-size:11px">Gérante</span></div>
+    </div>
+  </header>
+
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;align-items:center;gap:22px;padding:13px 22px;background:#eae3d8;border-bottom:1px solid #ddd3c5;flex-wrap:wrap;position:sticky;top:59px;z-index:30">
+    <div style="display:flex;gap:5px;padding:3px;background:#f7f3ec;border-radius:10px;flex-wrap:wrap">
+      <button onClick="{{ setAll }}" style="border:none;background:{{ pillAllBg }};color:{{ pillAllInk }};padding:8px 14px;border-radius:8px;font:500 13px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:8px"><i class="bi bi-houses" style="font-size:14px"></i>Tous les biens</button>
+      <button onClick="{{ setMer }}" style="border:none;background:{{ pillMerBg }};color:{{ pillMerInk }};padding:8px 14px;border-radius:8px;font:500 13px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:8px"><i class="bi bi-water" style="font-size:13px"></i>Kerloc'h</button>
+      <button onClick="{{ setMont }}" style="border:none;background:{{ pillMontBg }};color:{{ pillMontInk }};padding:8px 14px;border-radius:8px;font:500 13px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:8px"><i class="bi bi-triangle" style="font-size:12px"></i>Les Arcs</button>
+    </div>
+    <sc-if value="{{ scopeBien }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:12.5px;color:#4a443c">
+        <span style="display:flex;align-items:center;gap:7px"><i class="bi bi-geo-alt" style="font-size:13px;color:#6b6157"></i>{{ bienPlace }}</span>
+        <span style="display:flex;align-items:center;gap:7px"><i class="bi bi-diagram-3" style="font-size:13px;color:#6b6157"></i>{{ bienStructure }}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ scopeAll }}">
+      <div style="font-size:12.5px;color:#4a443c;display:flex;align-items:center;gap:7px"><i class="bi bi-diagram-3" style="font-size:13px;color:#6b6157"></i>Vue consolidée du portefeuille · {{ bienCount }} biens, 2 structures</div>
+    </sc-if>
+  </div>
+  <div style="display:grid;grid-template-columns:236px minmax(0,1fr);align-items:start">
+
+    <nav style="position:sticky;top:111px;padding:18px 14px 40px;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c;padding:0 10px 7px">Portefeuille</div>
+        <button onClick="{{ goDash }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navDash }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-house-heart" style="font-size:14.5px;color:#6b6157"></i>Tableau de bord</span>
+        </button>
+        <button onClick="{{ goBiens }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navBiens }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-houses" style="font-size:14.5px;color:#6b6157"></i>Biens gérés</span>
+        </button>
+      </div>
+      <sc-if value="{{ scopeBien }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;align-items:center;gap:9px;margin:0 4px;padding:11px 12px;background:#e6ded1;border-radius:10px">
+        <i class="bi bi-house-door" style="font-size:14px;color:#4a443c"></i>
+        <span style="font:500 13.5px 'Bricolage Grotesque',sans-serif;color:#24201b">{{ bienShort }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c;padding:0 10px 7px">Séjours</div>
+        <button onClick="{{ goCal }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navCal }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-calendar3" style="font-size:14.5px;color:#6b6157"></i>Calendrier d'occupation</span>
+        </button>
+        <button onClick="{{ goReq }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px" style-hover="background:#eae3d8">
+          <sc-if value="{{ navReq }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if>
+          <span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-envelope-paper" style="font-size:14.5px;color:#6b6157"></i>Demandes de séjour</span>
+          <span style="position:relative;background:#b0603f;color:#fffdf9;font:600 10.5px 'Instrument Sans';padding:2px 6px;border-radius:20px">{{ pendingCount }}</span>
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c;padding:0 10px 7px">Argent</div>
+        <button onClick="{{ goExp }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navExp }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-receipt" style="font-size:14.5px;color:#6b6157"></i>Dépenses & répartition</span>
+        </button>
+        <button onClick="{{ goBal }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navBal }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-arrow-left-right" style="font-size:14.5px;color:#6b6157"></i>Soldes & remboursements</span>
+        </button>
+        <sc-if value="{{ rentalHere }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ goRent }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navRent }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-key" style="font-size:14.5px;color:#6b6157"></i>Location saisonnière</span>
+        </button>
+        </sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c;padding:0 10px 7px">Maison</div>
+        <button onClick="{{ goMaint }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navMaint }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-tools" style="font-size:14.5px;color:#6b6157"></i>Carnet d'entretien</span>
+        </button>
+        <button onClick="{{ goProp }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navProp }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-journal-bookmark" style="font-size:14.5px;color:#6b6157"></i>Fiche du bien</span>
+        </button>
+        <button onClick="{{ goVault }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navVault }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-shield-lock" style="font-size:14.5px;color:#6b6157"></i>Coffre-fort</span>
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c;padding:0 10px 7px">Famille</div>
+        <button onClick="{{ goVote }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navVote }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-hand-thumbs-up" style="font-size:14.5px;color:#6b6157"></i>Décisions & votes</span>
+        </button>
+        <button onClick="{{ goSouv }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navSouv }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-images" style="font-size:14.5px;color:#6b6157"></i>Souvenirs</span>
+        </button>
+        <button onClick="{{ goMem }}" style="position:relative;text-align:left;border:none;background:transparent;padding:8px 10px;border-radius:8px;font:500 13.5px 'Instrument Sans';color:#3b352d;cursor:pointer" style-hover="background:#eae3d8">
+          <sc-if value="{{ navMem }}"><span style="position:absolute;inset:0;background:#e6ded1;border-radius:8px"></span></sc-if><span style="position:relative;display:flex;align-items:center;gap:10px"><i class="bi bi-people" style="font-size:14.5px;color:#6b6157"></i>Membres & quotes-parts</span>
+        </button>
+      </div>
+      </div>
+      </sc-if>
+      <div style="margin:6px 10px 0;padding-top:16px;border-top:1px solid #e4dcd1;font-size:11px;color:#5f564c;line-height:1.5">Auto-hébergé · données en Europe<br />Dernière sauvegarde : hier 03:00</div>
+    </nav>
+
+    <main style="padding:26px 30px 70px;min-width:0">
+
+      <sc-if value="{{ navDash }}" hint-placeholder-val="{{ true }}">
+      <section data-screen-label="Tableau de bord" style="display:flex;flex-direction:column;gap:22px;max-width:1080px">
+        <sc-if value="{{ scopeAll }}">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Bonjour Hélène</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Vue d'ensemble du portefeuille. Choisissez un bien dans la barre du haut pour entrer dans son dossier.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ scopeBien }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">{{ bienName }}</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">{{ bienGreeting }}</p>
+        </div>
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px;display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+          <div style="display:flex;gap:30px;flex-wrap:wrap;flex:1;min-width:280px">
+            <div><div style="font-size:11.5px;color:#6b6157">Prochain séjour</div><div style="font:500 15px 'Bricolage Grotesque',sans-serif;margin-top:5px">{{ bienNext }}</div></div>
+            <div><div style="font-size:11.5px;color:#6b6157">{{ bienOccLabel }}</div><div style="font:500 15px 'Bricolage Grotesque',sans-serif;margin-top:5px;font-variant-numeric:tabular-nums">{{ bienOcc }}</div></div>
+            <div><div style="font-size:11.5px;color:#6b6157">À traiter</div><div style="font:500 15px 'Bricolage Grotesque',sans-serif;margin-top:5px;color:#b0603f">{{ bienTodo }}</div></div>
+            <div><div style="font-size:11.5px;color:#6b6157">Dépenses 2026</div><div style="font:500 15px 'Bricolage Grotesque',sans-serif;margin-top:5px;font-variant-numeric:tabular-nums">{{ bienSpend }}</div></div>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button onClick="{{ goCal }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 14px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="border-color:#b0603f;color:#b0603f"><i class="bi bi-calendar3" style="font-size:13px"></i>Calendrier</button>
+            <button onClick="{{ goReq }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 14px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="border-color:#b0603f;color:#b0603f"><i class="bi bi-envelope-paper" style="font-size:13px"></i>Demandes</button>
+            <button onClick="{{ goProp }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 14px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="border-color:#b0603f;color:#b0603f"><i class="bi bi-journal-bookmark" style="font-size:13px"></i>Fiche</button>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ scopeAll }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+          <article onClick="{{ setMer }}" style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;overflow:hidden;cursor:pointer" style-hover="border-color:#b0603f">
+            <div style="position:relative;height:132px">
+              <image-slot id="mdf-kerloch-card" shape="rect" placeholder="Photo de la maison de Kerloc'h"></image-slot>
+            </div>
+            <div style="padding:16px 18px 18px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+                <h2 style="margin:0;font:500 18px 'Bricolage Grotesque',sans-serif">Maison de Kerloc'h</h2>
+                <span style="font-size:11.5px;color:#7a8b5c;font-weight:500"><i class="bi bi-water" style="font-size:12px;margin-right:5px"></i>Bord de mer</span>
+              </div>
+              <div style="color:#6b6157;font-size:12.5px;margin-top:3px">Crozon (29) · 8 couchages · louée en saison</div>
+              <div style="display:inline-flex;align-items:center;gap:7px;margin-top:9px;background:#f2ede5;border-radius:20px;padding:4px 11px;font-size:11.5px;font-weight:500;color:#4a443c">Indivision · 4 indivisaires</div>
+              <div style="display:flex;gap:26px;margin-top:15px;padding-top:14px;border-top:1px solid #efe8de">
+                <div><div style="font-size:11px;color:#6b6157">Prochain séjour</div><div style="font-size:13.5px;font-weight:500;margin-top:3px">Claire, 4 juil.</div></div>
+                <div><div style="font-size:11px;color:#6b6157">Occupation été</div><div style="font-size:13.5px;font-weight:500;margin-top:3px;font-variant-numeric:tabular-nums">62 %</div></div>
+                <div><div style="font-size:11px;color:#6b6157">À traiter</div><div style="font-size:13.5px;font-weight:500;margin-top:3px;color:#b0603f">2 demandes</div></div>
+              </div>
+            </div>
+          </article>
+          <article onClick="{{ setMont }}" style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;overflow:hidden;cursor:pointer" style-hover="border-color:#b0603f">
+            <div style="position:relative;height:132px">
+              <image-slot id="mdf-arcs-card" shape="rect" placeholder="Photo de l'appartement des Arcs"></image-slot>
+            </div>
+            <div style="padding:16px 18px 18px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+                <h2 style="margin:0;font:500 18px 'Bricolage Grotesque',sans-serif">Les Arcs 1800</h2>
+                <span style="font-size:11.5px;color:#4a6572;font-weight:500"><i class="bi bi-triangle" style="font-size:11px;margin-right:5px"></i>Montagne</span>
+              </div>
+              <div style="color:#6b6157;font-size:12.5px;margin-top:3px">Bourg-Saint-Maurice (73) · 6 couchages</div>
+              <div style="display:inline-flex;align-items:center;gap:7px;margin-top:9px;background:#f2ede5;border-radius:20px;padding:4px 11px;font-size:11.5px;font-weight:500;color:#4a443c">SCI Prudhomme Immobilier · 3 associés</div>
+              <div style="display:flex;gap:26px;margin-top:15px;padding-top:14px;border-top:1px solid #efe8de">
+                <div><div style="font-size:11px;color:#6b6157">Prochain séjour</div><div style="font-size:13.5px;font-weight:500;margin-top:3px">Julien, 11 juil.</div></div>
+                <div><div style="font-size:11px;color:#6b6157">Occupation hiver</div><div style="font-size:13.5px;font-weight:500;margin-top:3px;font-variant-numeric:tabular-nums">88 %</div></div>
+                <div><div style="font-size:11px;color:#6b6157">À traiter</div><div style="font-size:13.5px;font-weight:500;margin-top:3px">1 demande</div></div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        </sc-if>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-bell" style="font-size:12px;margin-right:6px"></i>Ce qui vous attend</div>
+            <div style="display:flex;flex-direction:column;gap:1px;margin-top:12px">
+              <sc-if value="{{ hasPending }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ goReq }}" style="display:flex;gap:11px;align-items:flex-start;text-align:left;border:none;background:transparent;padding:10px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;font-family:'Instrument Sans'" style-hover="background:#f5efe6">
+                <i class="bi bi-envelope-paper" style="font-size:15px;color:#b0603f;margin-top:2px;flex:none"></i>
+                <span><span style="font-size:13.5px;font-weight:500;color:#24201b">{{ pendingLabel }} de séjour à arbitrer</span><br /><span style="font-size:12px;color:#6b6157">{{ reqSubline }}</span></span>
+              </button>
+              </sc-if>
+              <sc-if value="{{ alertMer }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ goVote }}" style="display:flex;gap:11px;align-items:flex-start;text-align:left;border:none;background:transparent;padding:10px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;font-family:'Instrument Sans'" style-hover="background:#f5efe6">
+                <i class="bi bi-hand-thumbs-up" style="font-size:15px;color:#b0603f;margin-top:2px;flex:none"></i>
+                <span><span style="font-size:13.5px;font-weight:500;color:#24201b">Vote chaudière : 2 voix manquantes</span><br /><span style="font-size:12px;color:#6b6157">Majorité des deux tiers requise · clôture le 20 sept.</span></span>
+              </button>
+              <button onClick="{{ goMaint }}" style="display:flex;gap:11px;align-items:flex-start;text-align:left;border:none;background:transparent;padding:10px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;font-family:'Instrument Sans'" style-hover="background:#f5efe6">
+                <i class="bi bi-tools" style="font-size:15px;color:#a1937f;margin-top:2px;flex:none"></i>
+                <span><span style="font-size:13.5px;font-weight:500;color:#24201b">Ramonage à programmer avant le 15 octobre</span><br /><span style="font-size:12px;color:#6b6157">Kerloc'h · obligation annuelle</span></span>
+              </button>
+              </sc-if>
+              <sc-if value="{{ alertMont }}">
+              <button onClick="{{ goMaint }}" style="display:flex;gap:11px;align-items:flex-start;text-align:left;border:none;background:transparent;padding:10px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;font-family:'Instrument Sans'" style-hover="background:#f5efe6">
+                <i class="bi bi-snow" style="font-size:15px;color:#b0603f;margin-top:2px;flex:none"></i>
+                <span><span style="font-size:13.5px;font-weight:500;color:#24201b">Hivernage de la plomberie avant le 1er novembre</span><br /><span style="font-size:12px;color:#6b6157">Les Arcs · à confirmer au syndic</span></span>
+              </button>
+              <button onClick="{{ goVote }}" style="display:flex;gap:11px;align-items:flex-start;text-align:left;border:none;background:transparent;padding:10px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;font-family:'Instrument Sans'" style-hover="background:#f5efe6">
+                <i class="bi bi-people" style="font-size:15px;color:#a1937f;margin-top:2px;flex:none"></i>
+                <span><span style="font-size:13.5px;font-weight:500;color:#24201b">Assemblée générale de la SCI le 12 décembre</span><br /><span style="font-size:12px;color:#6b6157">Ordre du jour à envoyer 15 jours avant</span></span>
+              </button>
+              </sc-if>
+            </div>
+          </div>
+
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-wallet2" style="font-size:12px;margin-right:6px"></i>Trésorerie</div>
+            <div style="font:500 17px 'Bricolage Grotesque',sans-serif;margin-top:9px">{{ tresTitle }}</div>
+            <div style="font:500 30px/1 'Bricolage Grotesque',sans-serif;margin-top:11px;font-variant-numeric:tabular-nums">{{ tresAmount }}</div>
+            <div style="font-size:12px;color:#6b6157;margin-top:5px">{{ tresSub }}</div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:16px;padding-top:15px;border-top:1px solid #efe8de;font-size:13px">
+              <sc-for list="{{ tresRows }}" as="t" hint-placeholder-count="3">
+                <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#6b6157">{{ t.k }}</span><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ t.v }}</span></div>
+              </sc-for>
+            </div>
+            <button onClick="{{ goBal }}" style="margin-top:17px;width:100%;border:1px solid #d9cfc2;background:transparent;padding:9px;border-radius:9px;font:500 13px 'Instrument Sans';color:#4a443c;cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Voir les soldes</button>
+          </div>
+
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-suitcase-lg" style="font-size:12px;margin-right:6px"></i>Prochains séjours</div>
+            <div style="display:flex;flex-direction:column;gap:13px;margin-top:13px">
+              <sc-for list="{{ upcoming }}" as="s" hint-placeholder-count="4">
+                <div style="display:flex;gap:11px;align-items:baseline">
+                  <span style="font-size:12px;color:#6b6157;font-variant-numeric:tabular-nums;flex:none;width:74px">{{ s.range }}</span>
+                  <span style="min-width:0"><span style="font-size:13.5px;font-weight:500">{{ s.who }}</span><br /><span style="font-size:11.5px;color:#6b6157">{{ s.where }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navBiens }}">
+      <section data-screen-label="Biens gérés" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+          <div>
+            <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Biens gérés</h1>
+            <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Chaque bien porte son propre mode de détention : indivision, SCI, ou propriété en nom propre.</p>
+          </div>
+          <button onClick="{{ toggleAddBien }}" style="border:none;background:#b0603f;color:#fffdf9;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer" style-hover="background:#98502f">{{ addBienLabel }}</button>
+        </div>
+
+        <sc-if value="{{ addBienOpen }}">
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:22px">
+          <div style="font:500 17px 'Bricolage Grotesque',sans-serif">Ajouter un bien</div>
+          <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c;margin-top:20px">Mode de détention</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:11px">
+            <button onClick="{{ pickIndivision }}" style="text-align:left;border:1.5px solid {{ indivisionBorder }};background:transparent;border-radius:12px;padding:14px;cursor:pointer;font-family:'Instrument Sans'">
+              <div style="font-size:13.5px;font-weight:500;color:{{ indivisionInk }};display:flex;align-items:center;gap:8px"><i class="bi bi-people" style="font-size:15px"></i>Indivision</div>
+              <div style="font-size:12px;color:#6b6157;margin-top:5px;line-height:1.45">Quotes-parts, majorité des deux tiers, unanimité pour vendre.</div>
+            </button>
+            <button onClick="{{ pickSci }}" style="text-align:left;border:1.5px solid {{ sciBorder }};background:transparent;border-radius:12px;padding:14px;cursor:pointer;font-family:'Instrument Sans'">
+              <div style="font-size:13.5px;font-weight:500;color:{{ sciInk }};display:flex;align-items:center;gap:8px"><i class="bi bi-building" style="font-size:15px"></i>SCI</div>
+              <div style="font-size:12px;color:#6b6157;margin-top:5px;line-height:1.45">Parts sociales, gérant statutaire, décisions en assemblée.</div>
+            </button>
+            <button onClick="{{ pickPropre }}" style="text-align:left;border:1.5px solid {{ propreBorder }};background:transparent;border-radius:12px;padding:14px;cursor:pointer;font-family:'Instrument Sans'">
+              <div style="font-size:13.5px;font-weight:500;color:{{ propreInk }};display:flex;align-items:center;gap:8px"><i class="bi bi-person" style="font-size:15px"></i>Nom propre</div>
+              <div style="font-size:12px;color:#6b6157;margin-top:5px;line-height:1.45">Un seul propriétaire décide, les autres membres sont invités.</div>
+            </button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px">
+            <div><div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Nom du bien</div><div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px;color:#6b6157">Maison des Cévennes</div></div>
+            <div><div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Commune</div><div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px;color:#6b6157">Anduze (30)</div></div>
+            <div><div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Couchages</div><div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px;color:#6b6157">6</div></div>
+            <div><div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Location saisonnière</div><div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px;color:#6b6157">Désactivée</div></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center">
+            <button onClick="{{ addBien }}" style="border:none;background:#b0603f;color:#fffdf9;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer" style-hover="background:#98502f">Créer le bien</button>
+            <button onClick="{{ toggleAddBien }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer">Annuler</button>
+            <span style="font-size:12.5px;color:#6b6157">La structure choisie détermine les règles de vote et de répartition du bien.</span>
+          </div>
+        </div>
+        </sc-if>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ biens }}" as="b" hint-placeholder-count="2">
+            <article style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px 20px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+              <div style="flex:1;min-width:260px">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                  <h2 style="margin:0;font:500 18px 'Bricolage Grotesque',sans-serif">{{ b.name }}</h2>
+                  <span style="font-size:11.5px;font-weight:500;color:{{ b.kindInk }}">{{ b.kind }}</span>
+                </div>
+                <div style="font-size:12.5px;color:#6b6157;margin-top:4px">{{ b.place }} · {{ b.beds }} couchages · {{ b.rental }}</div>
+                <div style="display:flex;gap:8px;margin-top:11px;flex-wrap:wrap">
+                  <span style="font-size:11.5px;font-weight:500;color:#4a443c;background:#f2ede5;padding:4px 11px;border-radius:20px">{{ b.structure }}</span>
+                  <span style="font-size:11.5px;color:#4a443c;background:#f2ede5;padding:4px 11px;border-radius:20px">{{ b.holders }}</span>
+                  <span style="font-size:11.5px;color:#4a443c;background:#f2ede5;padding:4px 11px;border-radius:20px">{{ b.majority }}</span>
+                </div>
+                <div style="font-size:12.5px;color:#6b6157;margin-top:11px;line-height:1.5;max-width:56ch">{{ b.note }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:9px;min-width:180px">
+                <sc-if value="{{ b.idle }}">
+                  <button onClick="{{ b.open }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 15px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="border-color:#b0603f;color:#b0603f"><i class="bi bi-box-arrow-in-right" style="font-size:13px"></i>Ouvrir le dossier</button>
+                  <button onClick="{{ b.ask }}" style="border:none;background:transparent;color:#6b6157;font:400 12.5px 'Instrument Sans';cursor:pointer;text-decoration:underline;text-align:center">Retirer ce bien</button>
+                </sc-if>
+                <sc-if value="{{ b.asking }}">
+                  <div style="background:#fbf1ea;border:1px solid #e7c9b6;border-radius:10px;padding:12px 13px">
+                    <div style="font-size:12.5px;color:#8d4a2e;line-height:1.5">Retirer le bien archive ses séjours, dépenses et documents. Rien n'est effacé.</div>
+                    <div style="display:flex;gap:8px;margin-top:11px">
+                      <button onClick="{{ b.confirm }}" style="flex:1;border:none;background:#b0603f;color:#fffdf9;padding:8px;border-radius:8px;font:500 12.5px 'Instrument Sans';cursor:pointer">Retirer</button>
+                      <button onClick="{{ b.cancel }}" style="flex:1;border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:8px;border-radius:8px;font:500 12.5px 'Instrument Sans';cursor:pointer">Garder</button>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ b.archived }}">
+                  <div style="text-align:center;background:#f2ede5;color:#6b6157;padding:10px 15px;border-radius:9px;font:500 13px 'Instrument Sans'">Archivé</div>
+                  <button onClick="{{ b.cancel }}" style="border:none;background:transparent;color:#6b6157;font:400 12.5px 'Instrument Sans';cursor:pointer;text-decoration:underline">Réactiver</button>
+                </sc-if>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navCal }}">
+      <section data-screen-label="Calendrier d'occupation" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+          <div>
+            <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Calendrier d'occupation</h1>
+            <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Séjours famille, locations et interventions du bien sur la même grille.</p>
+          </div>
+        </div>
+
+        <sc-if value="{{ showConflict }}">
+        <div style="display:flex;gap:12px;align-items:flex-start;background:#fbf1ea;border:1px solid #e7c9b6;border-radius:12px;padding:14px 16px">
+          <span style="width:7px;height:7px;border-radius:50%;background:#b0603f;margin-top:6px;flex:none"></span>
+          <div style="font-size:13.5px;line-height:1.5"><strong style="font-weight:600">Chevauchement détecté</strong> — la demande de Julien (8 → 16 août) recouvre la location Berger de 24 heures et dépasse la capacité de 8 couchages.
+            <button onClick="{{ goReq }}" style="border:none;background:transparent;color:#b0603f;font:500 13.5px 'Instrument Sans';cursor:pointer;padding:0 0 0 4px;text-decoration:underline">Arbitrer</button>
+          </div>
+        </div>
+        </sc-if>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button onClick="{{ prevMonth }}" style="width:30px;height:30px;border:1px solid #d9cfc2;background:transparent;border-radius:8px;cursor:pointer;color:#4a443c;font-size:14px" style-hover="border-color:#b0603f">‹</button>
+              <div style="font:500 18px 'Bricolage Grotesque',sans-serif;min-width:150px;text-align:center">{{ monthLabel }}</div>
+              <button onClick="{{ nextMonth }}" style="width:30px;height:30px;border:1px solid #d9cfc2;background:transparent;border-radius:8px;cursor:pointer;color:#4a443c;font-size:14px" style-hover="border-color:#b0603f">›</button>
+            </div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#6b6157">
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:3px;background:#f0e0d5;border:1px solid #ddc3b0"></span>Séjour famille</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:3px;background:#e4e9dc;border:1px solid #c3cfb1"></span>Location</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:3px;background:#fffdf9;border:1px dashed #b0603f"></span>Demande en attente</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;border-radius:3px;background:#e5e8ea;border:1px solid #c3ccd1"></span>Entretien</span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:20px">
+            <sc-for list="{{ dayNames }}" as="d" hint-placeholder-count="7">
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#5f564c;padding-bottom:4px;text-align:center">{{ d }}</div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:2px">
+            <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px">
+                <sc-for list="{{ w.days }}" as="d" hint-placeholder-count="7">
+                  <div style="min-height:74px;border-radius:9px;padding:7px 8px;background:{{ d.bg }};border:1px {{ d.borderStyle }} {{ d.border }};overflow:hidden">
+                    <div style="font:500 12px 'Instrument Sans';color:{{ d.numInk }};font-variant-numeric:tabular-nums">{{ d.n }}</div>
+                    <div style="font-size:11px;line-height:1.3;margin-top:5px;color:{{ d.ink }};font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Séjours du mois</div>
+          <div style="display:flex;flex-direction:column;margin-top:8px">
+            <sc-for list="{{ monthStays }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid #efe8de">
+                <span style="font-size:12.5px;color:#6b6157;font-variant-numeric:tabular-nums;width:118px;flex:none">{{ s.range }}</span>
+                <span style="font-size:13.5px;font-weight:500;flex:1;min-width:0">{{ s.who }}</span>
+                <span style="font-size:12px;color:#6b6157;width:120px;flex:none">{{ s.detail }}</span>
+                <span style="font-size:11.5px;font-weight:500;color:{{ s.ink }};background:{{ s.bg }};padding:3px 9px;border-radius:20px;flex:none">{{ s.tag }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navReq }}">
+      <section data-screen-label="Demandes de séjour" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Demandes de séjour</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Deux modes de décision : validation au fil de l'eau par la gérante, ou tour de choix par saison.</p>
+        </div>
+        <div style="display:flex;gap:6px;padding:3px;background:#e9e2d7;border-radius:9px;width:max-content;max-width:100%;flex-wrap:wrap">
+          <button onClick="{{ setTabValider }}" style="position:relative;border:none;background:transparent;padding:8px 14px;border-radius:7px;font:500 13px 'Instrument Sans';color:#4a443c;cursor:pointer">
+            <sc-if value="{{ tabValider }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;inset:0;background:#fffdf9;border-radius:7px"></span></sc-if><span style="position:relative">File d'attente</span>
+          </button>
+          <button onClick="{{ setTabTour }}" style="position:relative;border:none;background:transparent;padding:8px 14px;border-radius:7px;font:500 13px 'Instrument Sans';color:#4a443c;cursor:pointer">
+            <sc-if value="{{ tabTour }}"><span style="position:absolute;inset:0;background:#fffdf9;border-radius:7px"></span></sc-if><span style="position:relative">Tour de choix — Été 2026</span>
+          </button>
+        </div>
+
+        <sc-if value="{{ tabValider }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ requests }}" as="r" hint-placeholder-count="3">
+            <article style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px 20px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+              <div style="flex:1;min-width:240px">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                  <h2 style="margin:0;font:500 17px 'Bricolage Grotesque',sans-serif">{{ r.who }}</h2>
+                  <span style="font-size:12px;color:#6b6157">{{ r.house }}</span>
+                </div>
+                <div style="font-size:13.5px;margin-top:7px;font-variant-numeric:tabular-nums">{{ r.dates }} · {{ r.nights }} nuits · {{ r.people }}</div>
+                <div style="font-size:13px;color:#6b6157;margin-top:9px;line-height:1.5;max-width:52ch">{{ r.note }}</div>
+                <sc-if value="{{ r.warn }}">
+                  <div style="display:inline-flex;gap:8px;align-items:center;margin-top:11px;background:#fbf1ea;border:1px solid #e7c9b6;border-radius:8px;padding:6px 11px;font-size:12.5px;color:#8d4a2e">{{ r.warnText }}</div>
+                </sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:9px;align-items:stretch;min-width:170px">
+                <sc-if value="{{ r.pending }}">
+                  <button onClick="{{ r.approve }}" style="border:none;background:#b0603f;color:#fffdf9;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer" style-hover="background:#98502f">Valider le séjour</button>
+                  <button onClick="{{ r.refuse }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Proposer d'autres dates</button>
+                </sc-if>
+                <sc-if value="{{ r.decided }}">
+                  <div style="text-align:center;background:{{ r.stateBg }};color:{{ r.stateInk }};padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans'">{{ r.stateLabel }}</div>
+                  <button onClick="{{ r.reset }}" style="border:none;background:transparent;color:#6b6157;font:400 12.5px 'Instrument Sans';cursor:pointer;text-decoration:underline">Annuler la décision</button>
+                </sc-if>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ tabTour }}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap">
+              <div>
+                <div style="font:500 17px 'Bricolage Grotesque',sans-serif">Vœux déposés — Kerloc'h, juillet à août</div>
+                <div style="font-size:13px;color:#6b6157;margin-top:6px">Ordre de priorité rotatif : Thomas passe premier cette année, Hélène l'an prochain.</div>
+              </div>
+              <button style="border:none;background:#b0603f;color:#fffdf9;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer" style-hover="background:#98502f">Lancer l'arbitrage</button>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(140px,1.1fr) minmax(120px,1fr) minmax(120px,1fr) minmax(90px,.7fr);gap:1px;margin-top:20px;font-size:12.5px">
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#5f564c;padding-bottom:9px">Indivisaire</div>
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#5f564c;padding-bottom:9px">1<sup>er</sup> choix</div>
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#5f564c;padding-bottom:9px">2<sup>e</sup> choix</div>
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.08em;text-transform:uppercase;color:#5f564c;padding-bottom:9px">Quota</div>
+              <sc-for list="{{ wishes }}" as="w" hint-placeholder-count="4">
+                <div style="padding:12px 0;border-top:1px solid #efe8de;font-weight:500">{{ w.who }}</div>
+                <div style="padding:12px 0;border-top:1px solid #efe8de;color:#4a443c;font-variant-numeric:tabular-nums">{{ w.first }}</div>
+                <div style="padding:12px 0;border-top:1px solid #efe8de;color:#6b6157;font-variant-numeric:tabular-nums">{{ w.second }}</div>
+                <div style="padding:12px 0;border-top:1px solid #efe8de;color:#4a443c;font-variant-numeric:tabular-nums">{{ w.quota }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Règles de la saison</div>
+            <ul style="margin:13px 0 0;padding-left:20px;font-size:13.5px;line-height:1.75;color:#4a443c">
+              <li>Dépôt des vœux jusqu'au 31 mars, deux semaines maximum en juillet-août.</li>
+              <li>Quota indicatif de 21 nuits par foyer en haute saison, ajustable par la gérante.</li>
+              <li>Les semaines louées sont bloquées avant l'ouverture du tour de choix.</li>
+              <li>Semaine non réclamée après arbitrage : ouverte à tous, premier arrivé.</li>
+            </ul>
+          </div>
+        </div>
+        </sc-if>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navExp }}">
+      <section data-screen-label="Dépenses et répartition" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Dépenses & répartition</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Chaque catégorie suit sa propre règle de partage. Le calcul se refait à chaque saisie.</p>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+            <div>
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Règles de répartition</div>
+              <div style="font-size:13px;color:#6b6157;margin-top:6px">Cliquez une règle pour la changer. Elle s'applique aux dépenses futures de la catégorie.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-top:14px">
+            <sc-for list="{{ rules }}" as="r" hint-placeholder-count="6">
+              <div style="display:flex;gap:16px;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid #efe8de">
+                <span style="font-size:13.5px;font-weight:500">{{ r.cat }}</span>
+                <button onClick="{{ r.cycle }}" style="border:1px solid #d9cfc2;background:#f7f2ea;color:#4a443c;padding:6px 12px;border-radius:20px;font:500 12.5px 'Instrument Sans';cursor:pointer;flex:none" style-hover="border-color:#b0603f;color:#b0603f">{{ r.rule }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">{{ expTotal }}</div>
+            <button style="border:none;background:#b0603f;color:#fffdf9;padding:9px 15px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer" style-hover="background:#98502f">Saisir une dépense</button>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-top:10px">
+            <sc-for list="{{ expenses }}" as="e" hint-placeholder-count="7">
+              <div style="display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #efe8de;flex-wrap:wrap">
+                <span style="font-size:12px;color:#6b6157;font-variant-numeric:tabular-nums;width:64px;flex:none">{{ e.date }}</span>
+                <span style="font-size:13.5px;font-weight:500;flex:1;min-width:140px">{{ e.label }}</span>
+                <span style="font-size:12px;color:#6b6157;width:96px;flex:none">{{ e.house }}</span>
+                <span style="font-size:12px;color:#6b6157;width:112px;flex:none">Avancé par {{ e.paidBy }}</span>
+                <span style="font-size:11.5px;color:#4a443c;background:#f2ede5;padding:3px 9px;border-radius:20px;flex:none">{{ e.rule }}</span>
+                <span style="font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;width:82px;text-align:right;flex:none">{{ e.amount }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navBal }}">
+      <section data-screen-label="Soldes et remboursements" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Soldes & remboursements</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Qui a avancé quoi, et le minimum de virements pour remettre tout le monde à zéro.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+          <sc-for list="{{ balances }}" as="b" hint-placeholder-count="4">
+            <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:14px;padding:17px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="width:30px;height:30px;border-radius:50%;background:#e6ded1;display:grid;place-items:center;font:500 12px 'Instrument Sans';color:#6b6157">{{ b.initials }}</span>
+                <span style="font-size:13.5px;font-weight:500">{{ b.who }}</span>
+              </div>
+              <div style="font:500 25px/1 'Bricolage Grotesque',sans-serif;margin-top:14px;font-variant-numeric:tabular-nums;color:{{ b.ink }}">{{ b.amount }}</div>
+              <div style="font-size:12px;color:#6b6157;margin-top:6px">{{ b.detail }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Virements proposés</div>
+            <button style="border:none;background:#b0603f;color:#fffdf9;padding:9px 15px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer" style-hover="background:#98502f">Générer l'appel de fonds</button>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-top:10px">
+            <sc-for list="{{ transfers }}" as="t" hint-placeholder-count="3">
+              <div style="display:flex;gap:14px;align-items:center;padding:14px 0;border-top:1px solid #efe8de;flex-wrap:wrap">
+                <span style="font-size:13.5px;flex:1;min-width:200px"><strong style="font-weight:500">{{ t.from }}</strong> <span style="color:#5f564c">→</span> <strong style="font-weight:500">{{ t.to }}</strong></span>
+                <span style="font-size:12px;color:#6b6157;flex:1;min-width:180px">{{ t.why }}</span>
+                <span style="font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;flex:none">{{ t.amount }}</span>
+                <span style="font-size:11.5px;color:#4a443c;background:#f2ede5;padding:3px 9px;border-radius:20px;flex:none">{{ t.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:12.5px;color:#6b6157;margin-top:15px;line-height:1.6">Régularisation annuelle au 31 décembre. L'indemnité d'occupation éventuelle et la répartition des loyers sont incluses dans le calcul.</div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navRent }}">
+      <section data-screen-label="Location saisonnière" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Location saisonnière · Kerloc'h</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Seule la maison de Kerloc'h est louée. Les semaines famille sont posées avant l'ouverture à la location.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:14px;padding:17px">
+            <div style="font-size:11.5px;color:#6b6157">Loyers encaissés 2026</div>
+            <div style="font:500 26px/1 'Bricolage Grotesque',sans-serif;margin-top:11px;font-variant-numeric:tabular-nums">8 400 €</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:14px;padding:17px">
+            <div style="font-size:11.5px;color:#6b6157">Semaines louées</div>
+            <div style="font:500 26px/1 'Bricolage Grotesque',sans-serif;margin-top:11px;font-variant-numeric:tabular-nums">6 / 10</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:14px;padding:17px">
+            <div style="font-size:11.5px;color:#6b6157">Charges déduites</div>
+            <div style="font:500 26px/1 'Bricolage Grotesque',sans-serif;margin-top:11px;font-variant-numeric:tabular-nums">1 380 €</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:14px;padding:17px">
+            <div style="font-size:11.5px;color:#6b6157">Net à répartir</div>
+            <div style="font:500 26px/1 'Bricolage Grotesque',sans-serif;margin-top:11px;font-variant-numeric:tabular-nums;color:#7a8b5c">7 020 €</div>
+          </div>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Réservations</div>
+            <button style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 15px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Ajouter une réservation</button>
+          </div>
+          <div style="display:flex;flex-direction:column;margin-top:10px">
+            <sc-for list="{{ rentals }}" as="r" hint-placeholder-count="4">
+              <div style="display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #efe8de;flex-wrap:wrap">
+                <span style="font-size:12.5px;color:#6b6157;font-variant-numeric:tabular-nums;width:120px;flex:none">{{ r.range }}</span>
+                <span style="font-size:13.5px;font-weight:500;flex:1;min-width:150px">{{ r.tenant }}</span>
+                <span style="font-size:12px;color:#6b6157;width:92px;flex:none">{{ r.people }}</span>
+                <span style="font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;width:80px;text-align:right;flex:none">{{ r.price }}</span>
+                <span style="font-size:11.5px;font-weight:500;color:{{ r.ink }};background:{{ r.bg }};padding:3px 9px;border-radius:20px;width:104px;text-align:center;flex:none">{{ r.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Répartition des loyers</div>
+            <div style="font-size:13.5px;color:#4a443c;line-height:1.65;margin-top:12px">Versés sur le compte de l'indivision, distribués au prorata des quotes-parts après clôture de la saison. Chaque indivisaire reçoit 1 755 € pour 25 %.</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Accès locataire</div>
+            <div style="font-size:13.5px;color:#4a443c;line-height:1.65;margin-top:12px">Le locataire reçoit un lien limité : dates de son séjour, guide d'arrivée, code de la boîte à clés. Aucun accès aux dépenses, aux documents ni aux autres séjours.</div>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navMaint }}">
+      <section data-screen-label="Carnet d'entretien" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Carnet d'entretien</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Les obligations récurrentes, les tâches ouvertes et l'historique des interventions.</p>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-tools" style="font-size:12px;margin-right:6px"></i>Tâches ouvertes</div>
+          <div style="display:flex;flex-direction:column;margin-top:10px">
+            <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="5">
+              <button onClick="{{ t.toggle }}" style="display:flex;gap:13px;align-items:center;text-align:left;border:none;background:transparent;border-top:1px solid #efe8de;padding:14px 0;cursor:pointer;font-family:'Instrument Sans'" style-hover="background:#faf6f0">
+                <span style="width:19px;height:19px;border-radius:6px;border:1.5px solid {{ t.boxBorder }};background:{{ t.boxBg }};display:grid;place-items:center;color:#fffdf9;font-size:11px;flex:none">{{ t.check }}</span>
+                <span style="flex:1;min-width:0"><span style="font-size:13.5px;font-weight:500;color:{{ t.ink }};text-decoration:{{ t.deco }}">{{ t.label }}</span><br /><span style="font-size:12px;color:#6b6157">{{ t.meta }}</span></span>
+                <span style="font-size:11.5px;font-weight:500;color:{{ t.tagInk }};background:{{ t.tagBg }};padding:3px 9px;border-radius:20px;flex:none">{{ t.tag }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Récurrences</div>
+            <div style="display:flex;flex-direction:column;margin-top:8px">
+              <sc-for list="{{ recurring }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid #efe8de">
+                  <span style="font-size:13.5px">{{ r.label }}</span>
+                  <span style="font-size:12px;color:#6b6157;flex:none">{{ r.every }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-list-check" style="font-size:12px;margin-right:6px"></i>Checklist de départ</div>
+            <div style="font-size:13px;color:#6b6157;margin-top:9px;line-height:1.6">Envoyée automatiquement la veille de chaque fin de séjour.</div>
+            <ul style="margin:11px 0 0;padding-left:19px;font-size:13.5px;line-height:1.8;color:#4a443c">
+              <li>Compteur d'eau relevé et vanne fermée</li>
+              <li>Draps au sale, lave-vaisselle vidé</li>
+              <li>Volets fermés côté mer, alarme armée</li>
+              <li>Photo de l'état des lieux dans le fil du séjour</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navProp }}">
+      <section data-screen-label="Fiche du bien" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <sc-if value="{{ isMer }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;height:250px;border-radius:18px;overflow:hidden;border:1px solid #e4dcd1">
+          <image-slot id="mdf-kerloch-hero" shape="rect" placeholder="Photo principale — Kerloc'h"></image-slot>
+        </div>
+        </sc-if>
+        <sc-if value="{{ isMont }}">
+        <div style="position:relative;height:250px;border-radius:18px;overflow:hidden;border:1px solid #e4dcd1">
+          <image-slot id="mdf-arcs-hero" shape="rect" placeholder="Photo principale — Les Arcs 1800"></image-slot>
+        </div>
+        </sc-if>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap">
+          <div>
+            <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">{{ ficheName }}</h1>
+            <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">{{ ficheSub }}</p>
+          </div>
+          <button style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 15px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Modifier la fiche</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:start">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Caractéristiques</div>
+            <div style="display:flex;flex-direction:column;margin-top:8px;font-size:13.5px">
+              <sc-for list="{{ ficheRows }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #efe8de"><span style="color:#6b6157">{{ r.k }}</span><span style="font-weight:500">{{ r.v }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-signpost-split" style="font-size:12px;margin-right:6px"></i>Guide d'arrivée</div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:13px;font-size:13.5px;line-height:1.5;color:#4a443c">
+              <sc-for list="{{ ficheGuide }}" as="g" hint-placeholder-count="5">
+                <div><strong style="font-weight:500">{{ g.k }}</strong> — {{ g.v }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Inventaire</div>
+            <div style="display:flex;flex-direction:column;margin-top:8px;font-size:13.5px">
+              <sc-for list="{{ inventory }}" as="i" hint-placeholder-count="5">
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #efe8de">
+                  <span style="color:#4a443c">{{ i.label }}</span>
+                  <span style="color:#6b6157;flex:none">{{ i.state }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <button style="margin-top:15px;width:100%;border:1px solid #d9cfc2;background:transparent;padding:9px;border-radius:9px;font:500 13px 'Instrument Sans';color:#4a443c;cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Signaler une casse</button>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navVault }}">
+      <section data-screen-label="Coffre-fort" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Coffre-fort</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">{{ vaultSub }}</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-file-earmark-text" style="font-size:12px;margin-right:6px"></i>Documents</div>
+              <button style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:7px 13px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Déposer</button>
+            </div>
+            <div style="display:flex;flex-direction:column;margin-top:10px">
+              <sc-for list="{{ docs }}" as="d" hint-placeholder-count="6">
+                <div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid #efe8de">
+                  <span style="width:30px;height:34px;border-radius:5px;background:#f2ede5;border:1px solid #e4dcd1;display:grid;place-items:center;font:600 9px 'Instrument Sans';color:#6b6157;flex:none">{{ d.ext }}</span>
+                  <span style="flex:1;min-width:0"><span style="font-size:13.5px;font-weight:500">{{ d.name }}</span><br /><span style="font-size:11.5px;color:#6b6157">{{ d.meta }}</span></span>
+                  <span style="font-size:11.5px;color:#4a443c;background:#f2ede5;padding:3px 9px;border-radius:20px;flex:none">{{ d.scope }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c"><i class="bi bi-key" style="font-size:12px;margin-right:6px"></i>Codes & accès</div>
+              <button onClick="{{ toggleCodes }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:7px 13px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">{{ codesLabel }}</button>
+            </div>
+            <div style="display:flex;flex-direction:column;margin-top:10px">
+              <sc-for list="{{ codes }}" as="c" hint-placeholder-count="5">
+                <div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid #efe8de">
+                  <span style="flex:1;min-width:0"><span style="font-size:13.5px;font-weight:500">{{ c.label }}</span><br /><span style="font-size:11.5px;color:#6b6157">{{ c.house }}</span></span>
+                  <span style="font:500 14px 'Instrument Sans';font-variant-numeric:tabular-nums;letter-spacing:.06em;color:#4a443c;flex:none">{{ c.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;color:#6b6157;margin-top:15px;line-height:1.6">{{ vaultNote }}</div>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navVote }}">
+      <section data-screen-label="Décisions et votes" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Décisions & votes</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Les voix sont pondérées par les quotes-parts, avec la majorité requise selon la nature de l'acte.</p>
+        </div>
+
+        <sc-if value="{{ isMer }}" hint-placeholder-val="{{ true }}">
+        <article style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:22px">
+          <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div style="min-width:240px;flex:1">
+              <div style="font-size:11.5px;color:#b0603f;font-weight:500">Vote ouvert · clôture le 20 septembre</div>
+              <h2 style="margin:8px 0 0;font:500 20px 'Bricolage Grotesque',sans-serif">Remplacement de la chaudière — Kerloc'h</h2>
+              <div style="font-size:11.5px;font-weight:500;color:#4a443c;background:#f2ede5;padding:4px 11px;border-radius:20px;display:inline-block;margin-top:11px">Indivision Kerloc'h · deux tiers des droits indivis</div>
+              <p style="margin:11px 0 0;font-size:13.5px;color:#4a443c;line-height:1.6;max-width:60ch">Devis Le Bihan Énergies, 6 800 € TTC, pompe à chaleur air-eau. Acte de gestion courante : les biens en SCI suivent les statuts, un bien en nom propre ne déclenche pas de vote.</p>
+            </div>
+            <div style="width:210px;flex:none">
+              <div style="font-size:11.5px;color:#6b6157">Voix exprimées</div>
+              <div style="display:flex;height:9px;border-radius:20px;overflow:hidden;margin-top:9px;background:#efe8de">
+                <div style="width:50%;background:#7a8b5c"></div>
+                <div style="width:25%;background:#b0603f"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:11px;font-size:12.5px">
+                <div style="display:flex;justify-content:space-between"><span style="color:#6b6157">Pour</span><span style="font-weight:500">50 %</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#6b6157">Contre</span><span style="font-weight:500">25 %</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#6b6157">En attente</span><span style="font-weight:500">25 %</span></div>
+              </div>
+              <div style="font-size:11.5px;color:#6b6157;margin-top:10px">Seuil à atteindre : 66,7 %</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid #efe8de;flex-wrap:wrap;align-items:center">
+            <button onClick="{{ voteFor }}" style="position:relative;border:1px solid #d9cfc2;background:transparent;padding:10px 18px;border-radius:9px;font:500 13.5px 'Instrument Sans';color:#4a443c;cursor:pointer" style-hover="border-color:#7a8b5c">
+              <sc-if value="{{ votedFor }}"><span style="position:absolute;inset:-1px;background:#7a8b5c;border-radius:9px"></span></sc-if>
+              <span style="position:relative;color:{{ voteForInk }}">Pour</span>
+            </button>
+            <button onClick="{{ voteAgainst }}" style="position:relative;border:1px solid #d9cfc2;background:transparent;padding:10px 18px;border-radius:9px;font:500 13.5px 'Instrument Sans';color:#4a443c;cursor:pointer" style-hover="border-color:#b0603f">
+              <sc-if value="{{ votedAgainst }}"><span style="position:absolute;inset:-1px;background:#b0603f;border-radius:9px"></span></sc-if>
+              <span style="position:relative;color:{{ voteAgainstInk }}">Contre</span>
+            </button>
+            <span style="font-size:12.5px;color:#6b6157">{{ voteHint }}</span>
+          </div>
+        </article>
+        </sc-if>
+        <sc-if value="{{ isMont }}">
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:22px">
+          <div style="font-size:11.5px;font-weight:500;color:#4a443c;background:#f2ede5;padding:4px 11px;border-radius:20px;display:inline-block">SCI Prudhomme Immobilier · assemblée générale</div>
+          <h2 style="margin:11px 0 0;font:500 20px 'Bricolage Grotesque',sans-serif">Aucun vote ouvert sur ce bien</h2>
+          <p style="margin:9px 0 0;font-size:13.5px;color:#4a443c;line-height:1.6;max-width:60ch">Les décisions de la SCI se prennent en assemblée, selon les statuts : majorité simple pour la gestion courante, unanimité pour céder un bien. Prochaine assemblée le 12 décembre, ordre du jour à envoyer quinze jours avant.</p>
+          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+            <button style="border:none;background:#b0603f;color:#fffdf9;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:#98502f"><i class="bi bi-calendar-plus" style="font-size:13.5px"></i>Convoquer l'assemblée</button>
+            <button onClick="{{ goVault }}" style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:10px 16px;border-radius:9px;font:500 13.5px 'Instrument Sans';cursor:pointer">Voir les statuts</button>
+          </div>
+        </div>
+        </sc-if>
+
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+          <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Historique</div>
+          <div style="display:flex;flex-direction:column;margin-top:10px">
+            <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="4">
+              <div style="display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid #efe8de;flex-wrap:wrap">
+                <span style="font-size:12px;color:#6b6157;font-variant-numeric:tabular-nums;width:74px;flex:none">{{ d.date }}</span>
+                <span style="font-size:13.5px;font-weight:500;flex:1;min-width:180px">{{ d.label }}</span>
+                <span style="font-size:12px;color:#6b6157;width:140px;flex:none">{{ d.majority }}</span>
+                <span style="font-size:11.5px;font-weight:500;color:{{ d.ink }};background:{{ d.bg }};padding:3px 9px;border-radius:20px;flex:none">{{ d.result }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navSouv }}">
+      <section data-screen-label="Souvenirs" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Souvenirs</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Un album par séjour, alimenté par la famille. Rien ne sort de l'instance auto-hébergée.</p>
+        </div>
+        <div style="display:flex;gap:14px;align-items:baseline">
+          <div style="font:500 17px 'Bricolage Grotesque',sans-serif">{{ souvTitle }}</div>
+          <div style="font-size:12.5px;color:#6b6157">{{ souvMeta }}</div>
+        </div>
+        <sc-if value="{{ isMer }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-1" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-2" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-3" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-4" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-5" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-6" radius="12" placeholder="Déposer une photo"></image-slot></div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ isMont }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-arcs-1" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-arcs-2" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-arcs-3" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-arcs-4" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-arcs-5" radius="12" placeholder="Déposer une photo"></image-slot></div>
+          <div style="position:relative;aspect-ratio:4/3"><image-slot id="mdf-souv-arcs-6" radius="12" placeholder="Déposer une photo"></image-slot></div>
+        </div>
+        </sc-if>
+        <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center">
+          <div style="font-size:13.5px;color:#4a443c;max-width:60ch;line-height:1.6">Les albums plus anciens sont archivés par année : 2024, 2023, 2022. Le livre d'or de la maison reprend les mots laissés à chaque fin de séjour.</div>
+          <button style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:9px 15px;border-radius:9px;font:500 13px 'Instrument Sans';cursor:pointer;flex:none" style-hover="border-color:#b0603f;color:#b0603f">Ouvrir le livre d'or</button>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ navMem }}">
+      <section data-screen-label="Membres et quotes-parts" style="display:flex;flex-direction:column;gap:20px;max-width:1080px">
+        <div>
+          <h1 style="margin:0;font:500 29px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em">Membres & quotes-parts</h1>
+          <p style="margin:7px 0 0;color:#6b6157;font-size:14.5px">Les détenteurs sont rattachés à une structure, pas à l'application. Un membre peut appartenir à l'une et pas à l'autre.</p>
+        </div>
+
+        <sc-for list="{{ structures }}" as="st" hint-placeholder-count="2">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:20px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+              <div>
+                <div style="font:500 17px 'Bricolage Grotesque',sans-serif">{{ st.title }}</div>
+                <div style="font-size:12.5px;color:#6b6157;margin-top:5px">{{ st.subtitle }}</div>
+              </div>
+              <span style="font-size:11.5px;font-weight:500;color:#4a443c;background:#f2ede5;padding:4px 11px;border-radius:20px;flex:none">{{ st.majority }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;margin-top:14px">
+              <sc-for list="{{ st.members }}" as="m" hint-placeholder-count="4">
+                <div style="display:flex;gap:14px;align-items:center;padding:14px 0;border-top:1px solid #efe8de;flex-wrap:wrap">
+                  <span style="width:34px;height:34px;border-radius:50%;background:#e6ded1;display:grid;place-items:center;font:500 12.5px 'Instrument Sans';color:#6b6157;flex:none">{{ m.initials }}</span>
+                  <span style="flex:1;min-width:170px"><span style="font-size:13.5px;font-weight:500">{{ m.who }}</span><br /><span style="font-size:11.5px;color:#6b6157">{{ m.household }}</span></span>
+                  <span style="font-size:11.5px;font-weight:500;color:{{ m.roleInk }};background:{{ m.roleBg }};padding:3px 10px;border-radius:20px;flex:none">{{ m.role }}</span>
+                  <span style="font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;width:70px;text-align:right;flex:none">{{ m.share }}</span>
+                  <span style="font-size:12px;color:#6b6157;width:120px;text-align:right;flex:none">{{ m.nights }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start">
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Ce que chaque rôle peut faire</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px;font-size:13.5px;line-height:1.5;color:#4a443c">
+              <div><strong style="font-weight:500">Gérant</strong> — gérante d'indivision, gérant de SCI ou propriétaire en nom propre : valide les séjours, saisit les dépenses, ouvre les votes, gère les accès de son bien.</div>
+              <div><strong style="font-weight:500">Détenteur</strong> — indivisaire ou associé : demande des séjours, vote, consulte tout, dépose des justificatifs.</div>
+              <div><strong style="font-weight:500">Membre de foyer</strong> — voit les séjours de son foyer, l'album et le guide d'arrivée.</div>
+              <div><strong style="font-weight:500">Invité</strong> — accès au séjour auquel il est rattaché, sur la durée du séjour.</div>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e4dcd1;border-radius:16px;padding:19px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+              <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Accès temporaires</div>
+              <button style="border:1px solid #d9cfc2;background:transparent;color:#4a443c;padding:7px 13px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer" style-hover="border-color:#b0603f;color:#b0603f">Inviter</button>
+            </div>
+            <div style="display:flex;flex-direction:column;margin-top:10px">
+              <sc-for list="{{ guests }}" as="g" hint-placeholder-count="3">
+                <div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid #efe8de">
+                  <span style="flex:1;min-width:0"><span style="font-size:13.5px;font-weight:500">{{ g.who }}</span><br /><span style="font-size:11.5px;color:#6b6157">{{ g.scope }}</span></span>
+                  <span style="font-size:11.5px;color:#4a443c;background:#f2ede5;padding:3px 9px;border-radius:20px;flex:none">{{ g.until }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+    </main>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isMobile }}">
+  <div style="display:flex;justify-content:center;padding:34px 20px 60px">
+    <div style="width:390px;max-width:100%;background:#fffdf9;border:10px solid #24201b;border-radius:38px;overflow:hidden;box-shadow:0 24px 60px rgba(36,32,27,.18)">
+      <div style="height:26px;background:#fffdf9;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font:500 11px 'Instrument Sans';color:#6b6157"><span>9:41</span><span>Kerloc'h</span></div>
+
+      <div style="min-height:600px;padding:14px 18px 20px">
+        <sc-if value="{{ mAccueil }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <div style="font:500 22px/1.15 'Bricolage Grotesque',sans-serif;letter-spacing:-.01em">Bonjour Claire</div>
+            <div style="font-size:12.5px;color:#6b6157;margin-top:4px">Votre séjour commence dans 12 jours.</div>
+          </div>
+          <div style="border-radius:14px;overflow:hidden;border:1px solid #e4dcd1">
+            <div style="position:relative;height:118px"><image-slot id="mdf-mobile-hero" shape="rect" placeholder="Photo"></image-slot></div>
+            <div style="padding:13px 15px 15px">
+              <div style="font:500 15px 'Bricolage Grotesque',sans-serif">Kerloc'h · 4 → 18 juillet</div>
+              <div style="font-size:12px;color:#6b6157;margin-top:4px">Validé par Hélène · 5 personnes</div>
+              <div style="display:flex;gap:8px;margin-top:12px">
+                <button style="flex:1;border:1px solid #d9cfc2;background:transparent;padding:8px;border-radius:9px;font:500 12.5px 'Instrument Sans';color:#4a443c;cursor:pointer">Guide d'arrivée</button>
+                <button style="flex:1;border:1px solid #d9cfc2;background:transparent;padding:8px;border-radius:9px;font:500 12.5px 'Instrument Sans';color:#4a443c;cursor:pointer">Codes</button>
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e4dcd1;border-radius:14px;padding:15px">
+            <div style="font:600 10px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Votre solde</div>
+            <div style="font:500 24px/1 'Bricolage Grotesque',sans-serif;margin-top:9px;font-variant-numeric:tabular-nums;color:#b0603f">− 310 €</div>
+            <div style="font-size:12px;color:#6b6157;margin-top:5px">À verser à Hélène avant le 31 décembre</div>
+          </div>
+          <div style="border:1px solid #e4dcd1;border-radius:14px;padding:15px">
+            <div style="font:600 10px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Vote en cours</div>
+            <div style="font-size:13.5px;font-weight:500;margin-top:9px">Chaudière — devis 6 800 €</div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button style="flex:1;border:none;background:#b0603f;color:#fffdf9;padding:9px;border-radius:9px;font:500 12.5px 'Instrument Sans';cursor:pointer">Voter</button>
+              <button style="flex:1;border:1px solid #d9cfc2;background:transparent;padding:9px;border-radius:9px;font:500 12.5px 'Instrument Sans';color:#4a443c;cursor:pointer">Le devis</button>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mCal }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="font:500 20px 'Bricolage Grotesque',sans-serif">Juillet 2026</div>
+          <sc-for list="{{ monthStays }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;gap:12px;align-items:flex-start;border:1px solid #e4dcd1;border-radius:12px;padding:13px 14px">
+              <span style="width:4px;align-self:stretch;border-radius:4px;background:{{ s.ink }};flex:none"></span>
+              <span style="min-width:0"><span style="font-size:13.5px;font-weight:500">{{ s.who }}</span><br /><span style="font-size:12px;color:#6b6157;font-variant-numeric:tabular-nums">{{ s.range }} · {{ s.detail }}</span></span>
+            </div>
+          </sc-for>
+          <div style="font-size:12px;color:#6b6157;line-height:1.6">Vue mensuelle complète en pivotant l'écran. Les semaines louées apparaissent en vert olive.</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mAsk }}">
+        <div style="display:flex;flex-direction:column;gap:15px">
+          <div style="font:500 20px 'Bricolage Grotesque',sans-serif">Demander un séjour</div>
+          <div>
+            <div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Bien</div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;border:1.5px solid #b0603f;border-radius:10px;padding:11px;font:500 13px 'Instrument Sans';text-align:center;color:#b0603f">Kerloc'h</div>
+              <div style="flex:1;border:1px solid #d9cfc2;border-radius:10px;padding:11px;font:500 13px 'Instrument Sans';text-align:center;color:#6b6157">Les Arcs</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1"><div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Arrivée</div><div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px;font-variant-numeric:tabular-nums">sam. 4 juil.</div></div>
+            <div style="flex:1"><div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Départ</div><div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px;font-variant-numeric:tabular-nums">sam. 18 juil.</div></div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;color:#6b6157;margin-bottom:6px">Qui vient</div>
+            <div style="border:1px solid #d9cfc2;border-radius:10px;padding:11px;font-size:13px">Claire, Marc, 3 enfants · 5 / 8 couchages</div>
+          </div>
+          <div style="background:#f4f6f0;border:1px solid #d8e0cc;border-radius:10px;padding:12px 13px;font-size:12.5px;color:#4f5c3d;line-height:1.5">Ces dates sont libres. Votre demande part à Hélène pour validation.</div>
+          <button style="border:none;background:#b0603f;color:#fffdf9;padding:13px;border-radius:11px;font:500 14px 'Instrument Sans';cursor:pointer">Envoyer la demande</button>
+        </div>
+        </sc-if>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #e4dcd1;background:#fffdf9">
+        <button onClick="{{ setMAccueil }}" style="position:relative;border:none;background:transparent;padding:13px 4px 17px;font:500 11px 'Instrument Sans';color:{{ mAccueilInk }};cursor:pointer"><span style="display:flex;flex-direction:column;align-items:center;gap:4px"><i class="bi bi-house-heart" style="font-size:17px"></i>Accueil</span></button>
+        <button onClick="{{ setMCal }}" style="position:relative;border:none;background:transparent;padding:13px 4px 17px;font:500 11px 'Instrument Sans';color:{{ mCalInk }};cursor:pointer"><span style="display:flex;flex-direction:column;align-items:center;gap:4px"><i class="bi bi-calendar3" style="font-size:17px"></i>Calendrier</span></button>
+        <button onClick="{{ setMAsk }}" style="position:relative;border:none;background:transparent;padding:13px 4px 17px;font:500 11px 'Instrument Sans';color:{{ mAskInk }};cursor:pointer"><span style="display:flex;flex-direction:column;align-items:center;gap:4px"><i class="bi bi-plus-circle" style="font-size:17px"></i>Demander</span></button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ notesOpen }}">
+  <aside style="position:fixed;top:0;right:0;bottom:0;width:352px;max-width:92vw;background:#fffdf9;border-left:1px solid #e4dcd1;box-shadow:-14px 0 40px rgba(36,32,27,.1);z-index:60;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #e4dcd1">
+      <div>
+        <div style="font:600 10.5px 'Instrument Sans';letter-spacing:.1em;text-transform:uppercase;color:#5f564c">Notes de comportement</div>
+        <div style="font:500 16px 'Bricolage Grotesque',sans-serif;margin-top:4px">{{ noteTitle }}</div>
+      </div>
+      <button onClick="{{ toggleNotes }}" style="width:28px;height:28px;border:1px solid #d9cfc2;background:transparent;border-radius:8px;cursor:pointer;color:#4a443c;flex:none">×</button>
+    </div>
+    <div style="padding:18px 20px 30px;overflow:auto">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ noteItems }}" as="n" hint-placeholder-count="4">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <span style="width:5px;height:5px;border-radius:50%;background:#c9bda9;margin-top:7px;flex:none"></span>
+            <span style="font-size:13px;line-height:1.6;color:#4a443c">{{ n }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:22px;padding-top:16px;border-top:1px solid #efe8de;font-size:12px;color:#6b6157;line-height:1.6">Ces notes décrivent le comportement attendu écran par écran, à reprendre comme spécification de développement.</div>
+    </div>
+  </aside>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;weekStart&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Lundi&quot;,&quot;Dimanche&quot;],&quot;default&quot;:&quot;Lundi&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Calendrier&quot;},&quot;showConflicts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Calendrier&quot;},&quot;rentalEnabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Modules&quot;}}">
+const K = {
+  famille: { bg: '#f0e0d5', border: '#ddc3b0', ink: '#8d4a2e', borderStyle: 'solid' },
+  location: { bg: '#e4e9dc', border: '#c3cfb1', ink: '#556340', borderStyle: 'solid' },
+  demande: { bg: '#fffdf9', border: '#b0603f', ink: '#b0603f', borderStyle: 'dashed' },
+  entretien: { bg: '#e5e8ea', border: '#c3ccd1', ink: '#3f545f', borderStyle: 'solid' }
+};
+
+const STAYS = [
+  { bien: 'mer', who: 'Hélène', from: '2026-06-13', to: '2026-06-21', kind: 'famille', detail: '2 personnes' },
+  { bien: 'mer', who: 'Claire & Marc + 3', from: '2026-07-04', to: '2026-07-18', kind: 'famille', detail: '5 personnes' },
+  { bien: 'mer', who: 'Location — famille Berger', from: '2026-07-25', to: '2026-08-08', kind: 'location', detail: '6 personnes' },
+  { bien: 'mer', who: 'Julien — demande', from: '2026-08-08', to: '2026-08-16', kind: 'demande', detail: '4 personnes' },
+  { bien: 'mer', who: 'Thomas + invités', from: '2026-08-22', to: '2026-08-30', kind: 'famille', detail: '7 personnes' },
+  { bien: 'mont', who: 'Entretien — chaudière', from: '2026-06-09', to: '2026-06-11', kind: 'entretien', detail: 'Le Bihan' },
+  { bien: 'mont', who: 'Julien & Sofia', from: '2026-07-11', to: '2026-07-19', kind: 'famille', detail: '2 personnes' },
+  { bien: 'mont', who: 'Hélène', from: '2026-08-01', to: '2026-08-09', kind: 'famille', detail: '4 personnes' },
+  { bien: 'mont', who: 'Claire — demande', from: '2026-08-15', to: '2026-08-22', kind: 'demande', detail: '5 personnes' }
+];
+
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const RULE_OPTIONS = ['Quotes-parts', 'Nuits occupées', 'Parts égales par foyer'];
+
+const BIENS = [
+  { id: 'b1', name: "Maison de Kerloc'h", place: 'Crozon (29)', beds: 8, kind: 'Bord de mer', kindInk: '#556340', rental: 'louée en saison', structure: 'Indivision', holders: '4 indivisaires · quotes-parts égales', majority: 'Deux tiers pour la gestion courante', note: "Issue de la succession de Robert Prudhomme, convention d'indivision signée en 2019 chez le notaire Kervella." },
+  { id: 'b2', name: 'Les Arcs 1800', place: 'Bourg-Saint-Maurice (73)', beds: 6, kind: 'Montagne', kindInk: '#3f545f', rental: 'non louée', structure: 'SCI Prudhomme Immobilier', holders: '3 associés · 300 parts', majority: 'Assemblée générale, gérant Thomas', note: 'Acquis en 2021 par la SCI familiale. Les charges passent par le compte de la société, la répartition suit les parts sociales.' }
+];
+
+const NOTES = {
+  biens: ["Un bien porte son mode de détention : indivision, SCI ou nom propre. Le mode détermine les règles de vote, la répartition par défaut et le vocabulaire affiché (quotes-parts ou parts sociales).", "Ajouter un bien crée sa structure, ses détenteurs et son calendrier ; les modules location et votes s'activent bien par bien.", "Retirer un bien l'archive : séjours, dépenses et documents restent consultables en lecture seule et l'action est réversible. La suppression définitive passe par un export préalable.", "Un utilisateur ne voit que les biens dont il est détenteur, membre de foyer ou invité.", "Un bien en nom propre n'ouvre aucun vote : le propriétaire décide et invite les autres."],
+  dash: ['Le bien sélectionné dans la barre du haut est le contexte de toute l\'application : navigation, calendrier, dépenses, coffre-fort et détenteurs suivent ce choix, mémorisé par utilisateur.', 'La vue « Tous les biens » ne garde que ce qui a du sens consolidé : le portefeuille et la liste des biens.', 'La page d\'accueil dépend du rôle : la gérante voit la file d\'attente, un indivisaire voit son prochain séjour et son solde.', 'Chaque carte de bien est cliquable et mène à la fiche du bien.', 'La liste « Ce qui vous attend » agrège demandes, votes ouverts et échéances d\'entretien, triés par date limite.', 'Les montants de trésorerie proviennent des dépenses validées, pas des dépenses saisies.'],
+  cal: ['Un calendrier par bien, sélectionné en haut à droite ; le choix est mémorisé par utilisateur.', 'Un séjour occupe une plage continue, nuit d\'arrivée incluse et nuit de départ exclue, pour permettre les rotations le même jour.', 'La détection de conflit compare les plages et la somme des occupants contre la capacité du bien.', 'Un glisser-déposer sur la grille ouvre le formulaire de demande pré-rempli.', 'Export iCal en lecture seule par bien, pour les agendas personnels.'],
+  req: ['Deux modes coexistent : file d\'attente validée par la gérante, et tour de choix saisonnier avec priorité rotative annuelle.', 'Valider une demande crée le séjour et notifie le demandeur ; « proposer d\'autres dates » renvoie la demande avec un message.', 'Le quota de nuits est indicatif : la gérante peut le dépasser, l\'écart est journalisé.', 'L\'arbitrage du tour de choix attribue les premiers choix par ordre de priorité, puis les seconds choix sur les semaines restantes.', 'Toute décision est horodatée et visible de tous les indivisaires.'],
+  exp: ['La comptabilité est tenue par bien et consolidée par structure : une dépense de SCI n\'entre jamais dans les comptes de l\'indivision.', 'Chaque catégorie porte sa règle de répartition, modifiable par la gérante ; le changement ne recalcule pas les dépenses passées.', 'La règle « nuits occupées » utilise les nuits réellement consommées sur l\'exercice, hors semaines louées.', 'Une dépense peut être avancée par un indivisaire ou payée depuis le compte commun.', 'Chaque dépense accepte un justificatif photo ou PDF, stocké dans le coffre-fort.'],
+  bal: ['Les soldes se recalculent à chaque dépense validée et à chaque loyer encaissé.', 'Les virements proposés minimisent le nombre de transactions entre indivisaires.', 'L\'appel de fonds génère un PDF par foyer avec le détail du calcul.', 'Un solde marqué réglé attend confirmation du bénéficiaire avant de passer à zéro.'],
+  rent: ['La location est activable par bien : seule Kerloc\'h l\'a activée ici.', 'Les semaines famille sont posées avant l\'ouverture à la location ; l\'inverse déclenche une alerte.', 'Le loyer net se calcule après déduction des charges directement liées à la location.', 'Le locataire dispose d\'un lien à durée limitée, sans compte, révocable à tout moment.'],
+  maint: ['Les récurrences génèrent automatiquement une tâche avec sa date limite légale ou d\'usage.', 'Cocher une tâche demande une date de réalisation et accepte une facture.', 'La checklist de départ part la veille de chaque fin de séjour à l\'occupant.', 'Une tâche peut être rattachée à un vote quand son coût dépasse le seuil défini dans la convention.'],
+  prop: ['Un bien porte ses caractéristiques, son guide d\'arrivée, son inventaire et sa capacité, utilisée par la détection de conflit.', 'Le guide d\'arrivée est visible des membres de foyer et des locataires pendant leur séjour.', 'Un signalement de casse crée une tâche d\'entretien et une ligne d\'inventaire à remplacer.', 'Les photos sont stockées sur l\'instance, jamais sur un service externe.'],
+  vault: ['Deux natures d\'éléments : documents versionnés et codes chiffrés.', 'La portée détermine qui voit quoi : indivisaires seuls, tous les membres, ou locataire pendant son séjour.', 'L\'affichage d\'un code est journalisé avec l\'auteur et l\'horodatage.', 'Export complet des documents en une archive, à tout moment, sans verrouillage.'],
+  vote: ['Les voix sont pondérées par les quotes-parts, pas par tête.', 'La majorité requise dépend de la nature de l\'acte : deux tiers pour la gestion courante, unanimité pour un acte de disposition.', 'Un vote a une date de clôture ; les abstentions restent visibles jusqu\'au dépouillement.', 'Une décision adoptée peut créer la dépense et la tâche correspondantes.'],
+  souv: ['Un album par séjour, créé automatiquement à la fin du séjour.', 'Tout membre de foyer peut déposer des photos ; seul l\'auteur ou la gérante peut supprimer.', 'Stockage local à l\'instance, avec vignettes générées côté serveur.', 'Le livre d\'or reprend les mots laissés en fin de séjour, un fil par année.'],
+  mem: ['Les détenteurs appartiennent à une structure : indivision, SCI ou propriétaire unique. Un même membre peut être dans l\'une et pas dans l\'autre.', 'Quatre rôles, du plus large au plus étroit : gérant, détenteur, membre de foyer, invité.', 'Les quotes-parts ou parts sociales pilotent le poids des votes et la répartition par défaut des dépenses et des loyers.', 'Un invité ou un locataire reçoit un accès limité dans le temps, révocable.', 'Le compteur de nuits par foyer sert de base au quota de la saison suivante.']
+};
+
+class Component extends DCLogic {
+  state = {
+    screen: 'dash', view: 'desktop', notes: false, mtab: 'accueil',
+    bien: 'mer', month: 6, reqTab: 'valider', codes: false, vote: null,
+    addBien: false, newStructure: 'Indivision', extraBiens: [], bienState: {},
+    decisions: { r1: 'pending', r2: 'pending', r3: 'pending' },
+    rules: {
+      'Taxe foncière': 'Quotes-parts',
+      'Assurance habitation': 'Quotes-parts',
+      'Énergie, eau, internet': 'Nuits occupées',
+      'Ménage et linge': 'Nuits occupées',
+      'Travaux et gros entretien': 'Quotes-parts',
+      'Courses et consommables': 'Parts égales par foyer'
+    },
+    tasks: { t1: false, t2: false, t3: true, t4: false, t5: false }
+  };
+
+  go = (screen) => () => this.setState({ screen });
+  fmtDay = (iso) => { const d = new Date(iso + 'T00:00:00Z'); return d.getUTCDate() + ' ' + SHORT[d.getUTCMonth()]; };
+
+  buildMonth(y, m, bien, sundayFirst) {
+    const first = new Date(Date.UTC(y, m, 1));
+    const offset = sundayFirst ? first.getUTCDay() : (first.getUTCDay() + 6) % 7;
+    const daysIn = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    const blank = { n: '', bg: 'transparent', border: 'transparent', borderStyle: 'solid', ink: '#6b6157', numInk: 'transparent', label: '' };
+    const cells = [];
+    for (let i = 0; i < offset; i++) cells.push(Object.assign({}, blank));
+    for (let d = 1; d <= daysIn; d++) {
+      const iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const s = STAYS.find(v => v.bien === bien && iso >= v.from && iso < v.to);
+      const k = s ? K[s.kind] : null;
+      cells.push({
+        n: d,
+        bg: k ? k.bg : '#fffdf9',
+        border: k ? k.border : '#efe8de',
+        borderStyle: k ? k.borderStyle : 'solid',
+        ink: k ? k.ink : '#6b6157',
+        numInk: '#6b6157',
+        label: s && s.from === iso ? s.who : ''
+      });
+    }
+    while (cells.length % 7) cells.push(Object.assign({}, blank));
+    const weeks = [];
+    for (let i = 0; i < cells.length; i += 7) weeks.push({ days: cells.slice(i, i + 7) });
+    return weeks;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const rentalOn = this.props.rentalEnabled ?? true;
+    const sundayFirst = (this.props.weekStart ?? 'Lundi') === 'Dimanche';
+    let screen = (!rentalOn && s.screen === 'rent') ? 'dash' : s.screen;
+    if (s.bien === 'all' && screen !== 'dash' && screen !== 'biens') screen = 'dash';
+    if (s.bien !== 'all' && screen === 'biens') screen = 'biens';
+
+    const reqData = [
+      { id: 'r1', bien: 'mer', who: 'Julien & Sofia', house: "Kerloc'h", dates: '8 → 16 août', nights: 8, people: '4 personnes', note: "Deuxième semaine d'août demandée pour rejoindre les cousins. Julien propose de décaler au 9 si la sortie des locataires prend la journée.", warn: true, warnText: 'Chevauche la location Berger de 24 h · capacité dépassée' },
+      { id: 'r2', bien: 'mont', who: 'Claire & Marc', house: 'Les Arcs 1800', dates: '15 → 22 août', nights: 7, people: '5 personnes', note: 'Semaine de randonnée avec les enfants. Aucune autre demande sur ces dates.', warn: false, warnText: '' },
+      { id: 'r3', bien: 'mer', who: 'Thomas', house: "Kerloc'h", dates: '22 → 30 août', nights: 8, people: '7 personnes dont 3 invités', note: 'Trois amis invités le week-end du 29. Thomas prend en charge le ménage de fin de séjour.', warn: false, warnText: '' }
+    ];
+    const stateStyles = { approved: { bg: '#e4e9dc', ink: '#556340', label: 'Séjour validé' }, refused: { bg: '#f2ede5', ink: '#6b6157', label: 'Dates à revoir' } };
+
+    const bienSel = s.bien === 'all' ? 'mer' : s.bien;
+    const monthStays = STAYS.filter(v => v.bien === bienSel && Number(v.from.slice(5, 7)) - 1 <= s.month && Number(v.to.slice(5, 7)) - 1 >= s.month).map(v => ({
+      who: v.who,
+      range: this.fmtDay(v.from) + ' → ' + this.fmtDay(v.to),
+      detail: v.detail,
+      tag: v.kind === 'famille' ? 'Famille' : v.kind === 'location' ? 'Location' : v.kind === 'demande' ? 'En attente' : 'Entretien',
+      bg: K[v.kind].bg, ink: K[v.kind].ink
+    }));
+
+    const taskData = [
+      { id: 't1', bien: 'mer', label: 'Ramonage de la cheminée', meta: "Kerloc'h · avant le 15 octobre", tag: 'Obligatoire', tagBg: '#f0e0d5', tagInk: '#8d4a2e' },
+      { id: 't2', bien: 'mont', label: 'Hivernage de la plomberie', meta: 'Les Arcs · avant le 1er novembre', tag: 'Saison', tagBg: '#e5e8ea', tagInk: '#3f545f' },
+      { id: 't3', bien: 'mer', label: 'Taille de la haie côté chemin', meta: "Kerloc'h · fait le 12 juin par Thomas", tag: 'Courant', tagBg: '#f2ede5', tagInk: '#6b6157' },
+      { id: 't4', bien: 'mer', label: 'Remplacer le matelas chambre nord', meta: "Kerloc'h · signalé par Claire", tag: 'Inventaire', tagBg: '#f2ede5', tagInk: '#6b6157' },
+      { id: 't5', bien: 'mont', label: 'Contrôle annuel de la chaudière', meta: 'Les Arcs · rendez-vous à prendre', tag: 'Obligatoire', tagBg: '#f0e0d5', tagInk: '#8d4a2e' }
+    ];
+
+    const label = s.bien === 'mont' ? 'Les Arcs' : "Kerloc'h";
+    const mine = (txt) => s.bien === 'all' || (txt || '').indexOf(label) >= 0 || (txt || '').indexOf('les deux') >= 0;
+    const FICHE = {
+      mer: {
+        name: "Maison de Kerloc'h", sub: '12 route du Fret, 29160 Crozon · acquise en 1978, en indivision depuis 2019',
+        rows: [['Surface', '142 m²'], ['Couchages', '8 (4 chambres)'], ['Chauffage', 'Fioul, chaudière 2009'], ['Taxe foncière', '2 340 € / an'], ['Valeur estimée', '410 000 €']],
+        guide: [['Clés', 'boîte à clés à droite du portail, code dans le coffre-fort.'], ['Eau', 'vanne générale sous l\'escalier, à ouvrir doucement.'], ['Poubelles', 'sortie le mardi soir, tri au bout du chemin.'], ['Voisins', 'Mme Le Guen (n° 14) garde un double des clés.'], ['Wifi', 'réseau « Kerloch », mot de passe dans le coffre-fort.']],
+        inv: [{ label: 'Literie, 8 couchages', state: 'Bon' }, { label: 'Vaisselle 12 couverts', state: 'Complet' }, { label: 'Vélos adultes ×3', state: '1 à réviser' }, { label: 'Barbecue et mobilier', state: 'Bon' }, { label: 'Matelas chambre nord', state: 'À remplacer' }]
+      },
+      mont: {
+        name: 'Les Arcs 1800', sub: 'Résidence Belles Cimes, 73700 Bourg-Saint-Maurice · détenu par la SCI depuis 2021',
+        rows: [['Surface', '58 m²'], ['Couchages', '6 (2 chambres, cabine)'], ['Chauffage', 'Électrique, radiateurs 2021'], ['Charges de copropriété', '1 840 € / an'], ['Valeur estimée', '295 000 €']],
+        guide: [['Clés', 'boîte à clés au local à skis, code dans le coffre-fort.'], ['Accès', 'portail résidence, code à 5 chiffres, parking niveau -1.'], ['Skis', 'casier n° 12, chausse-pieds et sangles fournis.'], ['Navette', 'arrêt Charmettoger, toutes les 20 minutes.'], ['Wifi', 'réseau « BellesCimes-12 », mot de passe dans le coffre-fort.']],
+        inv: [{ label: 'Literie, 6 couchages', state: 'Bon' }, { label: 'Vaisselle 8 couverts', state: 'Complet' }, { label: 'Luges et casques', state: 'Bon' }, { label: 'Aspirateur', state: 'À remplacer' }]
+      }
+    };
+    const fiche = FICHE[s.bien === 'mont' ? 'mont' : 'mer'];
+    const BAL = {
+      mer: {
+        rows: [
+          { who: 'Hélène', initials: 'HP', amount: '+ 1 240 €', ink: '#556340', detail: 'A avancé taxe foncière et fioul' },
+          { who: 'Claire', initials: 'CP', amount: '− 310 €', ink: '#b0603f', detail: '14 nuits consommées en juillet' },
+          { who: 'Thomas', initials: 'TP', amount: '− 620 €', ink: '#b0603f', detail: 'Literie déduite de sa quote-part' },
+          { who: 'Julien', initials: 'JP', amount: '− 310 €', ink: '#b0603f', detail: '8 nuits prévues en août' }
+        ],
+        transfers: [
+          { from: 'Thomas', to: 'Hélène', why: 'Régularisation indivision 2026', amount: '620 €', status: 'À faire' },
+          { from: 'Claire', to: 'Hélène', why: 'Régularisation indivision 2026', amount: '310 €', status: 'À faire' },
+          { from: 'Julien', to: 'Hélène', why: 'Régularisation indivision 2026', amount: '310 €', status: 'Annoncé' }
+        ]
+      },
+      mont: {
+        rows: [
+          { who: 'Thomas', initials: 'TP', amount: '+ 480 €', ink: '#556340', detail: 'A avancé la literie, remboursable par la SCI' },
+          { who: 'Claire', initials: 'CP', amount: '− 144 €', ink: '#b0603f', detail: 'Compte courant d\'associé, 90 parts' },
+          { who: 'Julien', initials: 'JP', amount: '− 144 €', ink: '#b0603f', detail: 'Compte courant d\'associé, 90 parts' }
+        ],
+        transfers: [
+          { from: 'SCI', to: 'Thomas', why: 'Remboursement de frais avancés', amount: '480 €', status: 'À faire' },
+          { from: 'Claire', to: 'SCI', why: 'Appel de fonds charges 2026', amount: '144 €', status: 'Annoncé' },
+          { from: 'Julien', to: 'SCI', why: 'Appel de fonds charges 2026', amount: '144 €', status: 'À faire' }
+        ]
+      }
+    };
+    const bal = BAL[s.bien === 'mont' ? 'mont' : 'mer'];
+    const pendHere = reqData.filter(r => r.bien === bienSel && s.decisions[r.id] === 'pending').length;
+    const EXPENSES = [
+      { date: '02/09', bien: 'mer', label: 'Taxe foncière 2026', house: "Kerloc'h", paidBy: 'Hélène', cat: 'Taxe foncière', amt: 2340 },
+      { date: '18/07', bien: 'mer', label: 'Ménage fin de location', house: "Kerloc'h", paidBy: 'compte commun', cat: 'Ménage et linge', amt: 420 },
+      { date: '02/07', bien: 'mer', label: 'Fioul, plein de saison', house: "Kerloc'h", paidBy: 'Hélène', cat: 'Énergie, eau, internet', amt: 1160 },
+      { date: '20/06', bien: 'mont', label: 'Literie, deux matelas', house: 'Les Arcs', paidBy: 'Thomas', cat: 'Courses et consommables', amt: 780 },
+      { date: '05/05', bien: 'both', label: 'Assurance multirisque', house: 'les deux biens', paidBy: 'compte commun', cat: 'Assurance habitation', amt: 1128 },
+      { date: '12/04', bien: 'mer', label: 'Jardinier, contrat annuel', house: "Kerloc'h", paidBy: 'Hélène', cat: 'Travaux et gros entretien', amt: 960 },
+      { date: '03/03', bien: 'mont', label: 'Réparation du portail', house: 'Les Arcs', paidBy: 'Claire', cat: 'Travaux et gros entretien', amt: 480 },
+      { date: '15/02', bien: 'mont', label: 'Charges de copropriété T1', house: 'Les Arcs', paidBy: 'la SCI', cat: 'Assurance habitation', amt: 460 }
+    ];
+    const eur = (n) => n.toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ') + ' €';
+    const expRows = EXPENSES.filter(e => s.bien === 'all' || e.bien === 'both' || e.bien === bienSel);
+    const expTotal = expRows.reduce((t, e) => t + (e.bien === 'both' && s.bien !== 'all' ? e.amt / 2 : e.amt), 0);
+    const expList = expRows.map(e => Object.assign({}, e, {
+      rule: s.rules[e.cat] || 'Parts sociales',
+      amount: eur(e.bien === 'both' && s.bien !== 'all' ? e.amt / 2 : e.amt)
+    }));
+    const expTotalLabel = 'Dépenses 2026 · ' + eur(expTotal);
+    const conflictHere = (this.props.showConflicts ?? true) && bienSel === 'mer' && s.decisions.r1 === 'pending';
+    const TRES = {
+      mer: { title: 'Trésorerie de l\'indivision', amount: '4 180 €', sub: 'Compte joint de l\'indivision Kerloc\'h', rows: [['Loyers encaissés', '8 400 €'], ['À régulariser', '1 240 €']] },
+      mont: { title: 'Trésorerie de la SCI', amount: '2 640 €', sub: 'Compte courant de la SCI Prudhomme Immobilier', rows: [['Appels de fonds versés', '1 800 €'], ['Comptes courants d\'associés', '288 €']] },
+      all: { title: 'Trésorerie consolidée', amount: '6 820 €', sub: 'Indivision Kerloc\'h et SCI Prudhomme Immobilier', rows: [['Recettes encaissées', '10 200 €'], ['À régulariser', '1 528 €']] }
+    };
+    const tres = TRES[s.bien] || TRES.mer;
+
+    const vals = {
+      isDesktop: s.view === 'desktop', isMobile: s.view === 'mobile',
+      setDesktop: () => this.setState({ view: 'desktop' }), setMobile: () => this.setState({ view: 'mobile' }),
+      notesOpen: s.notes, toggleNotes: () => this.setState({ notes: !s.notes }),
+      rentalOn,
+      pendingCount: pendHere, pendingLabel: pendHere + (pendHere > 1 ? ' demandes' : ' demande'),
+      goDash: this.go('dash'), goCal: this.go('cal'), goReq: this.go('req'), goExp: this.go('exp'),
+      goBal: this.go('bal'), goRent: this.go('rent'), goMaint: this.go('maint'), goProp: this.go('prop'),
+      goVault: this.go('vault'), goVote: this.go('vote'), goSouv: this.go('souv'), goMem: this.go('mem'),
+      goBiens: this.go('biens'),
+
+      scopeAll: s.bien === 'all', scopeBien: s.bien !== 'all',
+      pillAllBg: s.bien === 'all' ? '#24201b' : 'transparent',
+      pillAllInk: s.bien === 'all' ? '#fffdf9' : '#4a443c',
+      pillMerBg: s.bien === 'mer' ? '#24201b' : 'transparent',
+      pillMerInk: s.bien === 'mer' ? '#fffdf9' : '#4a443c',
+      pillMontBg: s.bien === 'mont' ? '#24201b' : 'transparent',
+      pillMontInk: s.bien === 'mont' ? '#fffdf9' : '#4a443c',
+      setAll: () => this.setState({ bien: 'all', screen: 'dash' }),
+      bienName: s.bien === 'mont' ? 'Les Arcs 1800' : "Maison de Kerloc'h",
+      bienShort: s.bien === 'mont' ? 'Les Arcs' : "Kerloc'h",
+      bienPlace: s.bien === 'mont' ? 'Bourg-Saint-Maurice (73) · 6 couchages' : 'Crozon (29) · 8 couchages',
+      bienStructure: s.bien === 'mont' ? 'SCI Prudhomme Immobilier · 3 associés · 300 parts' : "Indivision · 4 indivisaires · quotes-parts égales",
+      bienMajority: s.bien === 'mont' ? 'Assemblée générale, gérant Thomas' : 'Deux tiers pour la gestion courante',
+      bienIcon: s.bien === 'mont' ? 'triangle' : 'water',
+      rentalHere: (this.props.rentalEnabled ?? true) && s.bien === 'mer',
+      showConflict: conflictHere,
+      hasPending: pendHere > 0,
+      reqSubline: conflictHere ? 'Dont un chevauchement du 8 au 16 août à Kerloc\'h' : 'Aucun conflit de dates détecté',
+      tresTitle: tres.title, tresAmount: tres.amount, tresSub: tres.sub,
+      tresRows: [{ k: s.bien === 'mont' ? 'Charges engagées 2026' : 'Dépenses engagées 2026', v: eur(expTotal) }].concat(tres.rows.map(r => ({ k: r[0], v: r[1] }))),
+      vaultSub: s.bien === 'mont' ? 'Statuts de la SCI, règlement de copropriété et codes d\'accès, chiffrés et visibles selon le rôle.' : 'Documents de l\'indivision et codes d\'accès, chiffrés et visibles selon le rôle.',
+      vaultNote: s.bien === 'mont' ? 'Chiffré côté serveur. Les codes du portail et du local à skis sont partagés aux membres de foyer pendant leur séjour, jamais au-delà.' : 'Chiffré côté serveur. Le code de la boîte à clés est le seul partagé aux locataires, et uniquement pendant leur séjour.',
+      souvTitle: s.bien === 'mont' ? 'Hiver 2026 · Les Arcs' : "Été 2025 · Kerloc'h",
+      souvMeta: s.bien === 'mont' ? '62 photos · 4 contributeurs' : '148 photos · 6 contributeurs',
+      alertMer: s.bien !== 'mont', alertMont: s.bien === 'mont',
+      bienNext: s.bien === 'mont' ? 'Julien & Sofia, 11 juil.' : 'Claire & Marc, 4 juil.',
+      bienOccLabel: s.bien === 'mont' ? 'Occupation hiver' : 'Occupation été',
+      bienOcc: s.bien === 'mont' ? '88 %' : '62 %',
+      bienTodo: pendHere + (pendHere > 1 ? ' demandes' : ' demande'),
+      bienSpend: eur(expTotal),
+      bienGreeting: pendHere === 0 ? 'Aucune demande en attente sur ce bien.' : pendHere + (pendHere > 1 ? ' demandes de séjour attendent' : ' demande de séjour attend') + ' votre arbitrage.',
+
+      bienCount: BIENS.length + s.extraBiens.length,
+      addBienOpen: s.addBien,
+      addBienLabel: s.addBien ? 'Fermer le formulaire' : 'Ajouter un bien',
+      toggleAddBien: () => this.setState({ addBien: !s.addBien }),
+      indivisionBorder: s.newStructure === 'Indivision' ? '#b0603f' : '#d9cfc2',
+      indivisionInk: s.newStructure === 'Indivision' ? '#b0603f' : '#24201b',
+      sciBorder: s.newStructure === 'SCI' ? '#b0603f' : '#d9cfc2',
+      sciInk: s.newStructure === 'SCI' ? '#b0603f' : '#24201b',
+      propreBorder: s.newStructure === 'Nom propre' ? '#b0603f' : '#d9cfc2',
+      propreInk: s.newStructure === 'Nom propre' ? '#b0603f' : '#24201b',
+      pickIndivision: () => this.setState({ newStructure: 'Indivision' }),
+      pickSci: () => this.setState({ newStructure: 'SCI' }),
+      pickPropre: () => this.setState({ newStructure: 'Nom propre' }),
+      addBien: () => {
+        const n = s.extraBiens.length + 1;
+        const st = s.newStructure;
+        this.setState({
+          addBien: false,
+          extraBiens: s.extraBiens.concat([{
+            id: 'x' + n, name: 'Maison des Cévennes', place: 'Anduze (30)', beds: 6,
+            kind: 'Campagne', kindInk: '#5f564c', rental: 'non louée',
+            structure: st === 'SCI' ? 'SCI à créer' : st,
+            holders: st === 'Indivision' ? 'Détenteurs à inviter' : st === 'SCI' ? 'Associés et parts à saisir' : 'Hélène Prudhomme, seule propriétaire',
+            majority: st === 'Nom propre' ? 'Décision du propriétaire' : st === 'SCI' ? 'Selon les statuts' : 'Deux tiers pour la gestion courante',
+            note: 'Bien créé à l\'instant. Complétez les détenteurs, le calendrier et les documents pour l\'ouvrir à la famille.'
+          }])
+        });
+      },
+      biens: BIENS.concat(s.extraBiens).map(b => {
+        const st = s.bienState[b.id] || 'idle';
+        return Object.assign({}, b, {
+          idle: st === 'idle', asking: st === 'asking', archived: st === 'archived',
+          open: () => this.setState({ bien: b.id === 'b2' ? 'mont' : 'mer', screen: 'dash' }),
+          ask: () => this.setState({ bienState: Object.assign({}, s.bienState, { [b.id]: 'asking' }) }),
+          confirm: () => this.setState({ bienState: Object.assign({}, s.bienState, { [b.id]: 'archived' }) }),
+          cancel: () => this.setState({ bienState: Object.assign({}, s.bienState, { [b.id]: 'idle' }) })
+        });
+      }),
+
+      upcoming: [
+        { range: '4 → 18 juil.', who: 'Claire & Marc + 3', where: "Kerloc'h · validé" },
+        { range: '11 → 19 juil.', who: 'Julien & Sofia', where: 'Les Arcs · validé' },
+        { range: '25 juil. → 8 août', who: 'Famille Berger', where: "Kerloc'h · location" },
+        { range: '22 → 30 août', who: 'Thomas + invités', where: "Kerloc'h · en attente" }
+      ].filter(u => mine(u.where)),
+
+      isMer: s.bien === 'mer', isMont: s.bien === 'mont',
+      setMer: () => this.setState({ bien: 'mer' }), setMont: () => this.setState({ bien: 'mont' }),
+      dayNames: sundayFirst ? ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'] : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      monthLabel: MONTHS[s.month].charAt(0).toUpperCase() + MONTHS[s.month].slice(1) + ' 2026',
+      weeks: this.buildMonth(2026, s.month, bienSel, sundayFirst),
+      monthStays,
+      prevMonth: () => this.setState({ month: Math.max(0, s.month - 1) }),
+      nextMonth: () => this.setState({ month: Math.min(11, s.month + 1) }),
+
+      tabValider: s.reqTab === 'valider', tabTour: s.reqTab === 'tour',
+      setTabValider: () => this.setState({ reqTab: 'valider' }), setTabTour: () => this.setState({ reqTab: 'tour' }),
+      requests: reqData.filter(r => r.bien === bienSel).map(r => {
+        const st = s.decisions[r.id];
+        const style = stateStyles[st] || {};
+        return Object.assign({}, r, {
+          pending: st === 'pending', decided: st !== 'pending',
+          stateBg: style.bg, stateInk: style.ink, stateLabel: style.label,
+          warn: r.warn && st === 'pending',
+          approve: () => this.setState({ decisions: Object.assign({}, s.decisions, { [r.id]: 'approved' }) }),
+          refuse: () => this.setState({ decisions: Object.assign({}, s.decisions, { [r.id]: 'refused' }) }),
+          reset: () => this.setState({ decisions: Object.assign({}, s.decisions, { [r.id]: 'pending' }) })
+        });
+      }),
+      wishes: [
+        { who: 'Thomas', first: '22 → 30 août', second: '4 → 11 juil.', quota: '8 / 21 n' },
+        { who: 'Hélène', first: '13 → 21 juin', second: '1 → 9 août', quota: '8 / 21 n' },
+        { who: 'Claire', first: '4 → 18 juil.', second: '15 → 22 août', quota: '14 / 21 n' },
+        { who: 'Julien', first: '8 → 16 août', second: '11 → 19 juil.', quota: '16 / 21 n' }
+      ],
+
+      rules: Object.keys(s.rules).map(cat => ({
+        cat, rule: s.rules[cat],
+        cycle: () => {
+          const next = RULE_OPTIONS[(RULE_OPTIONS.indexOf(s.rules[cat]) + 1) % RULE_OPTIONS.length];
+          this.setState({ rules: Object.assign({}, s.rules, { [cat]: next }) });
+        }
+      })),
+      expenses: expList,
+      expTotal: expTotalLabel,
+
+      balances: bal.rows,
+      transfers: bal.transfers,
+
+      rentals: [
+        { range: '4 → 11 juil.', tenant: 'M. et Mme Corre', people: '4 personnes', price: '1 350 €', status: 'Soldé', bg: '#e4e9dc', ink: '#556340' },
+        { range: '25 juil. → 8 août', tenant: 'Famille Berger', people: '6 personnes', price: '3 100 €', status: 'Acompte reçu', bg: '#f0e0d5', ink: '#8d4a2e' },
+        { range: '8 → 15 août', tenant: 'Mme Rolland', people: '3 personnes', price: '1 550 €', status: 'À confirmer', bg: '#f2ede5', ink: '#6b6157' },
+        { range: '5 → 12 sept.', tenant: 'M. Guillou', people: '2 personnes', price: '890 €', status: 'Soldé', bg: '#e4e9dc', ink: '#556340' }
+      ],
+
+      tasks: taskData.filter(t => t.bien === bienSel).map(t => {
+        const done = s.tasks[t.id];
+        return Object.assign({}, t, {
+          check: done ? '✓' : '',
+          boxBg: done ? '#7a8b5c' : 'transparent',
+          boxBorder: done ? '#7a8b5c' : '#c9bda9',
+          ink: done ? '#5f564c' : '#24201b',
+          deco: done ? 'line-through' : 'none',
+          toggle: () => this.setState({ tasks: Object.assign({}, s.tasks, { [t.id]: !done }) })
+        });
+      }),
+      recurring: [
+        { label: 'Ramonage', every: 'Tous les ans' },
+        { label: 'Contrôle chaudière', every: 'Tous les ans' },
+        { label: 'Entretien du jardin', every: 'Tous les mois, avr. à oct.' },
+        { label: 'Relevé des compteurs', every: 'À chaque séjour' }
+      ],
+      inventory: fiche.inv,
+      ficheName: fiche.name, ficheSub: fiche.sub,
+      ficheRows: fiche.rows.map(r => ({ k: r[0], v: r[1] })),
+      ficheGuide: fiche.guide.map(r => ({ k: r[0], v: r[1] })),
+
+      docs: [
+        { bien: 'mer', ext: 'PDF', name: "Convention d'indivision", meta: 'Signée le 14/03/2019 · notaire Kervella', scope: 'Indivisaires' },
+        { bien: 'mer', ext: 'PDF', name: 'Acte de notoriété', meta: 'Succession Robert Prudhomme', scope: 'Indivisaires' },
+        { bien: 'mer', ext: 'PDF', name: "Attestation d'assurance Kerloc'h", meta: 'Valable jusqu\'au 30/04/2027', scope: 'Tous les membres' },
+        { bien: 'mer', ext: 'PDF', name: 'Diagnostic DPE', meta: 'Classe E · établi en 2023', scope: 'Tous les membres' },
+        { bien: 'mer', ext: 'JPG', name: 'Compteurs relevés juillet', meta: 'Déposé par Claire', scope: 'Indivisaires' },
+        { bien: 'mer', ext: 'PDF', name: 'Devis chaudière Le Bihan', meta: 'Rattaché au vote en cours', scope: 'Indivisaires' },
+        { bien: 'mont', ext: 'PDF', name: 'Statuts de la SCI Prudhomme Immobilier', meta: 'Enregistrés en 2021 · 300 parts', scope: 'Associés' },
+        { bien: 'mont', ext: 'PDF', name: 'Règlement de copropriété', meta: 'Résidence Belles Cimes', scope: 'Tous les membres' },
+        { bien: 'mont', ext: 'PDF', name: "Attestation d'assurance Les Arcs", meta: 'Valable jusqu\'au 31/12/2026', scope: 'Tous les membres' },
+        { bien: 'both', ext: 'PDF', name: 'Déclaration de revenus fonciers 2025', meta: 'Déposée par Hélène · les deux biens', scope: 'Indivisaires' }
+      ].filter(d => d.bien === 'both' || d.bien === bienSel),
+      codes: [
+        { bien: 'mer', label: 'Alarme', house: "Kerloc'h", value: s.codes ? '4 7 1 2' : '• • • •' },
+        { bien: 'mer', label: 'Boîte à clés', house: "Kerloc'h", value: s.codes ? '2 0 5 9' : '• • • •' },
+        { bien: 'mer', label: 'Wifi « Kerloch »', house: "Kerloc'h", value: s.codes ? 'goelands29' : '• • • • • • •' },
+        { bien: 'mont', label: 'Portail résidence', house: 'Les Arcs', value: s.codes ? '1 8 4 0 B' : '• • • • •' },
+        { bien: 'mont', label: 'Local à skis', house: 'Les Arcs', value: s.codes ? '3 3 7 1' : '• • • •' },
+        { bien: 'mont', label: 'Wifi « BellesCimes-12 »', house: 'Les Arcs', value: s.codes ? 'edelweiss73' : '• • • • • • •' }
+      ].filter(c => c.bien === 'both' || c.bien === bienSel),
+      codesLabel: s.codes ? 'Masquer' : 'Afficher',
+      toggleCodes: () => this.setState({ codes: !s.codes }),
+
+      votedFor: s.vote === 'for', votedAgainst: s.vote === 'against',
+      voteForInk: s.vote === 'for' ? '#fffdf9' : '#4a443c',
+      voteAgainstInk: s.vote === 'against' ? '#fffdf9' : '#4a443c',
+      voteHint: s.vote ? 'Votre voix pèse 25 % des droits indivis. Modifiable jusqu\'au 20 septembre.' : 'Il manque deux voix pour atteindre les deux tiers.',
+      voteFor: () => this.setState({ vote: s.vote === 'for' ? null : 'for' }),
+      voteAgainst: () => this.setState({ vote: s.vote === 'against' ? null : 'against' }),
+      decisions: [
+        { date: '04/2026', label: 'Contrat jardinier annuel', majority: 'Deux tiers', result: 'Adopté', bg: '#e4e9dc', ink: '#556340' },
+        { date: '11/2025', label: 'Mise en location de Kerloc\'h', majority: 'Deux tiers', result: 'Adopté', bg: '#e4e9dc', ink: '#556340' },
+        { date: '06/2025', label: 'Réfection de la terrasse, 14 000 €', majority: 'Deux tiers', result: 'Reporté', bg: '#f2ede5', ink: '#6b6157' },
+        { date: '02/2025', label: 'Vente du garage mitoyen', majority: 'Unanimité', result: 'Rejeté', bg: '#f0e0d5', ink: '#8d4a2e' },
+        { date: '12/2025', label: "Les Arcs · budget travaux salle de bain", majority: 'Assemblée générale', result: 'Adopté', bg: '#e4e9dc', ink: '#556340' }
+      ],
+
+      structures: [
+        {
+          bien: 'mer', title: "Indivision Kerloc'h", subtitle: 'Succession Robert Prudhomme · convention de 2019 · quotes-parts égales', majority: 'Deux tiers · unanimité pour vendre',
+          members: [
+            { who: 'Hélène Prudhomme', initials: 'HP', household: 'Foyer Hélène · 2 personnes', role: 'Gérante', roleBg: '#f0e0d5', roleInk: '#8d4a2e', share: '25 %', nights: '8 nuits en 2026' },
+            { who: 'Claire Prudhomme-Vasseur', initials: 'CP', household: 'Foyer Vasseur · 5 personnes', role: 'Indivisaire', roleBg: '#f2ede5', roleInk: '#4a443c', share: '25 %', nights: '14 nuits en 2026' },
+            { who: 'Thomas Prudhomme', initials: 'TP', household: 'Foyer Thomas · 4 personnes', role: 'Indivisaire', roleBg: '#f2ede5', roleInk: '#4a443c', share: '25 %', nights: '8 nuits en 2026' },
+            { who: 'Julien Prudhomme', initials: 'JP', household: 'Foyer Julien · 4 personnes', role: 'Indivisaire', roleBg: '#f2ede5', roleInk: '#4a443c', share: '25 %', nights: '16 nuits en 2026' }
+          ]
+        },
+        {
+          bien: 'mont', title: 'SCI Prudhomme Immobilier', subtitle: 'Les Arcs 1800 · 300 parts sociales · exercice au 31 décembre', majority: 'Assemblée générale selon les statuts',
+          members: [
+            { who: 'Thomas Prudhomme', initials: 'TP', household: 'Foyer Thomas · 4 personnes', role: 'Gérant', roleBg: '#f0e0d5', roleInk: '#8d4a2e', share: '120 parts', nights: '12 nuits en 2026' },
+            { who: 'Claire Prudhomme-Vasseur', initials: 'CP', household: 'Foyer Vasseur · 5 personnes', role: 'Associée', roleBg: '#f2ede5', roleInk: '#4a443c', share: '90 parts', nights: '7 nuits en 2026' },
+            { who: 'Julien Prudhomme', initials: 'JP', household: 'Foyer Julien · 4 personnes', role: 'Associé', roleBg: '#f2ede5', roleInk: '#4a443c', share: '90 parts', nights: '8 nuits en 2026' }
+          ]
+        }
+      ].filter(st => s.bien === 'all' || st.bien === bienSel),
+      guests: [
+        { who: 'Famille Berger', scope: "Locataire · Kerloc'h, 25 juil. → 8 août", until: 'Jusqu\'au 9 août' },
+        { who: 'Marc Vasseur', scope: 'Membre de foyer · séjours de Claire', until: 'Permanent' },
+        { who: 'Léa et Antoine', scope: 'Invités de Thomas · week-end du 29 août', until: 'Jusqu\'au 31 août' }
+      ],
+
+      mAccueil: s.mtab === 'accueil', mCal: s.mtab === 'cal', mAsk: s.mtab === 'ask',
+      mAccueilInk: s.mtab === 'accueil' ? '#b0603f' : '#5f564c',
+      mCalInk: s.mtab === 'cal' ? '#b0603f' : '#5f564c',
+      mAskInk: s.mtab === 'ask' ? '#b0603f' : '#5f564c',
+      setMAccueil: () => this.setState({ mtab: 'accueil' }), setMCal: () => this.setState({ mtab: 'cal' }), setMAsk: () => this.setState({ mtab: 'ask' }),
+
+      noteTitle: { biens: 'Biens gérés', dash: 'Tableau de bord', cal: "Calendrier d'occupation", req: 'Demandes de séjour', exp: 'Dépenses & répartition', bal: 'Soldes & remboursements', rent: 'Location saisonnière', maint: "Carnet d'entretien", prop: 'Fiche du bien', vault: 'Coffre-fort', vote: 'Décisions & votes', souv: 'Souvenirs', mem: 'Membres & quotes-parts' }[screen],
+      noteItems: NOTES[screen] || []
+    };
+
+    ['biens', 'dash', 'cal', 'req', 'exp', 'bal', 'rent', 'maint', 'prop', 'vault', 'vote', 'souv', 'mem'].forEach(k => {
+      vals['nav' + k.charAt(0).toUpperCase() + k.slice(1)] = screen === k;
+    });
+    return vals;
+  }
+}
+
+</script>
+</body>
+</html>
