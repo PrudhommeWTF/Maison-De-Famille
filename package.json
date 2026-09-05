@@ -1,0 +1,18 @@
+{
+  "name": "maison-de-famille",
+  "version": "0.0.0",
+  "description": "Maison de Famille, application auto-hebergee de gestion de biens familiaux (Angular + Node/SQLite).",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend start",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "docker:build": "docker build -t maison-de-famille .",
+    "docker:up": "docker compose up -d --build"
+  }
+}

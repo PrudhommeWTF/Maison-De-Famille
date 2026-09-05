@@ -1,0 +1,36 @@
+{
+  "name": "mdf-backend",
+  "version": "0.0.0",
+  "description": "Maison de Famille, API (Express + SQLite relationnel)",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "lint:mort": "tsc -p tsconfig.json --noUnusedLocals --noUnusedParameters --noEmit",
+    "docs:parametres": "tsx scripts/parametres-doc.ts > ../docs/parametres.md",
+    "docs:schema": "tsx scripts/schema-dump.ts > ../docs/schema.sql"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.0",
+    "@types/nodemailer": "^6.4.17",
+    "tsx": "^4.20.6",
+    "typescript": "^5.7.2"
+  }
+}
