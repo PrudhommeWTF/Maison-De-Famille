@@ -9,7 +9,7 @@ Chaque tranche se termine par : un tag Git, une note de version, un fichier
 
 ---
 
-## Tranche 1 : remplacer le fichier Excel
+## Tranche 1 : remplacer le fichier Excel — **livrée**
 
 C'est la seule tranche qui compte tant qu'elle n'est pas faite.
 
@@ -73,6 +73,11 @@ avec une date d'effet dans le passé, et cette dépense garde sa ventilation d'o
 ## Tranche 3 : la maison
 
 - carnet d'entretien, tâches, récurrences engendrant leurs échéances ;
+- **carnet d'adresses** du bien : artisans, voisins, mairie, contacts d'urgence.
+  Cinq champs, une carte dans la fiche du bien, portée « membres ». Utile le
+  jour où la chaudière lâche pendant le séjour de quelqu'un qui ne connaît pas
+  le plombier. C'est la seule fonction du service de référence que le brief
+  n'avait pas listée et qui méritait d'être reprise ;
 - cocher une tâche demande la date et accepte une facture, qui peut créer la dépense ;
 - checklist de départ et sa notification la veille de la fin de séjour ;
 - fiche complète du bien : caractéristiques, guide d'arrivée, inventaire, signalement de casse ;
@@ -122,10 +127,11 @@ que personne n'exécute jamais et qui ne marche pas le jour où on en a besoin.
 
 ```
 backend/src/noyau/migrations/
-  001-socle.ts        personnes, foyers, structures, biens, détentions, séjours, fichiers, paramètres
-  002-import.ts       import_run et ses colonnes sur sejour
+  001-socle.ts        personnes, foyers, structures, biens, détentions, séjours,
+                      saisons, fichiers, paramètres, notifications, journal, imports
+  002-totp.ts         second facteur et codes de secours
   003-argent.ts       catégories, règles datées, dépenses, ventilations, règlements
-  004-maison.ts       tâches, récurrences, documents, codes
+  004-maison.ts       tâches, récurrences, contacts, documents, codes
   ...
 ```
 

@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  NG_CLI_ANALYTICS: "false"
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Un secret arrivé dans l'historique est compromis même retiré ensuite :
+      # le seul moment où l'attraper est avant qu'il n'y entre. Bloquant.
+      - name: Recherche de secrets
+        run: node scripts/cherche-secrets.js
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Installation
+        working-directory: backend
+        run: npm ci
+
+      # Les dépendances de production, et elles seules : un outil de build
+      # vulnérable ne tourne pas sur la machine de la famille. Bloquant à partir
+      # de « high » : « moderate » ferait échouer la CI sur des avis souvent sans
+      # chemin d'exploitation ici, et une CI rouge en permanence ne se lit plus.
+      - name: Audit des dépendances
+        working-directory: backend
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+      # Ce qui bloque vraiment : la portée d'accès (une route sans garde fait
+      # échouer la CI), les détentions historisées, la détection de
+      # chevauchement, l'import du planning, les migrations, et la fraîcheur du
+      # schéma et de la documentation engendrés.
+      - name: Tests
+        working-directory: backend
+        run: npm test
+
+      # « Pas de code mort » : imports, variables et paramètres inutilisés
+      # font échouer, dans le code comme dans les tests.
+      - name: Lint code mort
+        working-directory: backend
+        run: npm run lint:mort && npm run typecheck
+
+  frontend:
+    name: Application
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installation
+        working-directory: frontend
+        run: npm ci
+
+      - name: Audit des dépendances
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+      # La grille du calendrier et la mise en forme des dates : une erreur y est
+      # silencieuse (elle décale une nuit), elle ne plante pas.
+      - name: Tests
+        working-directory: frontend
+        run: npm test
+
+      - name: Typage des tests
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Lint code mort
+        working-directory: frontend
+        run: npm run lint:mort
+
+  registre:
+    name: Registre partagé
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Les deux copies du registre de paramètres sont identiques octet pour
+      # octet. Sans ce contrôle, l'écran de configuration et le serveur
+      # divergeraient sans que personne ne s'en aperçoive.
+      - name: Les deux copies du registre sont identiques
+        run: |
+          if ! diff -u backend/src/parametres/registre.ts frontend/src/app/core/parametres/registre.ts; then
+            echo ""
+            echo "Les deux copies du registre de paramètres ont divergé."
+            echo "Recopiez l'une sur l'autre :"
+            echo "  cp backend/src/parametres/registre.ts frontend/src/app/core/parametres/registre.ts"
+            exit 1
+          fi

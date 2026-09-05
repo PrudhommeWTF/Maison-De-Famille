@@ -1,0 +1,35 @@
+{
+  "name": "mdf-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "tsx --test \"src/app/core/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "lint:mort": "tsc -p tsconfig.app.json --noUnusedLocals --noUnusedParameters --noEmit"
+  },
+  "dependencies": {
+    "@angular/common": "^21.2.22",
+    "@angular/compiler": "^21.2.22",
+    "@angular/core": "^21.2.22",
+    "@angular/forms": "^21.2.22",
+    "@angular/platform-browser": "^21.2.22",
+    "@angular/router": "^21.2.22",
+    "@fontsource/bricolage-grotesque": "^5.2.5",
+    "@fontsource/instrument-sans": "^5.2.5",
+    "bootstrap-icons": "^1.11.3",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.22",
+    "@angular/cli": "^21.2.22",
+    "@angular/compiler-cli": "^21.2.22",
+    "@types/node": "^22.20.1",
+    "tsx": "^4.20.6",
+    "typescript": "~5.9.2"
+  }
+}
