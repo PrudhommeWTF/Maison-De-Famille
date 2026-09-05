@@ -31,6 +31,8 @@ l'est pas, et pourquoi.
 | Codes d'accès | Chiffrés au repos en **AES-256-GCM**. La clé (`MDF_CLE_COFFRE`) vit dans le fichier d'environnement, **hors du répertoire de données** : une base qui fuit ou une sauvegarde recopiée ne rend aucun code. Une racine sur la machine lit la clé comme le reste : c'est une frontière réelle, pas un coffre-fort. | `coffre/chiffrement.ts` |
 | Portée des codes | Quatre portées. « Pendant le séjour » ouvre deux jours avant l'arrivée et se ferme **le lendemain du jour de départ**, jamais avant : il faut pouvoir refermer la maison. Un gérant et un détenteur ne dépendent pas d'un séjour. | `coffre/portee.ts` |
 | Affichage d'un code | La liste ne porte **jamais** la valeur. Chaque affichage passe par une route qui déchiffre et journalise dans la même transaction, avec le nom et l'horodatage. | `coffre/repo.ts`, `code_affichage` |
+| Accès temporaire | Un lien d'invité ouvre une personne sans mot de passe et un rôle **daté**. Deux verrous indépendants : le jeton n'ouvre plus de session passé la date, et la fin du rôle coupe les sessions déjà ouvertes. La révocation ajoute le troisième : jetons d'accès et de renouvellement invalidés sur-le-champ. | `acces/temporaire.ts` |
+| Compte par lien | `acces_lien_seul` empêche un locataire de se transformer en compte permanent par « mot de passe oublié ». La réponse de cette route reste identique : aucune énumération. | `auth/routes.ts` |
 | Deux gérants par structure | Le serveur refuse tout retrait qui ferait descendre sous deux, y compris pour soi-même. Une structure à gérant unique est une instance dont l'accès se perd avec un téléphone, et dont la seule issue est une restauration. | `acces/gouvernance.ts` |
 
 ## Ce que la CI vérifie, à chaque poussée
@@ -49,6 +51,9 @@ l'est pas, et pourquoi.
   créer une personne, recevoir l'invitation, choisir un mot de passe, se
   connecter. Le contournement de ce parcours dans le banc d'essai avait laissé
   passer un défaut qui le rendait entièrement inopérant.
+- **Seuils de majorité** : le seuil exact, l'arrondi au supérieur, l'abstention,
+  le quorum, un détenteur sorti pendant le scrutin, et l'absence de vote en nom
+  propre.
 - **Portée du coffre-fort**, cas par cas : la veille, pendant, le jour du départ
   et le lendemain, pour chacun des quatre rôles, avec les rotations le même jour
   et les séjours à cheval sur le changement d'année.

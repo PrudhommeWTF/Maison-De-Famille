@@ -62,6 +62,11 @@ export const ROUTES: Routes = [
     title: 'Connexion',
   },
   {
+    path: 'sejour',
+    loadComponent: () => import('./shell/sejour').then((m) => m.EntreeSejour),
+    title: 'Votre séjour',
+  },
+  {
     path: 'reinitialiser',
     loadComponent: () => import('./shell/reinitialisation').then((m) => m.Reinitialisation),
     title: 'Nouveau mot de passe',
@@ -83,6 +88,7 @@ export const ROUTES: Routes = [
           { path: 'soldes', loadComponent: () => import('./ecrans/soldes').then((m) => m.Soldes), title: 'Soldes et remboursements' },
           { path: 'membres', loadComponent: () => import('./ecrans/membres').then((m) => m.Membres), title: 'Membres et quotes-parts' },
           { path: 'entretien', loadComponent: () => import('./ecrans/entretien').then((m) => m.Entretien), title: "Carnet d'entretien" },
+          { path: 'decisions', loadComponent: () => import('./ecrans/decisions').then((m) => m.Decisions), title: 'Décisions et votes' },
           { path: 'coffre', loadComponent: () => import('./ecrans/coffre').then((m) => m.CoffreFort), title: 'Coffre-fort' },
           { path: 'fiche', loadComponent: () => import('./ecrans/fiche').then((m) => m.Fiche), title: 'Fiche du bien' },
           { path: '', pathMatch: 'full', redirectTo: 'calendrier' },

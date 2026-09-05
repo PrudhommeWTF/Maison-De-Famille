@@ -72,6 +72,10 @@ export const PUBLIQUES_AUTORISEES: readonly string[] = [
   'POST /api/auth/renouveler',
   'POST /api/auth/deconnexion',
   'POST /api/auth/mot-de-passe-oublie',
+  // L'entrée par un lien d'invité : c'est le jeton qui authentifie, il n'y a
+  // pas de compte à connecter. Le lien porte sa propre expiration, et le rôle
+  // qu'il ouvre porte la sienne.
+  'POST /api/auth/lien',
   'POST /api/auth/mot-de-passe-reinitialiser',
   'GET /api/sante',
   // L'amorçage : une instance vide n'a aucun compte, donc personne ne peut se

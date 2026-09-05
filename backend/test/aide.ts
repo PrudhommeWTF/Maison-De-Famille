@@ -60,6 +60,10 @@ export class Instance {
   }
 
   deconnecte(): void { this.acces = ''; }
+
+  /** Prend un jeton d'accès obtenu autrement que par la connexion, un lien
+   *  temporaire par exemple. */
+  utiliserJeton(acces: string): void { this.acces = acces; }
   /** L'en-tête d'autorisation courant, pour un appel direct (téléchargement binaire). */
   get entetesAuth(): Record<string, string> { return this.acces ? { authorization: `Bearer ${this.acces}` } : {}; }
   /** Se faire passer pour quelqu'un d'autre, sans repasser par la connexion. */

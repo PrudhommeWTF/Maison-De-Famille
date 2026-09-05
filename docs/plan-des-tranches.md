@@ -137,7 +137,7 @@ seule ne rend aucun code, et il faut donc en garder une copie ailleurs.
 
 ---
 
-## Tranche 4 : la famille
+## Tranche 4 : la famille (**livrée**)
 
 - décisions et scrutins selon la structure, voix pondérées par les parts figées à l'ouverture ;
 - seuils lus dans `regle_decision`, jamais codés en dur ;
@@ -149,7 +149,21 @@ seule ne rend aucun code, et il faut donc en garder une copie ailleurs.
 - notifications `vote_ouvert` et `vote_cloture_proche`.
 
 **Ce que vous vérifiez vous-même** : un lien d'invité expiré ne donne plus accès au code
-d'accès, y compris en tapant l'adresse directement.
+d'accès, y compris en tapant l'adresse directement. La liste complète est dans
+`docs/recette-t4.md`.
+
+**Deux décisions prises en chemin.**
+
+Le seuil de majorité porte sur le **corps électoral entier**, pas sur les voix exprimées : une
+abstention pèse donc comme un refus. C'est la lecture de l'article 815-3 du Code civil, qui parle
+de la majorité des deux tiers des droits indivis et non des droits exprimés. Le rappel envoyé
+trois jours avant la clôture le dit à ceux qui n'ont pas répondu, parce que quelqu'un qui
+l'ignore croit s'abstenir alors qu'il bloque.
+
+Un accès temporaire crée une **vraie personne** sans mot de passe, plutôt qu'un second mécanisme
+d'authentification. Toute l'application continue alors de fonctionner sans savoir que ce visiteur
+est arrivé par un lien : portées, journal des codes, notifications. Le prix est un drapeau,
+`acces_lien_seul`, qui empêche ce compte de devenir permanent par « mot de passe oublié ».
 
 ---
 

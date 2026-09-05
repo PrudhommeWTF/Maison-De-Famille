@@ -211,7 +211,18 @@ export class Cadre {
     // et un invité en séjour y trouve légitimement le code du portail.
     e.push({ chemin: '/bien/coffre', libelle: 'Coffre-fort', icone: 'bi-shield-lock' });
     e.push({ chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-house-door' });
-    e.push({ chemin: '/bien/membres', libelle: 'Membres et ' + this.etat.vocabulaire().parts, icone: 'bi-people' });
+    // Les décisions sont visibles de tous les membres : « toute décision est
+    // horodatée et visible de tous les indivisaires », dit la maquette.
+    if (this.etat.roleIci() !== 'invite') {
+      e.push({ chemin: '/bien/decisions', libelle: 'Décisions et votes', icone: 'bi-check2-square' });
+    }
+    // Un invité ou un locataire ne voit pas la liste des membres de la famille :
+    // l'écran s'appuie sur la portée de structure, qu'un rôle posé sur un seul
+    // bien ne donne pas, et une entrée de navigation qui mène à un écran vide
+    // est un mensonge.
+    if (this.etat.roleIci() !== 'invite') {
+      e.push({ chemin: '/bien/membres', libelle: 'Membres et ' + this.etat.vocabulaire().parts, icone: 'bi-people' });
+    }
     return e;
   });
 

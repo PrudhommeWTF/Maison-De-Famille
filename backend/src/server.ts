@@ -24,6 +24,7 @@ import { routesArgent } from './argent/routes';
 import { demarrerEntretien, routesEntretien } from './entretien/routes';
 import { routesCoffre } from './coffre/routes';
 import { routesMaison } from './maison/routes';
+import { routesDecisions } from './decisions/routes';
 import { routesSaisons } from './sejours/saisons';
 import { routesImport } from './sejours/import/routes';
 import { routesParametres } from './parametres/routes';
@@ -83,7 +84,7 @@ export function construireApp(deps: Deps): express.Express {
   for (const routeur of [
     routesAuth(deps), routesAcces(deps), routesPatrimoine(deps), routesSejours(deps),
     routesSaisons(deps), routesImport(deps), routesArgent(deps), routesEntretien(deps),
-    routesMaison(deps), routesCoffre(deps), routesParametres(deps),
+    routesMaison(deps), routesCoffre(deps), routesDecisions(deps), routesParametres(deps),
     routesFichiers(deps), routesExport(deps), routesSysteme(deps),
   ]) app.use('/api', routeur.router);
 
