@@ -3,8 +3,14 @@
 Deux façons de déployer, au choix. Les deux servent la même image : un seul
 processus qui rend l'API et l'application, sur un seul port.
 
-Dans les deux cas, l'application n'écoute **que sur la boucle locale** : c'est le
-reverse-proxy qui expose, avec le certificat.
+Dans les deux cas, l'application écoute **sur toutes les interfaces**, port 8099.
+C'est ce qui permet d'ouvrir l'écran de premier démarrage en tapant l'adresse du
+conteneur, avant même qu'un reverse-proxy existe. Une fois le proxy en place sur
+la même machine, `MDF_HOST=127.0.0.1` ferme l'accès direct au port ; sur une
+machine séparée, c'est au pare-feu de le faire.
+
+La mise en ligne passe de toute façon par le reverse-proxy, qui porte le
+certificat : l'application ne fait pas de TLS elle-même.
 
 ---
 
@@ -131,13 +137,22 @@ dit « je n'ai rien reçu ».
 
 ## Mettre à jour
 
+En LXC, on **relance l'installateur** : il reclone la dernière version, la
+recompile et redémarre le service, sans toucher aux données ni à la
+configuration.
+
 ```bash
 # LXC
-cd /opt/maison-de-famille && git pull && bash deploy/lxc/install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
 
-# Docker
+# Docker (depuis votre clone du dépôt)
 git pull && docker compose up -d --build
 ```
+
+Un `git pull` dans `/opt/maison-de-famille` ne marche pas et ne marchera jamais :
+l'installateur y copie le code **sans le dossier `.git`**, pour ne pas laisser
+l'historique complet du dépôt sur une machine exposée. La commande répondrait
+`fatal: not a git repository`.
 
 Les migrations de schéma s'appliquent au démarrage, dans une transaction, après
 une **sauvegarde automatique** déposée dans `<données>/sauvegardes/`. Si la base

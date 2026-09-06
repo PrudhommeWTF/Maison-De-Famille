@@ -83,7 +83,19 @@ rsync -a --delete \
   "${MDF_SRC}/" "${APP_DIR}/"
 
 log "Compilation du backend"
-npm --prefix "${APP_DIR}/backend" ci --silent
+# « better-sqlite3 » est un module natif. Il télécharge d'ordinaire un binaire
+# tout prêt ; quand il n'y en a pas pour cette machine, il tente de le compiler
+# et échoue sur une erreur node-gyp que personne ne veut lire à trois heures du
+# matin. On ne préinstalle pas la chaîne de compilation (deux cents méga-octets
+# sur un conteneur qui se veut minimal), on dit quoi faire si le cas arrive.
+if ! npm --prefix "${APP_DIR}/backend" ci --silent; then
+  err "L'installation des dépendances du backend a échoué."
+  err "Cause la plus fréquente : « better-sqlite3 » n'a pas trouvé de binaire prêt"
+  err "à l'emploi pour cette machine et a tenté de le compiler."
+  err "Installez la chaîne de compilation, puis relancez ce script :"
+  err "  apt-get install -y python3 make g++"
+  exit 1
+fi
 npm --prefix "${APP_DIR}/backend" run build --silent
 
 log "Compilation de l'application (cela prend une à deux minutes)"
@@ -106,6 +118,11 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 
 NODE_ENV=production
 PORT=${PORT}
+
+# Interface d'écoute. « 0.0.0.0 » (toutes) pour que le premier démarrage soit
+# atteignable depuis un navigateur du réseau local. Une fois un reverse-proxy
+# installé SUR CETTE MACHINE, mettre 127.0.0.1 ferme l'accès direct au port.
+MDF_HOST=0.0.0.0
 MDF_DATA_DIR=${DATA_DIR}
 MDF_STATIC_DIR=${APP_DIR}/frontend/dist/frontend/browser
 

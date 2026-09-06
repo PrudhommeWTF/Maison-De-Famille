@@ -19,6 +19,14 @@ import { log } from './log';
 export interface Config {
   production: boolean;
   port: number;
+  /**
+   * L'interface d'écoute. Par défaut toutes, parce que le premier démarrage se
+   * fait en tapant l'adresse du conteneur dans un navigateur : se lier à la
+   * boucle locale rendrait l'application inatteignable avant même qu'un
+   * reverse-proxy existe. Mettre `127.0.0.1` une fois le proxy en place sur la
+   * même machine ferme l'accès direct au port.
+   */
+  host: string;
   /** Racine des données : base SQLite, fichiers joints, sauvegardes. */
   dataDir: string;
   dbPath: string;
@@ -105,6 +113,7 @@ export function construire(env: NodeJS.ProcessEnv = process.env): Config {
   const cfg: Config = {
     production,
     port: Number(env.PORT || 8099),
+    host: (env.MDF_HOST || '').trim() || '0.0.0.0',
     dataDir,
     dbPath: env.MDF_DB_PATH || path.join(dataDir, 'maison.db'),
     staticDir: env.MDF_STATIC_DIR || null,

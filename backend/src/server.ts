@@ -143,8 +143,8 @@ function demarrer(): void {
   const arreterOrdonnanceur = demarrerOrdonnanceur(db, config);
   const arreterEntretien = demarrerEntretien(db, config);
 
-  const serveur = app.listen(config.port, () => {
-    log.info(`Maison de Famille ${config.version} écoute sur le port ${config.port}.`);
+  const serveur = app.listen(config.port, config.host, () => {
+    log.info(`Maison de Famille ${config.version} écoute sur ${config.host}:${config.port}.`);
     log.info(`Données : ${config.dataDir}`);
     log.info(`${ROUTES.length} routes déclarées.`);
     if (!config.publicUrl) {
