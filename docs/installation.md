@@ -30,6 +30,28 @@ disque), démarré au boot. Ces valeurs se règlent par variables d'environnemen
 CTID=210 MEMOIRE=2048 DISK=12 STORAGE=local-zfs bash deploy/lxc/proxmox-create.sh
 ```
 
+Le modèle est **découvert**, pas figé : le script réutilise celui qui est déjà
+sur l'hôte pour la version demandée, et va sinon chercher le plus récent du
+miroir. `TEMPLATE=` permet d'en imposer un autre.
+
+Debian **13** par défaut, soutenue jusqu'en 2030 contre 2028 pour la 12 : sur
+une machine qu'on installe une fois et qu'on ne retouche pas, deux ans de plus
+comptent. Le repli sur Debian 12 est automatique et annoncé si le miroir ne
+propose pas encore la 13, et `DEBIAN=12` l'impose. C'est le repli à prendre si
+Node 22 ne s'installe pas : NodeSource ne publie pas pour toutes les versions de
+Debian le jour de leur sortie, et l'installateur le dit clairement au lieu
+d'échouer plus loin sur un message sans rapport.
+
+Si le stockage indiqué ne peut pas héberger un disque de conteneur, le script
+s'arrête avant de télécharger quoi que ce soit et liste ceux qui le peuvent.
+
+Le script prépare aussi le conteneur : il rafraîchit l'index apt et installe
+`curl`. Les deux sont nécessaires, et aucun des deux n'est acquis. Le modèle
+Debian n'embarque pas `curl`, et son index apt est un instantané figé au jour de
+sa fabrication : installer quoi que ce soit sans `apt-get update` échoue sur des
+404, parce que le miroir a retiré les paquets de la version corrective que cet
+index réclame.
+
 ### 2. Installer, dans le conteneur
 
 ```bash
@@ -41,6 +63,13 @@ Le script installe Node 22, compile le backend et l'application, crée
 l'utilisateur de service `maison`, engendre un secret JWT, écrit l'unité systemd
 et démarre le service. Il est **idempotent** : le relancer met à jour le code
 sans toucher aux données.
+
+Sur un conteneur créé à la main plutôt que par le script précédent, il faut
+d'abord donner à Debian de quoi télécharger :
+
+```bash
+apt-get update && apt-get install -y curl ca-certificates
+```
 
 ### 3. Renseigner la configuration
 
