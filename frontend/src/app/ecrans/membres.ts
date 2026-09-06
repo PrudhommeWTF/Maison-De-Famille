@@ -41,7 +41,7 @@ import type { LigneDetention, Personne, Structure } from '../core/modeles';
   template: `
     <div class="colonne">
       <div>
-        <h1>Membres et {{ etat.vocabulaire().parts }}</h1>
+        <h1>Membres &amp; {{ etat.vocabulaire().parts }}</h1>
         <p class="secondaire" style="margin:6px 0 0">{{ structure()?.structure?.nom }}</p>
       </div>
 

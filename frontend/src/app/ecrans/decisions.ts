@@ -98,7 +98,7 @@ const RESULTAT: Record<string, string> = {
   template: `
     <div class="colonne">
       <div>
-        <h1>Décisions et votes</h1>
+        <h1>Décisions &amp; votes</h1>
         <p class="secondaire" style="margin:6px 0 0">
           Les voix sont pondérées par les {{ etat.vocabulaire().parts }}, avec la majorité requise
           selon la nature de l'acte.

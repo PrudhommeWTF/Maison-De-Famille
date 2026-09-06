@@ -82,13 +82,13 @@ export const ROUTES: Routes = [
       {
         path: 'bien', canActivate: [bienOuvert],
         children: [
-          { path: 'calendrier', loadComponent: () => import('./ecrans/calendrier').then((m) => m.Calendrier), title: 'Calendrier' },
+          { path: 'calendrier', loadComponent: () => import('./ecrans/calendrier').then((m) => m.Calendrier), title: "Calendrier d'occupation" },
           { path: 'demandes', loadComponent: () => import('./ecrans/demandes').then((m) => m.Demandes), title: 'Demandes de séjour' },
-          { path: 'depenses', loadComponent: () => import('./ecrans/depenses').then((m) => m.Depenses), title: 'Dépenses et répartition' },
-          { path: 'soldes', loadComponent: () => import('./ecrans/soldes').then((m) => m.Soldes), title: 'Soldes et remboursements' },
-          { path: 'membres', loadComponent: () => import('./ecrans/membres').then((m) => m.Membres), title: 'Membres et quotes-parts' },
+          { path: 'depenses', loadComponent: () => import('./ecrans/depenses').then((m) => m.Depenses), title: 'Dépenses & répartition' },
+          { path: 'soldes', loadComponent: () => import('./ecrans/soldes').then((m) => m.Soldes), title: 'Soldes & remboursements' },
+          { path: 'membres', loadComponent: () => import('./ecrans/membres').then((m) => m.Membres), title: 'Membres & quotes-parts' },
           { path: 'entretien', loadComponent: () => import('./ecrans/entretien').then((m) => m.Entretien), title: "Carnet d'entretien" },
-          { path: 'decisions', loadComponent: () => import('./ecrans/decisions').then((m) => m.Decisions), title: 'Décisions et votes' },
+          { path: 'decisions', loadComponent: () => import('./ecrans/decisions').then((m) => m.Decisions), title: 'Décisions & votes' },
           { path: 'coffre', loadComponent: () => import('./ecrans/coffre').then((m) => m.CoffreFort), title: 'Coffre-fort' },
           { path: 'location', loadComponent: () => import('./ecrans/location').then((m) => m.Location), title: 'Location saisonnière' },
           { path: 'souvenirs', loadComponent: () => import('./ecrans/souvenirs').then((m) => m.Souvenirs), title: 'Souvenirs' },

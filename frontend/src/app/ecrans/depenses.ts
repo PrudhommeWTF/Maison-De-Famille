@@ -71,7 +71,7 @@ const LIBELLE: Record<Regle, string> = {
     <div class="colonne">
       <div class="entre">
         <div>
-          <h1>Dépenses et répartition</h1>
+          <h1>Dépenses &amp; répartition</h1>
           <p class="secondaire" style="margin:6px 0 0">
             {{ etat.bien()?.nom }} · exercice {{ annee() }}
           </p>
