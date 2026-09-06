@@ -67,6 +67,19 @@ if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -c2- | cut -d. -f1)"
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
   apt-get install -y -qq nodejs >/dev/null
 fi
+
+# NodeSource ne publie pas pour toutes les versions de Debian le jour de leur
+# sortie. Quand la distribution est trop récente pour lui, son dépôt s'ajoute
+# sans erreur mais n'apporte rien, et la compilation échouerait plus loin sur un
+# message sans rapport. On vérifie donc ce qu'on a réellement obtenu.
+if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -c2- | cut -d. -f1)" -lt 22 ]]; then
+  err "Node.js 22 n'a pas pu être installé sur cette distribution."
+  err "Obtenu : $(command -v node >/dev/null 2>&1 && node -v || echo 'rien')"
+  err "NodeSource ne publie probablement pas encore pour $(. /etc/os-release && echo "${PRETTY_NAME}")."
+  err "Recréez le conteneur sur la version précédente de Debian :"
+  err "  DEBIAN=12 bash deploy/lxc/proxmox-create.sh"
+  exit 1
+fi
 log "Node $(node -v), npm $(npm -v)"
 
 # --- Utilisateur de service, sans shell ni mot de passe ---

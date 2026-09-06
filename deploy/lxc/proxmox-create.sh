@@ -18,6 +18,12 @@ TEMPLATE_STORAGE="${TEMPLATE_STORAGE:-local}"
 # version précis (« 12.7-1 ») condamnait ce script à casser, parce que Proxmox
 # retire les anciens de son miroir dès qu'une version corrective sort.
 TEMPLATE="${TEMPLATE:-}"
+# Version majeure de Debian. 13 (trixie) est soutenue jusqu'en 2030, contre
+# 2028 pour la 12 : sur une machine familiale qu'on installe une fois et qu'on
+# ne retouche pas, deux ans de plus ne sont pas rien. Le repli sur 12 est
+# automatique si le miroir ne propose pas encore la 13.
+DEBIAN="${DEBIAN:-13}"
+DEBIAN_REPLI="${DEBIAN_REPLI:-12}"
 DISK="${DISK:-8}"
 MEMOIRE="${MEMOIRE:-1024}"
 COEURS="${COEURS:-2}"
@@ -53,41 +59,60 @@ if ! stockages_conteneur | grep -qx "${STORAGE}"; then
   exit 1
 fi
 
-# --- Le modèle Debian 12, en trois temps ---
+# --- Le modèle Debian, en trois temps ---
 #
 # 1. celui que l'appelant impose, s'il en impose un ;
 # 2. sinon un modèle déjà téléchargé sur cet hôte, pour ne pas retélécharger
 #    cent cinquante méga-octets à chaque conteneur ;
 # 3. sinon le plus récent que le miroir propose.
+#
+# Le tri est un tri de VERSION et non alphabétique : sur « 12.9 » et « 12.12 »,
+# un tri alphabétique choisirait 12.9, et on installerait toujours une version
+# corrective en retard.
+motif_debian() { echo "^debian-$1-standard_.*_amd64\.tar\.(zst|gz|xz)$"; }
+
 deja_present() {
   pveam list "${TEMPLATE_STORAGE}" 2>/dev/null \
     | awk '{print $1}' | sed 's#.*/##' \
-    | grep -E '^debian-12-standard_.*_amd64\.tar\.(zst|gz|xz)$' \
-    | sort -V | tail -1
+    | grep -E "$(motif_debian "$1")" | sort -V | tail -1
 }
 
+au_miroir() {
+  pveam available --section system 2>/dev/null \
+    | awk '{print $NF}' \
+    | grep -E "$(motif_debian "$1")" | sort -V | tail -1
+}
+
+# La réutilisation locale ne porte QUE sur la majeure demandée. Rendre une
+# Debian 12 déjà présente à quelqu'un qui a demandé la 13, pour lui épargner un
+# téléchargement, serait lui donner autre chose que ce qu'il a demandé sans le
+# lui dire. Le repli, lui, est annoncé.
 if [[ -z "${TEMPLATE}" ]]; then
-  TEMPLATE="$(deja_present || true)"
-  if [[ -n "${TEMPLATE}" ]]; then
-    log "Modèle déjà présent : ${TEMPLATE}"
-  else
-    log "Recherche du modèle Debian 12 le plus récent"
-    pveam update >/dev/null
-    TEMPLATE="$(pveam available --section system 2>/dev/null \
-      | awk '{print $NF}' \
-      | grep -E '^debian-12-standard_.*_amd64\.tar\.(zst|gz|xz)$' \
-      | sort -V | tail -1 || true)"
-    if [[ -z "${TEMPLATE}" ]]; then
-      err "Aucun modèle Debian 12 disponible sur ce miroir."
-      err "Les modèles proposés :"
-      pveam available --section system | sed 's/^/    /' >&2
-      err "Choisissez-en un et relancez :  TEMPLATE=<nom> bash \$0"
-      exit 1
+  TEMPLATE="$(deja_present "${DEBIAN}" || true)"
+  [[ -n "${TEMPLATE}" ]] && log "Modèle déjà présent : ${TEMPLATE}"
+fi
+
+if [[ -z "${TEMPLATE}" ]]; then
+  log "Recherche du modèle Debian le plus récent"
+  pveam update >/dev/null
+  for majeure in "${DEBIAN}" "${DEBIAN_REPLI}"; do
+    TEMPLATE="$(au_miroir "${majeure}" || true)"
+    if [[ -n "${TEMPLATE}" ]]; then
+      [[ "${majeure}" != "${DEBIAN}" ]] \
+        && log "Aucun modèle Debian ${DEBIAN} au miroir, repli sur Debian ${majeure}."
+      break
     fi
-    log "Téléchargement du modèle ${TEMPLATE}"
-    pveam download "${TEMPLATE_STORAGE}" "${TEMPLATE}"
+  done
+  if [[ -z "${TEMPLATE}" ]]; then
+    err "Aucun modèle Debian ${DEBIAN} ni ${DEBIAN_REPLI} disponible sur ce miroir."
+    err "Les modèles proposés :"
+    pveam available --section system | sed 's/^/    /' >&2
+    err "Choisissez-en un et relancez :  TEMPLATE=<nom> bash \$0"
+    exit 1
   fi
-elif [[ -z "$(pveam list "${TEMPLATE_STORAGE}" 2>/dev/null | grep -F "${TEMPLATE}" || true)" ]]; then
+fi
+
+if [[ -z "$(pveam list "${TEMPLATE_STORAGE}" 2>/dev/null | grep -F "${TEMPLATE}" || true)" ]]; then
   log "Téléchargement du modèle ${TEMPLATE}"
   pveam update >/dev/null
   pveam download "${TEMPLATE_STORAGE}" "${TEMPLATE}"

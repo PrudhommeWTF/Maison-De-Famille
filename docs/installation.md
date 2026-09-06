@@ -30,10 +30,20 @@ disque), démarré au boot. Ces valeurs se règlent par variables d'environnemen
 CTID=210 MEMOIRE=2048 DISK=12 STORAGE=local-zfs bash deploy/lxc/proxmox-create.sh
 ```
 
-Le modèle Debian 12 est **découvert**, pas figé : le script réutilise celui qui
-est déjà sur l'hôte, et va sinon chercher le plus récent du miroir. `TEMPLATE=`
-permet d'en imposer un autre. Si le stockage indiqué n'existe pas, le script
-s'arrête avant de télécharger quoi que ce soit et liste ceux qui existent.
+Le modèle est **découvert**, pas figé : le script réutilise celui qui est déjà
+sur l'hôte pour la version demandée, et va sinon chercher le plus récent du
+miroir. `TEMPLATE=` permet d'en imposer un autre.
+
+Debian **13** par défaut, soutenue jusqu'en 2030 contre 2028 pour la 12 : sur
+une machine qu'on installe une fois et qu'on ne retouche pas, deux ans de plus
+comptent. Le repli sur Debian 12 est automatique et annoncé si le miroir ne
+propose pas encore la 13, et `DEBIAN=12` l'impose. C'est le repli à prendre si
+Node 22 ne s'installe pas : NodeSource ne publie pas pour toutes les versions de
+Debian le jour de leur sortie, et l'installateur le dit clairement au lieu
+d'échouer plus loin sur un message sans rapport.
+
+Si le stockage indiqué ne peut pas héberger un disque de conteneur, le script
+s'arrête avant de télécharger quoi que ce soit et liste ceux qui le peuvent.
 
 Le script prépare aussi le conteneur : il rafraîchit l'index apt et installe
 `curl`. Les deux sont nécessaires, et aucun des deux n'est acquis. Le modèle
