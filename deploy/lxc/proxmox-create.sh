@@ -106,11 +106,47 @@ pct create "${CTID}" "${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}" \
   --onboot 1
 
 pct start "${CTID}"
-sleep 5
+
+# --- Attendre le réseau avant de parler à apt ---
+# L'adresse vient du DHCP : « pct start » rend la main bien avant qu'elle
+# arrive, et un apt lancé trop tôt échoue sur une résolution de nom.
+log "Attente du réseau dans le conteneur"
+reseau=0
+for _ in $(seq 1 30); do
+  if pct exec "${CTID}" -- getent hosts deb.debian.org >/dev/null 2>&1; then reseau=1; break; fi
+  sleep 2
+done
+
+# --- Préparer le conteneur ---
+#
+# Le modèle Debian embarque un index apt figé au jour de sa fabrication, et
+# n'embarque pas curl. Sans ces deux commandes, la ligne d'installation affichée
+# plus bas échoue d'abord sur « curl: command not found », puis, si on installe
+# curl sans rafraîchir l'index, sur des 404 : le miroir a retiré les paquets de
+# la version corrective que cet index réclame.
+#
+# L'échec n'est pas fatal : le conteneur existe, et on dit quoi taper dedans.
+prepare=0
+if [[ "${reseau}" -eq 1 ]]; then
+  log "Préparation du conteneur (index apt et curl)"
+  if pct exec "${CTID}" -- apt-get update -qq \
+     && pct exec "${CTID}" -- apt-get install -y -qq curl ca-certificates; then
+    prepare=1
+  fi
+else
+  err "Le conteneur n'a pas obtenu d'adresse en soixante secondes."
+fi
 
 log "Conteneur ${CTID} démarré."
 echo
-echo "  Entrer dedans   :  pct enter ${CTID}"
-echo "  Puis installer  :  bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)"
+if [[ "${prepare}" -eq 1 ]]; then
+  echo "  Entrer dedans   :  pct enter ${CTID}"
+  echo "  Puis installer  :  bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)"
+else
+  err "La préparation a échoué. Dans le conteneur, avant d'installer :"
+  echo "    pct enter ${CTID}"
+  echo "    apt-get update && apt-get install -y curl ca-certificates"
+  echo "    bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)"
+fi
 echo "  Adresse obtenue :  pct exec ${CTID} -- hostname -I"
 echo

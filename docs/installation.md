@@ -35,6 +35,13 @@ est déjà sur l'hôte, et va sinon chercher le plus récent du miroir. `TEMPLAT
 permet d'en imposer un autre. Si le stockage indiqué n'existe pas, le script
 s'arrête avant de télécharger quoi que ce soit et liste ceux qui existent.
 
+Le script prépare aussi le conteneur : il rafraîchit l'index apt et installe
+`curl`. Les deux sont nécessaires, et aucun des deux n'est acquis. Le modèle
+Debian n'embarque pas `curl`, et son index apt est un instantané figé au jour de
+sa fabrication : installer quoi que ce soit sans `apt-get update` échoue sur des
+404, parce que le miroir a retiré les paquets de la version corrective que cet
+index réclame.
+
 ### 2. Installer, dans le conteneur
 
 ```bash
@@ -46,6 +53,13 @@ Le script installe Node 22, compile le backend et l'application, crée
 l'utilisateur de service `maison`, engendre un secret JWT, écrit l'unité systemd
 et démarre le service. Il est **idempotent** : le relancer met à jour le code
 sans toucher aux données.
+
+Sur un conteneur créé à la main plutôt que par le script précédent, il faut
+d'abord donner à Debian de quoi télécharger :
+
+```bash
+apt-get update && apt-get install -y curl ca-certificates
+```
 
 ### 3. Renseigner la configuration
 
