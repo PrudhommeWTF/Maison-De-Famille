@@ -42,6 +42,17 @@ if [[ -z "${ALLOW_HOST:-}" ]] && { command -v pct >/dev/null 2>&1 || [[ -d /etc/
   exit 1
 fi
 
+# --- Dépendances système, AVANT tout le reste ---
+#
+# L'ordre compte : l'étape suivante clone avec git, et la copie du code plus
+# bas se fait avec rsync. Ni l'un ni l'autre n'est présent dans un conteneur
+# Debian standard, et les chercher après les avoir utilisés donnait
+# « git: command not found » sur une machine neuve.
+log "Installation des paquets système"
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y -qq curl ca-certificates git rsync sqlite3 >/dev/null
+
 # --- Source : copie locale auto-détectée, sinon clone ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." 2>/dev/null && pwd || true)"
@@ -56,11 +67,6 @@ if [[ -z "${MDF_SRC:-}" ]]; then
   fi
 fi
 
-# --- Dépendances système ---
-log "Installation des paquets système"
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq
-apt-get install -y -qq curl ca-certificates git rsync sqlite3 >/dev/null
 
 if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -c2- | cut -d. -f1)" -lt 22 ]]; then
   log "Installation de Node.js 22"
