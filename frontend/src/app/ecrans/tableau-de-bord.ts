@@ -12,7 +12,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api';
 import { Etat, TOUS } from '../core/etat';
-import { euros, nuitsLisible, personnesLisible, plage } from '../core/format';
+import { dateCourte, euros, nuitsLisible, personnesLisible, plage } from '../core/format';
 import { etapes } from '../core/demarrage';
 import type { Etape } from '../core/demarrage';
 import type { BienResume, Etat as EtatSysteme, ListeDepenses, Sejour, Soldes } from '../core/modeles';
@@ -33,8 +33,18 @@ interface Gouvernance { alertes: { structureNom: string }[] }
     .corps { padding: 16px 18px 18px; }
     .nom-bien { font-family: var(--titre); font-size: 18px; font-weight: 500; }
     .stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--separateur); }
-    .stat .valeur { font-family: var(--titre); font-size: 20px; font-weight: 500; }
-    .stat .quoi { font-size: 11.5px; color: var(--encre-3); }
+    /* Le libellé passe au-dessus de la valeur : la maquette met « Prochain
+       séjour » puis « Claire, 4 juil. », et une date de quinze caractères ne
+       peut pas jouer le rôle du grand chiffre qu'on lisait avant. */
+    .stat .valeur { font-family: var(--titre); font-size: 13.5px; font-weight: 500; margin-top: 3px; }
+    .stat .quoi { font-size: 11px; color: var(--encre-3); }
+    /* Le type du bien, coloré comme la maquette : la couleur porte
+       l'information aussi vite que le mot. */
+    .type-bien { font-size: 12.5px; font-weight: 500; margin-top: 3px; }
+    .type-mer { color: #7a8b5c; }
+    .type-montagne { color: #4a6572; }
+    .type-campagne { color: #7a8b5c; }
+    .type-ville { color: #6b6157; }
     .trois { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     .resume { display: flex; gap: 30px; flex-wrap: wrap; }
     .resume .valeur { font-family: var(--titre); font-size: 25px; font-weight: 500; }
@@ -127,16 +137,23 @@ interface Gouvernance { alertes: { structureNom: string }[] }
                 <div class="bandeau"><i class="bi" [class]="ico(b.type)" aria-hidden="true"></i></div>
                 <div class="corps">
                   <div class="nom-bien">{{ b.nom }}</div>
-                  <div class="meta" style="margin-top:2px">{{ b.commune }} · {{ b.couchages }} couchages</div>
+                  <div class="type-bien" [class]="'type-' + b.type">{{ typeLisible(b.type) }}</div>
+                  <div class="meta" style="margin-top:2px">
+                    {{ b.commune }} · {{ b.couchages }} couchages@if (b.locationActivee) { · louée en saison }
+                  </div>
                   <div style="margin-top:10px"><span class="pastille">{{ libelleStructure(b) }}</span></div>
                   <div class="stats">
                     <div class="stat">
-                      <div class="valeur chiffres">{{ compteurs()[b.id]?.aVenir ?? 0 }}</div>
-                      <div class="quoi">Séjours à venir</div>
+                      <div class="quoi">Prochain séjour</div>
+                      <div class="valeur">{{ prochainDe(b.id) }}</div>
                     </div>
                     <div class="stat">
-                      <div class="valeur chiffres">{{ b.demandesEnAttente }}</div>
-                      <div class="quoi">En attente</div>
+                      <div class="quoi">{{ b.occupationLibelle }}</div>
+                      <div class="valeur chiffres">{{ b.occupationPourcent }} %</div>
+                    </div>
+                    <div class="stat">
+                      <div class="quoi">À traiter</div>
+                      <div class="valeur">{{ aTraiter(b.demandesEnAttente) }}</div>
                     </div>
                   </div>
                 </div>
@@ -168,25 +185,6 @@ interface Gouvernance { alertes: { structureNom: string }[] }
           }
         </section>
 
-        <section class="carte">
-          <h2>Prochains séjours</h2>
-          @if (aVenir().length) {
-            <div style="margin-top:12px">
-              @for (s of aVenir(); track s.id) {
-                <div class="ligne">
-                  <span class="plage chiffres">{{ plage(s.arrivee, s.depart) }}</span>
-                  <span>
-                    <span style="display:block;font-size:13.5px">{{ s.titre }}</span>
-                    <span class="meta">{{ s.bienNom }} · {{ nuitsLisible(s.nuits) }}</span>
-                  </span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="vide">Aucun séjour prévu.</p>
-          }
-        </section>
-
         <!-- La trésorerie. Le tableau de bord ne calcule rien : il compose ce
              que le module argent lui rend, et n'affiche la carte que s'il a
              quelque chose à dire. -->
@@ -205,6 +203,25 @@ interface Gouvernance { alertes: { structureNom: string }[] }
             <a class="btn" routerLink="/bien/soldes" style="margin-top:10px">Voir les soldes</a>
           </section>
         }
+
+        <section class="carte">
+          <h2>Prochains séjours</h2>
+          @if (aVenir().length) {
+            <div style="margin-top:12px">
+              @for (s of aVenir(); track s.id) {
+                <div class="ligne">
+                  <span class="plage chiffres">{{ plage(s.arrivee, s.depart) }}</span>
+                  <span>
+                    <span style="display:block;font-size:13.5px">{{ s.titre }}</span>
+                    <span class="meta">{{ s.bienNom }} · {{ nuitsLisible(s.nuits) }}</span>
+                  </span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="vide">Aucun séjour prévu.</p>
+          }
+        </section>
 
         @if (monSejour(); as s) {
           <section class="carte">
@@ -235,6 +252,8 @@ export class TableauDeBord {
   private readonly demandes = signal<Sejour[]>([]);
   private readonly depenses = signal<ListeDepenses | null>(null);
   private readonly soldes = signal<Soldes | null>(null);
+  /** Vrai quand les soldes agrègent plusieurs structures. */
+  private readonly consolide = signal(false);
   private readonly faits = signal<Etape[]>([]);
   private readonly echeances = signal<{ id: number; libelle: string; bienNom: string; echeance: string; urgence: string }[]>([]);
 
@@ -256,10 +275,15 @@ export class TableauDeBord {
     const aRegulariser = (s?.soldes ?? [])
       .filter((x) => !x.estStructure && x.montantCents < 0)
       .reduce((t, x) => t - x.montantCents, 0);
+    const structures = this.etat.structuresArgent();
+    const consolide = this.consolide() && structures.length > 1;
     return {
-      titre: s ? `Trésorerie de ${s.structure.nom}` : 'Trésorerie',
+      titre: consolide ? 'Trésorerie consolidée'
+        : s ? `Trésorerie de ${s.structure.nom}` : 'Trésorerie',
       montantCents: d.total,
-      sousTitre: `Dépenses engagées sur l'exercice ${d.annee}`,
+      sousTitre: consolide
+        ? structures.map((x) => x.nom).join(' et ')
+        : `Dépenses engagées sur l'exercice ${d.annee}`,
       lignes: [
         { cle: 'À régulariser', valeur: euros(aRegulariser) },
         { cle: 'Virements proposés', valeur: String(s?.virements.length ?? 0) },
@@ -325,17 +349,44 @@ export class TableauDeBord {
 
   constructor() { void this.charger(); }
 
+  /**
+   * Les soldes de la ou des structures concernées.
+   *
+   * Sur un bien, c'est la sienne. En vue consolidée, ce sont toutes celles dont
+   * la personne peut voir l'argent : la maquette parle de « Trésorerie
+   * consolidée », et une famille avec une indivision et une SCI veut le total,
+   * pas l'une des deux au hasard.
+   */
+  private async chargerSoldes(structureId: number | null): Promise<Soldes | null> {
+    if (!this.etat.voitLArgentQuelquePart()) return null;
+    if (structureId !== null) {
+      return this.api.get<Soldes>(`/structures/${structureId}/soldes`).catch(() => null);
+    }
+    const parts = await Promise.all(this.etat.structuresArgent().map((s) =>
+      this.api.get<Soldes>(`/structures/${s.id}/soldes`).catch(() => null)));
+    const vus = parts.filter((p): p is Soldes => !!p);
+    if (!vus.length) return null;
+    // On agrège plutôt que de choisir : les soldes de chaque personne
+    // s'additionnent, les virements proposés se concatènent.
+    return {
+      ...vus[0],
+      soldes: vus.flatMap((p) => p.soldes),
+      virements: vus.flatMap((p) => p.virements),
+    };
+  }
+
   private async charger(): Promise<void> {
     const bien = this.etat.bien();
     const [sejours, demandes, depenses, soldes, echeances] = await Promise.all([
       this.api.get<Sejour[]>('/sejours/a-venir').catch(() => [] as Sejour[]),
       this.etat.estGerant() ? this.api.get<Sejour[]>('/demandes').catch(() => [] as Sejour[]) : Promise.resolve([]),
-      this.etat.voitLArgent()
+      // En vue consolidée, aucun bien n'est ouvert : c'est le droit sur au
+      // moins un bien qui décide, sinon la carte de trésorerie disparaissait
+      // alors qu'il y avait bien de l'argent à montrer.
+      this.etat.voitLArgentQuelquePart()
         ? this.api.get<ListeDepenses>(`/depenses${bien ? '?bienId=' + bien.id : ''}`).catch(() => null)
         : Promise.resolve(null),
-      bien && this.etat.voitLArgent()
-        ? this.api.get<Soldes>(`/structures/${bien.structureId}/soldes`).catch(() => null)
-        : Promise.resolve(null),
+      this.chargerSoldes(bien?.structureId ?? null),
       this.api.get<{ id: number; libelle: string; bienNom: string; echeance: string; urgence: string }[]>(
         '/entretien/echeances').catch(() => []),
     ]);
@@ -344,6 +395,7 @@ export class TableauDeBord {
     this.demandes.set(demandes.filter((d) => this.etat.contexte() === TOUS || d.bienId === this.etat.contexte()));
     this.depenses.set(depenses);
     this.soldes.set(soldes);
+    this.consolide.set(!bien);
     if (this.etat.estGerant()) void this.chargerDemarrage(sejours.length);
   }
 
@@ -373,9 +425,36 @@ export class TableauDeBord {
     return type === 'montagne' ? 'bi-triangle' : type === 'ville' ? 'bi-building' : type === 'campagne' ? 'bi-tree' : 'bi-water';
   }
 
+  /**
+   * La puce de structure, comme la maquette : « Indivision · 4 indivisaires »,
+   * « SCI Prudhomme Immobilier · 3 associés ». Une indivision se nomme rarement
+   * autrement que par son mode, une SCI porte un vrai nom : on montre celui des
+   * deux qui apprend quelque chose.
+   */
   libelleStructure(b: BienResume): string {
     const mode = b.structureMode === 'sci' ? 'SCI' : b.structureMode === 'nom_propre' ? 'Nom propre' : 'Indivision';
-    return `${mode} · ${b.structureNom}`;
+    const nom = b.structureMode === 'sci' ? b.structureNom : mode;
+    if (!b.detenteurs) return nom;
+    const qui = b.structureMode === 'sci' ? 'associé' : b.structureMode === 'nom_propre' ? 'propriétaire' : 'indivisaire';
+    return `${nom} · ${b.detenteurs} ${qui}${b.detenteurs > 1 ? 's' : ''}`;
+  }
+
+  typeLisible(t: string): string {
+    return t === 'montagne' ? 'Montagne' : t === 'ville' ? 'Ville'
+      : t === 'campagne' ? 'Campagne' : 'Bord de mer';
+  }
+
+  /** « Claire, 4 juil. » : qui vient, et quand. Rien à afficher se dit. */
+  prochainDe(bienId: number): string {
+    const s = this.sejours().find((x) => x.bienId === bienId);
+    if (!s) return 'Aucun';
+    const qui = (s.demandeurNom || s.titre || '').split(' ')[0];
+    return qui ? `${qui}, ${dateCourte(s.arrivee)}` : dateCourte(s.arrivee);
+  }
+
+  /** « 2 demandes », ou rien à traiter, plutôt qu'un zéro sec. */
+  aTraiter(n: number): string {
+    return n ? `${n} demande${n > 1 ? 's' : ''}` : 'Rien';
   }
 
   ouvrir(b: BienResume): void {
