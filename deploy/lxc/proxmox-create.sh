@@ -31,12 +31,25 @@ command -v pct >/dev/null || { err "pct est introuvable : ce script se lance sur
 [[ -n "${CTID}" ]] || CTID="$(pvesh get /cluster/nextid)"
 log "Conteneur ${CTID} (${HOSTNAME_CT})"
 
-# --- Le stockage du disque doit exister, sinon pct sort une erreur obscure ---
-if ! pvesm status 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "${STORAGE}"; then
-  err "Le stockage « ${STORAGE} » n'existe pas sur cet hôte."
-  err "Stockages disponibles :"
-  pvesm status | sed 's/^/    /' >&2
-  err "Relancez en désignant le bon :  STORAGE=<nom> bash \$0"
+# --- Le stockage du disque, vérifié d'abord ---
+#
+# Le filtre porte sur « rootdir », le contenu « disque de conteneur », et pas
+# seulement sur l'existence : un stockage de type répertoire existe souvent sans
+# accepter de conteneur, et le proposer enverrait sur une seconde erreur.
+# « local-lvm » n'existe pas sur un hôte ZFS, où c'est « local-zfs ».
+stockages_conteneur() { pvesm status --content rootdir 2>/dev/null | awk 'NR>1 {print $1}'; }
+
+if ! stockages_conteneur | grep -qx "${STORAGE}"; then
+  err "Le stockage « ${STORAGE} » ne peut pas héberger le disque d'un conteneur."
+  dispo="$(stockages_conteneur || true)"
+  if [[ -n "${dispo}" ]]; then
+    err "Ceux qui le peuvent sur cet hôte :"
+    echo "${dispo}" | sed 's/^/    /' >&2
+    err "Relancez en désignant le bon :  STORAGE=<nom> bash \$0"
+  else
+    err "Aucun stockage de cet hôte n'accepte de disque de conteneur."
+    err "Ajoutez-en un dans Datacenter, Storage, avec le contenu « Container »."
+  fi
   exit 1
 fi
 
