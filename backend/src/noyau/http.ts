@@ -227,6 +227,18 @@ export function traiterErreurs(err: unknown, req: Request, res: Response, _next:
     res.status(err.statut).json({ code: err.code, message: err.message, champs: err.champs });
     return;
   }
+  // Corps trop gros : Express lève avant le gestionnaire, et sans ce cas la
+  // famille recevait « une erreur interne s'est produite » pour une photo un peu
+  // lourde, ce qui n'aide personne à comprendre quoi faire.
+  if (err instanceof Error && (err as { type?: string }).type === 'entity.too.large') {
+    log.debug(`${req.method} ${req.path} → corps refusé : ${err.message}`);
+    res.status(415).json({
+      code: 'FICHIER_REFUSE',
+      message: 'Ce fichier est trop lourd pour être envoyé. La limite se règle dans '
+        + 'Paramètres, section Fichiers.',
+    });
+    return;
+  }
   // Charge JSON illisible : Express lève avant d'atteindre le gestionnaire.
   if (err instanceof SyntaxError && 'body' in err) {
     res.status(400).json({ code: 'REQUETE_INVALIDE', message: 'La requête est illisible.' });

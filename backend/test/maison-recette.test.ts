@@ -17,6 +17,11 @@ import type { Instance } from './aide';
 
 const CLE = 'c'.repeat(64);
 
+/** Le dépôt d'un fichier au coffre : le corps est le fichier, le nom en requête. */
+const deposerCoffre = (i: Instance, bienId: number, nom: string, contenu: string) =>
+  i.appel<{ id: string }>('POST', `/api/biens/${bienId}/coffre/fichier?nom=${encodeURIComponent(nom)}`,
+    Buffer.from(contenu));
+
 /** Hélène gère, Claire est membre de foyer, et un séjour est posé pour Claire. */
 async function maison(i: Instance) {
   const { bienId, structureId } = await amorcer(i);
@@ -46,9 +51,7 @@ test('un membre de foyer voit le guide d\'arrivée mais pas la convention d\'ind
     await i.post(`/api/biens/${bienId}/fiche`, {
       section: 'guide', cle: 'Eau', valeur: "vanne générale sous l'escalier", ordre: 1,
     });
-    const fichier = await i.post<{ id: string }>(`/api/biens/${bienId}/coffre/fichier`, {
-      nom: 'convention.pdf', contenu: Buffer.from('%PDF-1.4 convention').toString('base64'),
-    });
+    const fichier = await deposerCoffre(i, bienId, 'convention.pdf', '%PDF-1.4 convention');
     await i.post(`/api/biens/${bienId}/coffre/documents`, {
       nom: "Convention d'indivision", portee: 'detenteur', fichierId: fichier.corps.id, note: '',
     });
@@ -184,12 +187,8 @@ test('un document déposé à nouveau ajoute une version, il n\'écrase pas', as
   const i = await demarrer({ cleCoffre: CLE });
   try {
     const { bienId } = await maison(i);
-    const f1 = await i.post<{ id: string }>(`/api/biens/${bienId}/coffre/fichier`, {
-      nom: 'a.pdf', contenu: Buffer.from('%PDF-1.4 version un').toString('base64'),
-    });
-    const f2 = await i.post<{ id: string }>(`/api/biens/${bienId}/coffre/fichier`, {
-      nom: 'b.pdf', contenu: Buffer.from('%PDF-1.4 version deux').toString('base64'),
-    });
+    const f1 = await deposerCoffre(i, bienId, 'a.pdf', '%PDF-1.4 version un');
+    const f2 = await deposerCoffre(i, bienId, 'b.pdf', '%PDF-1.4 version deux');
     const doc = await i.post<{ id: number }>(`/api/biens/${bienId}/coffre/documents`, {
       nom: "Attestation d'assurance", portee: 'membres', fichierId: f1.corps.id, note: '2026',
     });

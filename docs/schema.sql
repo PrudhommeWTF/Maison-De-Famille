@@ -1,5 +1,5 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 6
+-- Version du schéma : 7
 -- Régénérer : cd backend && npm run docs:schema
 
 CREATE TABLE acces_temporaire (
@@ -19,6 +19,16 @@ CREATE TABLE acces_temporaire (
         utilisations  INTEGER NOT NULL DEFAULT 0,
         cree_le       TEXT NOT NULL,
         cree_par      INTEGER REFERENCES personne(id)
+      );
+CREATE TABLE album (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        sejour_id  INTEGER REFERENCES sejour(id),
+        titre      TEXT NOT NULL,
+        annee      INTEGER NOT NULL,
+        cree_le    TEXT NOT NULL,
+        cree_par   INTEGER REFERENCES personne(id),
+        archive_le TEXT
       );
 CREATE TABLE appel_de_fonds (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -111,7 +121,8 @@ CREATE TABLE depense (
         note            TEXT NOT NULL DEFAULT '',
         cree_le         TEXT NOT NULL,
         cree_par        INTEGER REFERENCES personne(id),
-        archive_le      TEXT,
+        archive_le      TEXT, charge_location INTEGER NOT NULL DEFAULT 0
+        CHECK (charge_location IN (0,1)),
         CHECK ((paye_par = 'personne') = (avance_par_id IS NOT NULL))
       );
 CREATE TABLE depense_bien (
@@ -217,6 +228,34 @@ CREATE TABLE journal_audit (
         fait_le     TEXT NOT NULL,
         adresse_ip  TEXT
       );
+CREATE TABLE location (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        sejour_id      INTEGER NOT NULL UNIQUE REFERENCES sejour(id),
+        bien_id        INTEGER NOT NULL REFERENCES bien(id),
+        locataire      TEXT NOT NULL,
+        email          TEXT NOT NULL DEFAULT '',
+        telephone      TEXT NOT NULL DEFAULT '',
+        loyer_cents    INTEGER NOT NULL CHECK (loyer_cents >= 0),
+        acompte_cents  INTEGER NOT NULL DEFAULT 0 CHECK (acompte_cents >= 0),
+        statut         TEXT NOT NULL CHECK (statut IN ('a_confirmer','acompte','solde','annule')),
+        note           TEXT NOT NULL DEFAULT '',
+        acces_id       INTEGER REFERENCES acces_temporaire(id),
+        cree_le        TEXT NOT NULL,
+        cree_par       INTEGER REFERENCES personne(id),
+        archive_le     TEXT,
+        CHECK (acompte_cents <= loyer_cents)
+      );
+CREATE TABLE mot_livre_or (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        bien_id    INTEGER NOT NULL REFERENCES bien(id),
+        sejour_id  INTEGER REFERENCES sejour(id),
+        annee      INTEGER NOT NULL,
+        texte      TEXT NOT NULL,
+        signature  TEXT NOT NULL DEFAULT '',
+        ecrit_le   TEXT NOT NULL,
+        ecrit_par  INTEGER REFERENCES personne(id),
+        archive_le TEXT
+      );
 CREATE TABLE notification (
         id                  INTEGER PRIMARY KEY AUTOINCREMENT,
         personne_id         INTEGER NOT NULL REFERENCES personne(id),
@@ -261,6 +300,18 @@ CREATE TABLE personne (
         cree_par          INTEGER REFERENCES personne(id),
         archive_le        TEXT
       , totp_secret TEXT, totp_pending TEXT, totp_recovery TEXT NOT NULL DEFAULT '[]', totp_last_step INTEGER NOT NULL DEFAULT 0, totp_active_le TEXT, acces_lien_seul INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE photo (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        album_id     INTEGER NOT NULL REFERENCES album(id),
+        bien_id      INTEGER NOT NULL REFERENCES bien(id),
+        fichier_id   TEXT NOT NULL REFERENCES fichier(id),
+        vignette_id  TEXT REFERENCES fichier(id),
+        legende      TEXT NOT NULL DEFAULT '',
+        prise_le     TEXT,
+        depose_le    TEXT NOT NULL,
+        depose_par   INTEGER REFERENCES personne(id),
+        archive_le   TEXT
+      );
 CREATE TABLE quota (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
         saison_id INTEGER NOT NULL REFERENCES saison(id),
@@ -507,6 +558,8 @@ CREATE TABLE voeu (
       );
 CREATE INDEX idx_acces_bien ON acces_temporaire(bien_id) WHERE revoque_le IS NULL;
 CREATE INDEX idx_affichage_code ON code_affichage(code_id, affiche_le);
+CREATE INDEX idx_album_bien ON album(bien_id, annee) WHERE archive_le IS NULL;
+CREATE UNIQUE INDEX idx_album_sejour ON album(sejour_id) WHERE sejour_id IS NOT NULL;
 CREATE INDEX idx_audit_date ON journal_audit(fait_le);
 CREATE INDEX idx_audit_objet ON journal_audit(objet_kind, objet_id);
 CREATE INDEX idx_bien_structure ON bien(structure_id);
@@ -522,9 +575,12 @@ CREATE INDEX idx_document_bien ON document(bien_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_fiche_bien ON fiche_ligne(bien_id, section) WHERE archive_le IS NULL;
 CREATE INDEX idx_fichier_sha ON fichier(sha256);
 CREATE INDEX idx_inventaire_bien ON inventaire(bien_id) WHERE archive_le IS NULL;
+CREATE INDEX idx_location_bien ON location(bien_id) WHERE archive_le IS NULL;
+CREATE INDEX idx_mot_bien ON mot_livre_or(bien_id, annee) WHERE archive_le IS NULL;
 CREATE INDEX idx_notification_a_envoyer ON notification(prochaine_tentative)
         WHERE envoye_le IS NULL AND abandonne_le IS NULL;
 CREATE INDEX idx_personne_active ON personne(archive_le);
+CREATE INDEX idx_photo_album ON photo(album_id) WHERE archive_le IS NULL;
 CREATE INDEX idx_regle_periode ON regle_repartition(bien_id, categorie_id, applicable_du, applicable_au);
 CREATE INDEX idx_reglement_structure ON reglement(structure_id, statut);
 CREATE INDEX idx_reinit_personne ON reinit_mot_de_passe(personne_id, motif)

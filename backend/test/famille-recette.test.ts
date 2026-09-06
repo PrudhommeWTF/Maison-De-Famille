@@ -253,6 +253,43 @@ test('un lien d\'invité ouvre une session sans compte, et voit le code de son s
   } finally { await i.fermer(); }
 });
 
+test('le lien rattaché au séjour de la gérante donne bien le code de la boîte à clés', async () => {
+  const i = await demarrer({ cleCoffre: CLE, publicUrl: 'https://maison.exemple.fr' });
+  try {
+    const { bienId } = await indivision(i);
+    const code = await i.post<{ id: number }>(`/api/biens/${bienId}/coffre/codes`, {
+      libelle: 'Boîte à clés', valeur: '4271', portee: 'sejour', note: '',
+    });
+
+    // Le chemin réel, et non celui du test précédent : c'est **la gérante** qui
+    // pose le séjour, puis qui y rattache le lien. Le locataire n'est demandeur
+    // de rien, et n'a pas de foyer. Sans le rattachement par l'accès temporaire,
+    // il ouvrait un coffre vide, ce qui vide le lien de son seul intérêt.
+    const s = await i.post<{ id: number }>(`/api/biens/${bienId}/sejours`, {
+      titre: 'Location Berger', arrivee: jourDecale(-1), depart: jourDecale(5), occupants: 4,
+    });
+    assert.equal(s.statut, 200, JSON.stringify(s.corps));
+    const a = await i.post<{ lien: string }>(`/api/biens/${bienId}/acces`, {
+      libelle: 'Famille Berger', expireLe: jourDecale(6), sejourId: s.corps.id,
+    });
+    assert.equal(a.statut, 200, JSON.stringify(a.corps));
+
+    i.deconnecte();
+    const o = await i.post<{ acces: string }>('/api/auth/lien',
+      { jeton: decodeURIComponent(a.corps.lien.split('jeton=')[1]) });
+    i.utiliserJeton(o.corps.acces);
+
+    const vue = await i.get<{ codes: { id: number }[] }>(`/api/biens/${bienId}/coffre`);
+    assert.equal(vue.statut, 200, JSON.stringify(vue.corps));
+    assert.equal(vue.corps.codes.length, 1, 'le locataire doit voir son code exister');
+
+    const vu = await i.post<{ valeur: string }>(
+      `/api/biens/${bienId}/coffre/codes/${code.corps.id}/affichage`, {});
+    assert.equal(vu.statut, 200, JSON.stringify(vu.corps));
+    assert.equal(vu.corps.valeur, '4271');
+  } finally { await i.fermer(); }
+});
+
 test('un lien expiré ne donne plus le code, y compris en tapant l\'adresse', async () => {
   const i = await demarrer({ cleCoffre: CLE, publicUrl: 'https://maison.exemple.fr' });
   try {

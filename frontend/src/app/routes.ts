@@ -90,6 +90,8 @@ export const ROUTES: Routes = [
           { path: 'entretien', loadComponent: () => import('./ecrans/entretien').then((m) => m.Entretien), title: "Carnet d'entretien" },
           { path: 'decisions', loadComponent: () => import('./ecrans/decisions').then((m) => m.Decisions), title: 'Décisions et votes' },
           { path: 'coffre', loadComponent: () => import('./ecrans/coffre').then((m) => m.CoffreFort), title: 'Coffre-fort' },
+          { path: 'location', loadComponent: () => import('./ecrans/location').then((m) => m.Location), title: 'Location saisonnière' },
+          { path: 'souvenirs', loadComponent: () => import('./ecrans/souvenirs').then((m) => m.Souvenirs), title: 'Souvenirs' },
           { path: 'fiche', loadComponent: () => import('./ecrans/fiche').then((m) => m.Fiche), title: 'Fiche du bien' },
           { path: '', pathMatch: 'full', redirectTo: 'calendrier' },
         ],
