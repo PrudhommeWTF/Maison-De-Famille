@@ -42,7 +42,7 @@ import type { SoldeActeur, Soldes as SoldesModele, VirementPropose } from '../co
     <div class="colonne">
       <div class="entre">
         <div>
-          <h1>Soldes et remboursements</h1>
+          <h1>Soldes &amp; remboursements</h1>
           <p class="secondaire" style="margin:6px 0 0">{{ donnees()?.structure?.nom }}</p>
         </div>
         @if (etat.estGeranteIci() && aDesDebiteurs()) {

@@ -67,7 +67,7 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
     <div class="colonne">
       <div class="entre">
         <div>
-          <h1>Calendrier</h1>
+          <h1>Calendrier d'occupation</h1>
           <p class="secondaire" style="margin:6px 0 0">
             {{ etat.bien()?.nom }} · {{ etat.bien()?.couchages }} couchages ·
             nuit d'arrivée incluse, nuit de départ libre

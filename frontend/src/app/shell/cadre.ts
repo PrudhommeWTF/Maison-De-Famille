@@ -16,6 +16,17 @@ import { initiales } from '../core/format';
 
 interface Entree { chemin: string; libelle: string; icone: string; badge?: boolean }
 
+/**
+ * Un groupe d'entrées dans la navigation d'un bien.
+ *
+ * La maquette range les onze écrans d'un bien en quatre groupes : Séjours,
+ * Argent, Maison, Famille. Ce n'est pas de la décoration. Onze liens à plat
+ * forment une liste qu'on relit à chaque fois ; quatre groupes de trois forment
+ * une carte mentale qu'on retient. Un groupe dont toutes les entrées sont
+ * masquées par les règles de rôle ne s'affiche pas du tout, titre compris.
+ */
+interface Groupe { titre: string; entrees: Entree[] }
+
 @Component({
   selector: 'app-cadre',
   standalone: true,
@@ -59,6 +70,26 @@ interface Entree { chemin: string; libelle: string; icone: string; badge?: boole
       overflow-y: auto; padding: 20px 14px 40px;
     }
     .laterale .libelle-section { margin: 16px 8px 7px; display: block; }
+    /* Le nom du bien porte son icône, comme dans la maquette : c'est le seul
+       intertitre qui désigne une chose et non une catégorie. */
+    .laterale .titre-bien { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    /* Le lieu et la structure sous le nom : ils disent dans quel dossier on est
+       sans avoir à remonter à la barre de contexte. */
+    .laterale .contexte-bien {
+      display: block; margin: 0 8px 6px; font-size: 11.5px; color: var(--encre-3);
+    }
+    /* Les quatre groupes. Plus discrets que le nom du bien, sinon la navigation
+       compte cinq titres de même poids et n'a plus de hiérarchie. */
+    .laterale .libelle-groupe {
+      display: block; margin: 13px 10px 4px; font-size: 11px; font-weight: 500;
+      color: var(--encre-3);
+    }
+    .laterale .libelle-groupe:first-of-type { margin-top: 8px; }
+    /* Le pied : ce que l'application est, et quand elle a été sauvegardée. */
+    .laterale .pied {
+      margin: 26px 8px 0; padding-top: 14px; border-top: 1px solid var(--separateur);
+      font-size: 11px; color: var(--encre-3); line-height: 1.5;
+    }
     .laterale a {
       display: flex; align-items: center; gap: 10px; padding: 9px 10px; min-height: 40px;
       border-radius: 8px; color: var(--encre-2); text-decoration: none; font-size: 13.5px;
@@ -144,16 +175,26 @@ interface Entree { chemin: string; libelle: string; icone: string; badge?: boole
         }
 
         @if (etat.bien(); as b) {
-          <span class="libelle-section">{{ b.nom }}</span>
-          @for (e of entreesBien(); track e.chemin) {
-            <a [routerLink]="e.chemin" routerLinkActive="actif">
-              <i class="bi" [class]="e.icone" aria-hidden="true"></i>{{ e.libelle }}
-              @if (e.badge && etat.demandesEnAttente() > 0) {
-                <span class="badge">{{ etat.demandesEnAttente() }}</span>
-              }
-            </a>
+          <span class="libelle-section titre-bien">
+            <i class="bi bi-house-door" aria-hidden="true"></i>{{ b.nom }}
+          </span>
+          <span class="contexte-bien">{{ b.commune }} · {{ b.structureNom }}</span>
+          @for (g of groupesBien(); track g.titre) {
+            <span class="libelle-groupe">{{ g.titre }}</span>
+            @for (e of g.entrees; track e.chemin) {
+              <a [routerLink]="e.chemin" routerLinkActive="actif">
+                <i class="bi" [class]="e.icone" aria-hidden="true"></i>{{ e.libelle }}
+                @if (e.badge && etat.demandesEnAttente() > 0) {
+                  <span class="badge">{{ etat.demandesEnAttente() }}</span>
+                }
+              </a>
+            }
           }
         }
+        <!-- La maquette met aussi « Dernière sauvegarde : hier 03:00 ». Le
+             serveur n'expose pas encore cette date : l'écrire en dur serait
+             une promesse que rien ne tient. La ligne viendra avec le champ. -->
+        <div class="pied">Auto-hébergé · vos données ne sortent pas d'ici</div>
       </nav>
 
       <main><router-outlet /></main>
@@ -177,7 +218,7 @@ export class Cadre {
   readonly initiales = initiales;
 
   readonly entreesPortefeuille = computed<Entree[]>(() => {
-    const e: Entree[] = [{ chemin: '/', libelle: 'Tableau de bord', icone: 'bi-grid-1x2' }];
+    const e: Entree[] = [{ chemin: '/', libelle: 'Tableau de bord', icone: 'bi-house-heart' }];
     if (this.etat.estGerant()) {
       e.push({ chemin: '/biens', libelle: 'Biens gérés', icone: 'bi-houses' });
       e.push({ chemin: '/personnes', libelle: 'Personnes et rôles', icone: 'bi-people' });
@@ -188,54 +229,65 @@ export class Cadre {
     return e;
   });
 
-  /** Les entrées d'un bien. Ce qui n'est pas encore livré n'est pas affiché :
-   *  une entrée de navigation qui mène à un écran vide est un mensonge. */
-  readonly entreesBien = computed<Entree[]>(() => {
-    const e: Entree[] = [
-      { chemin: '/bien/calendrier', libelle: 'Calendrier', icone: 'bi-calendar3' },
-      { chemin: '/bien/demandes', libelle: 'Demandes', icone: 'bi-envelope-paper', badge: true },
+  /**
+   * Les entrées d'un bien, groupées comme la maquette.
+   *
+   * Les règles de rôle sont inchangées : ce qui n'est pas accessible n'est pas
+   * affiché, parce qu'une entrée de navigation qui mène à un refus ou à un
+   * écran vide est un mensonge. Un groupe vidé par ces règles disparaît avec
+   * son titre, plutôt que de laisser un intertitre sans rien dessous.
+   */
+  readonly groupesBien = computed<Groupe[]>(() => {
+    const membre = this.etat.roleIci() !== 'invite';
+    const parts = this.etat.vocabulaire().parts;
+
+    const groupes: Groupe[] = [
+      {
+        titre: 'Séjours',
+        entrees: [
+          { chemin: '/bien/calendrier', libelle: "Calendrier d'occupation", icone: 'bi-calendar3' },
+          { chemin: '/bien/demandes', libelle: 'Demandes de séjour', icone: 'bi-envelope-paper', badge: true },
+        ],
+      },
+      {
+        titre: 'Argent',
+        entrees: [
+          // L'argent n'est visible que de qui a le droit de le voir.
+          ...(this.etat.voitLArgent() ? [
+            { chemin: '/bien/depenses', libelle: 'Dépenses & répartition', icone: 'bi-receipt' },
+            { chemin: '/bien/soldes', libelle: 'Soldes & remboursements', icone: 'bi-arrow-left-right' },
+          ] : []),
+          // « La location est activable par bien » : sur un bien qui n'est pas
+          // loué, l'entrée n'existe pas.
+          ...(this.etat.bien()?.locationActivee && this.etat.voitLArgent() ? [
+            { chemin: '/bien/location', libelle: 'Location saisonnière', icone: 'bi-key' },
+          ] : []),
+        ],
+      },
+      {
+        titre: 'Maison',
+        entrees: [
+          // Savoir que la chaudière est contrôlée intéresse tout le monde, mais
+          // pas un invité de passage.
+          ...(membre ? [
+            { chemin: '/bien/entretien', libelle: "Carnet d'entretien", icone: 'bi-tools' },
+          ] : []),
+          { chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-journal-bookmark' },
+          // Le coffre-fort s'affiche pour tous : son contenu est filtré par
+          // portée, et un invité en séjour y trouve le code du portail.
+          { chemin: '/bien/coffre', libelle: 'Coffre-fort', icone: 'bi-shield-lock' },
+        ],
+      },
+      {
+        titre: 'Famille',
+        entrees: membre ? [
+          { chemin: '/bien/decisions', libelle: 'Décisions & votes', icone: 'bi-hand-thumbs-up' },
+          { chemin: '/bien/souvenirs', libelle: 'Souvenirs', icone: 'bi-images' },
+          { chemin: '/bien/membres', libelle: `Membres & ${parts}`, icone: 'bi-people' },
+        ] : [],
+      },
     ];
-    // L'argent n'est visible que de qui a le droit de le voir : afficher une
-    // entrée qui répondra 403 est une promesse que l'application ne tient pas.
-    if (this.etat.voitLArgent()) {
-      e.push({ chemin: '/bien/depenses', libelle: 'Dépenses', icone: 'bi-receipt' });
-      e.push({ chemin: '/bien/soldes', libelle: 'Soldes', icone: 'bi-arrow-left-right' });
-    }
-    // Le carnet d'entretien est ouvert aux membres de foyer, pas aux invités :
-    // savoir que la chaudière est contrôlée intéresse tout le monde, et cacher
-    // l'entretien n'a jamais évité une panne.
-    if (this.etat.roleIci() !== 'invite') {
-      e.push({ chemin: '/bien/entretien', libelle: "Carnet d'entretien", icone: 'bi-tools' });
-    }
-    // Le coffre-fort s'affiche pour tous : son contenu est filtré par portée,
-    // et un invité en séjour y trouve légitimement le code du portail.
-    e.push({ chemin: '/bien/coffre', libelle: 'Coffre-fort', icone: 'bi-shield-lock' });
-    e.push({ chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-house-door' });
-    // Les décisions sont visibles de tous les membres : « toute décision est
-    // horodatée et visible de tous les indivisaires », dit la maquette.
-    if (this.etat.roleIci() !== 'invite') {
-      e.push({ chemin: '/bien/decisions', libelle: 'Décisions et votes', icone: 'bi-check2-square' });
-    }
-    // « La location est activable par bien » : sur un bien qui n'est pas loué,
-    // l'entrée ne s'affiche pas du tout. Le serveur refuse de toute façon, mais
-    // une entrée de navigation qui mène à un refus est un mensonge de plus.
-    if (this.etat.bien()?.locationActivee && this.etat.roleIci() !== 'invite'
-        && this.etat.roleIci() !== 'membre_foyer') {
-      e.push({ chemin: '/bien/location', libelle: 'Location saisonnière', icone: 'bi-key' });
-    }
-    // Les souvenirs sont ouverts aux membres de foyer : c'est ce que la famille
-    // a de plus commun. Un locataire de passage, lui, n'a rien à y faire.
-    if (this.etat.roleIci() !== 'invite') {
-      e.push({ chemin: '/bien/souvenirs', libelle: 'Souvenirs', icone: 'bi-images' });
-    }
-    // Un invité ou un locataire ne voit pas la liste des membres de la famille :
-    // l'écran s'appuie sur la portée de structure, qu'un rôle posé sur un seul
-    // bien ne donne pas, et une entrée de navigation qui mène à un écran vide
-    // est un mensonge.
-    if (this.etat.roleIci() !== 'invite') {
-      e.push({ chemin: '/bien/membres', libelle: 'Membres et ' + this.etat.vocabulaire().parts, icone: 'bi-people' });
-    }
-    return e;
+    return groupes.filter((g) => g.entrees.length > 0);
   });
 
   readonly onglets = computed<Entree[]>(() => this.etat.bien()
