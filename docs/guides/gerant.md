@@ -383,10 +383,15 @@ Les plus utiles :
 Les dates de vacances sont fixées par arrêté et ne se calculent pas. Elles se
 mettent à jour une fois par an, ici, en déposant le fichier officiel.
 
-**L'application ne va jamais le chercher en ligne.** C'est vous qui le
-téléchargez sur data.education.gouv.fr, et vous qui le déposez.
+Par défaut, **l'application ne va pas le chercher en ligne** : c'est vous qui le
+téléchargez sur data.education.gouv.fr, et vous qui le déposez. Un réglage
+« Télécharger le calendrier scolaire » ajoute un bouton **Récupérer en ligne**
+qui s'en charge, au prix du seul appel réseau sortant de l'application. Il est
+éteint par défaut ; allumez-le si votre serveur a le droit de sortir sur
+Internet et que la commodité vous intéresse.
 
-1. Cliquez sur **Déposer un calendrier** et choisissez le fichier.
+1. Cliquez sur **Déposer un calendrier** et choisissez le fichier, ou sur
+   **Récupérer en ligne** si vous avez activé le réglage.
 2. Relisez l'aperçu.
 
 ![L'aperçu avant enregistrement](images/gerant-vacances-apercu.png)

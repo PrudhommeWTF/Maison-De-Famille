@@ -21,9 +21,12 @@ ferait rater un jour de travail.
 Elles ne se déduisent de rien. Elles sont fixées par arrêté ministériel, et
 l'ordre des zones tourne d'une année sur l'autre. Aucune formule ne les donne.
 
-L'application **ne va pas les chercher en ligne** : le brief interdit tout appel
-réseau sortant, et cette règle ne se contourne pas pour un confort d'affichage.
-C'est vous qui téléchargez le fichier officiel, et vous qui le déposez.
+Par défaut, l'application **ne va pas les chercher en ligne** : c'est vous qui
+téléchargez le fichier officiel, et vous qui le déposez. C'est le mode livré, et
+c'est celui qui garde l'instance entièrement muette vis-à-vis d'Internet.
+
+Un réglage permet de changer cela, en connaissance de cause : voir
+[Récupérer en ligne](#récupérer-en-ligne-facultatif) plus bas.
 
 La table vit en base, dans `vacance_scolaire`, et se met à jour depuis l'écran
 **Réglages**, section « Vacances scolaires ». Toucher au code n'est plus
@@ -44,6 +47,31 @@ remplacées, et quelles lignes ont été écartées avec leur raison.
 
 Un import **remplace les années qu'il apporte** et ne touche à aucune autre :
 déposer un fichier 2027-2028 ne fait rien perdre de 2026-2027.
+
+### Récupérer en ligne, facultatif
+
+Le réglage **« Télécharger le calendrier scolaire »**, dans Réglages, section
+Général, ajoute un bouton **Récupérer en ligne** à côté de « Déposer un
+calendrier ». Il évite d'aller chercher le fichier soi-même une fois par an.
+
+Il est **éteint par défaut**, et il faut savoir ce qu'on allume :
+
+- c'est le **seul appel réseau sortant** de l'application en dehors du relais de
+  courriel, donc le conteneur doit avoir le droit de sortir sur Internet ;
+- l'instance **signale son existence** au portail à chaque récupération ;
+- si le portail change d'adresse ou de format, le bouton cesse de fonctionner, et
+  il faudra revenir au dépôt manuel en attendant une mise à jour.
+
+Ce que le réglage ne change pas :
+
+- l'adresse est **en dur dans le code**, aucun réglage ne permet de la changer ;
+- l'hôte est **revérifié après les redirections** ;
+- la réponse est plafonnée à 8 Mo et abandonnée au bout de 20 secondes ;
+- **rien n'est enregistré sans confirmation.** Le bouton remplit le même aperçu
+  que le dépôt d'un fichier, et il faut toujours cliquer sur « Enregistrer ».
+
+Le navigateur, lui, ne parle jamais au portail : c'est le serveur qui va
+chercher le fichier, et la politique de sécurité de contenu reste fermée.
 
 ### Ce qui est écarté, et pourquoi
 
