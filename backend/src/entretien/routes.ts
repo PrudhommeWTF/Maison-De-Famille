@@ -28,7 +28,7 @@ import type { Db } from '../noyau/db';
 import type { Config } from '../noyau/config';
 import { rappelerClotures } from '../decisions/routes';
 import { creerAlbumsDesSejoursFinis } from '../location/routes';
-import { Categorie, Periodicite, lisible, urgence } from './recurrences';
+import { Categorie, Periodicite, RecurrenceInvalide, lisible, urgence } from './recurrences';
 import {
   archiverChecklist, archiverInventaire, archiverRecurrence, archiverTache, checklist,
   creerChecklist, creerInventaire, creerRecurrence, creerTache, echeancesProches, engendrer,
@@ -124,10 +124,19 @@ export function routesEntretien(deps: Deps): Routeur {
     const moisDebut = l.entierFacultatif('moisDebut', { min: 1, max: 12 });
     const moisFin = l.entierFacultatif('moisFin', { min: 1, max: 12 });
     l.fin();
-    return { id: creerRecurrence(ctx.db, ctx.bienId, {
-      libelle, categorie, periodicite,
-      limiteMmjj: limiteMmjj || null, moisDebut: moisDebut ?? null, moisFin: moisFin ?? null,
-    }, ctx.personneId) };
+    try {
+      return { id: creerRecurrence(ctx.db, ctx.bienId, {
+        libelle, categorie, periodicite,
+        limiteMmjj: limiteMmjj || null, moisDebut: moisDebut ?? null, moisFin: moisFin ?? null,
+      }, ctx.personneId) };
+    } catch (e) {
+      // Le module pur refuse une récurrence incohérente avec un message écrit
+      // pour la famille et qui dit quoi corriger. Sans cette reprise, il
+      // ressortait en « erreur interne » et le seul texte utile finissait dans
+      // le journal du serveur, que personne ne lit.
+      if (e instanceof RecurrenceInvalide) throw invalide(e.message);
+      throw e;
+    }
   });
 
   r.post('/biens/:bienId/recurrences/:recurrenceId/archivage', { acces: 'bien', role: 'gerant' }, (ctx) => {

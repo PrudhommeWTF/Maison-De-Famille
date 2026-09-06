@@ -226,6 +226,28 @@ test('un signalement de casse crée la tâche et la ligne d\'inventaire', async 
   } finally { await i.fermer(); }
 });
 
+test('une récurrence incohérente est refusée en français, pas en erreur interne', async () => {
+  const i = await demarrer({ cleCoffre: CLE });
+  try {
+    const { bienId } = await maison(i);
+    // Le module pur refuse cette récurrence avec un message écrit pour la
+    // famille. Sans reprise dans la route, il ressortait en 500 « erreur
+    // interne » et le seul texte utile finissait dans le journal du serveur.
+    const r = await i.post<{ message: string }>(`/api/biens/${bienId}/recurrences`, {
+      libelle: 'Ramonage', categorie: 'obligatoire', periodicite: 'annuelle',
+    });
+    assert.equal(r.statut, 400, JSON.stringify(r.corps));
+    assert.match(r.corps.message, /date limite dans l'année/);
+    assert.match(r.corps.message, /10-15/, 'le message doit donner un exemple à recopier');
+
+    const impossible = await i.post<{ message: string }>(`/api/biens/${bienId}/recurrences`, {
+      libelle: 'Ramonage', categorie: 'obligatoire', periodicite: 'annuelle', limiteMmjj: '02-30',
+    });
+    assert.equal(impossible.statut, 400);
+    assert.match(impossible.corps.message, /n'a pas 30 jours/);
+  } finally { await i.fermer(); }
+});
+
 test('une récurrence engendre son échéance, et cocher demande la date', async () => {
   const i = await demarrer({ cleCoffre: CLE });
   try {

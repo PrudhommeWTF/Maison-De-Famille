@@ -99,6 +99,19 @@ icônes sont dans le dépôt.
 
 ## Documentation
 
+### Pour la famille qui s'en sert
+
+| Document | Contenu |
+| --- | --- |
+| [`docs/guides/`](docs/guides/README.md) | **Les guides d'utilisation, un par rôle, avec des captures d'écran** |
+| [`docs/guides/premiers-pas.md`](docs/guides/premiers-pas.md) | Recevoir son invitation, se connecter, se repérer. À lire en premier |
+| [`docs/guides/gerant.md`](docs/guides/gerant.md) | Arbitrer, saisir les dépenses, tenir les papiers et les réglages |
+| [`docs/guides/detenteur.md`](docs/guides/detenteur.md) | Demander un séjour, suivre l'argent, voter |
+| [`docs/guides/membre-de-foyer.md`](docs/guides/membre-de-foyer.md) | Le conjoint d'un détenteur : calendrier, entretien, codes |
+| [`docs/guides/invite.md`](docs/guides/invite.md) | Entrer par un lien, trouver les codes de son séjour |
+
+### Pour qui héberge et fait évoluer le service
+
 | Document | Contenu |
 | --- | --- |
 | [`docs/installation.md`](docs/installation.md) | Docker, LXC, reverse-proxy, mise à jour |
@@ -115,6 +128,7 @@ icônes sont dans le dépôt.
 | [`docs/recette-t3.md`](docs/recette-t3.md) | **Ce que vous vérifiez vous-même** pour la maison et le coffre-fort |
 | [`docs/recette-t4.md`](docs/recette-t4.md) | **Ce que vous vérifiez vous-même** pour les votes et les accès temporaires |
 | [`docs/design/handoff/`](docs/design/handoff/) | Le paquet de design. Contractuel pour l'apparence et les libellés |
+| [`docs/guides/CAPTURES.md`](docs/guides/CAPTURES.md) | Comment réengendrer les captures des guides après un changement d'interface |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions du dépôt |
 
 ## Le prototype de design
