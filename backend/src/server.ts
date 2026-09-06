@@ -49,6 +49,19 @@ export function construireApp(deps: Deps): express.Express {
     // CDN, et aucun appel réseau sortant en dehors du relais SMTP.
     contentSecurityPolicy: {
       directives: {
+        // `upgrade-insecure-requests` vient des défauts de helmet, qui les
+        // fusionne avec ce qu'on lui donne. Il faisait réécrire chaque
+        // ressource en https, y compris sur une instance servie en clair sur le
+        // réseau local : le navigateur n'obtenait aucun script et affichait une
+        // page blanche. Invisible en test, parce que les navigateurs exemptent
+        // « localhost » de cette réécriture.
+        //
+        // Le retirer ne coûte rien ici : l'application ne charge aucune
+        // ressource extérieure, et toutes ses adresses sont relatives, donc
+        // déjà dans le protocole de la page. La mise en ligne passe par un
+        // reverse-proxy qui porte le certificat, et c'est lui qui doit rediriger
+        // vers https, pas une directive qui casse le premier démarrage.
+        upgradeInsecureRequests: null,
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
