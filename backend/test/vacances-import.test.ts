@@ -236,12 +236,19 @@ test("un fichier illisible est refusé en français, sans rien écrire", async (
 test('seul un gérant peut changer le calendrier scolaire', async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
-  const { bienId } = await amorcer(i);
+  const { bienId, structureId } = await amorcer(i);
 
+  // Marc est rattaché pour de bon : sans cela, le test vérifierait seulement
+  // qu'un inconnu se fait refuser, ce qui est bien plus faible.
   const marcId = await creerCompte(i, 'Marc Prudhomme', 'marc@exemple.fr');
-  await i.post(`/api/biens/${bienId}/rattachements`, { personneId: marcId, role: 'membre' });
+  const rattache = await i.post(`/api/structures/${structureId}/roles`,
+    { personneId: marcId, role: 'membre_foyer' });
+  assert.equal(rattache.statut, 204, JSON.stringify(rattache.corps));
   await i.connexion('marc@exemple.fr', MOT_DE_PASSE);
 
+  // Le témoin du rattachement : sans lui, un 403 plus bas prouverait seulement
+  // qu'un inconnu se fait refuser.
+  assert.equal((await i.get(`/api/biens/${bienId}`)).statut, 200, 'Marc doit bien voir le bien');
   // Il voit les repères, comme tout le monde : ce ne sont pas des secrets.
   assert.equal((await i.get('/api/calendrier/reperes?du=2026-02-01&au=2026-02-28')).statut, 200);
   // Mais il ne peut ni consulter l'état de l'import, ni écrire.

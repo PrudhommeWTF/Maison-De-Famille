@@ -22,6 +22,7 @@ import { deposer } from '../notifications/file';
 import { demandeDecidee, demandeNouvelle } from '../notifications/gabarits';
 import { biensVisibles } from '../acces/roles';
 import { Conflit, detecter } from './conflits';
+import { masquerListe } from './discretion';
 import {
   Nature, annuler, annulerDecision, aVenir, conflitsDe, creer, decider, enAttente,
   occupationsDe, sejour, surPlage,
@@ -46,28 +47,57 @@ export function routesSejours(deps: Deps): Routeur {
   const r = new Routeur('sejours', deps);
 
   /**
+   * Les séjours qui appartiennent à l'appelant.
+   *
+   * Deux façons d'être le sien : l'avoir demandé, ou être entré par un lien
+   * ouvert pour lui. Un locataire n'a pas de demande à son nom, son séjour lui
+   * est rattaché par l'accès temporaire.
+   */
+  const siensParmi = (ctx: { db: Deps['db']; personneId: number }): Set<number> => {
+    const lignes = ctx.db.prepare(
+      `SELECT id FROM sejour WHERE demandeur_id = ? AND archive_le IS NULL
+       UNION
+       SELECT sejour_id AS id FROM acces_temporaire
+       WHERE personne_id = ? AND sejour_id IS NOT NULL AND revoque_le IS NULL`,
+    ).all(ctx.personneId, ctx.personneId) as { id: number }[];
+    return new Set(lignes.map((l) => l.id));
+  };
+
+  /**
    * Le calendrier consolidé, tous biens visibles confondus. La liste des biens
    * autorisés part dans la requête SQL : ce qui n'est pas dans la portée n'est
    * jamais lu, et pas seulement jamais affiché.
    */
   r.get('/sejours', { acces: 'authentifie' }, (ctx) => {
     const { du, au } = plageDemandee(ctx.req.query as Record<string, unknown>);
-    return { du, au, sejours: surPlage(ctx.db, biensVisibles(ctx.portee), du, au) };
+    const sejours = surPlage(ctx.db, biensVisibles(ctx.portee), du, au);
+    return {
+      du, au,
+      sejours: masquerListe(sejours, (b) => ctx.portee.biens.get(b) === 'invite', siensParmi(ctx)),
+    };
   });
 
   r.get('/biens/:bienId/sejours', { acces: 'bien', role: 'invite' }, (ctx) => {
     const { du, au } = plageDemandee(ctx.req.query as Record<string, unknown>);
     const b = bien(ctx.db, ctx.bienId);
-    const sejours = surPlage(ctx.db, [ctx.bienId], du, au);
+    const invite = ctx.portee.biens.get(ctx.bienId) === 'invite';
+    const sejours = masquerListe(
+      surPlage(ctx.db, [ctx.bienId], du, au), () => invite, invite ? siensParmi(ctx) : new Set(),
+    );
+
     // La bannière de conflit du calendrier : uniquement les chevauchements réels
-    // et non arbitrés, comme le prévoit la maquette.
-    const occupations = occupationsDe(ctx.db, ctx.bienId);
+    // et non arbitrés, comme le prévoit la maquette. Un invité n'y a pas sa
+    // place : l'arbitrage est une affaire de famille, et la bannière nomme les
+    // séjours qu'elle croise.
     const conflits: Conflit[] = [];
-    for (const o of occupations.filter((x) => x.statut === 'demande')) {
-      conflits.push(...detecter(
-        { arrivee: o.arrivee, depart: o.depart, occupants: o.occupants, sejourId: o.id },
-        occupations, b.couchages,
-      ).filter((c) => c.nature === 'sejour_valide'));
+    if (!invite) {
+      const occupations = occupationsDe(ctx.db, ctx.bienId);
+      for (const o of occupations.filter((x) => x.statut === 'demande')) {
+        conflits.push(...detecter(
+          { arrivee: o.arrivee, depart: o.depart, occupants: o.occupants, sejourId: o.id },
+          occupations, b.couchages,
+        ).filter((c) => c.nature === 'sejour_valide'));
+      }
     }
     return { du, au, sejours, conflits, couchages: b.couchages };
   });
@@ -218,8 +248,11 @@ export function routesSejours(deps: Deps): Routeur {
   });
 
   /** Les prochains séjours, pour le tableau de bord. */
-  r.get('/sejours/a-venir', { acces: 'authentifie' }, (ctx) =>
-    aVenir(ctx.db, biensVisibles(ctx.portee), aujourdhui()));
+  r.get('/sejours/a-venir', { acces: 'authentifie' }, (ctx) => masquerListe(
+    aVenir(ctx.db, biensVisibles(ctx.portee), aujourdhui()),
+    (b) => ctx.portee.biens.get(b) === 'invite',
+    siensParmi(ctx),
+  ));
 
   return r;
 }
