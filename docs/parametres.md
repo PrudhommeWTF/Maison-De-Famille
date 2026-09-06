@@ -25,6 +25,14 @@ Identité de l'instance et affichage.
 
 Apparaît dans l'objet des courriels et dans l'en-tête de l'application. Utile quand plusieurs familles hébergent la même application sur le même réseau.
 
+### Jours fériés d'Alsace-Moselle
+
+- **Clé** : `feriesAlsaceMoselle`
+- **Portée** : Instance
+- **Par défaut** : Non
+
+Ajoute le Vendredi saint et le 26 décembre, fériés dans le Bas-Rhin, le Haut-Rhin et la Moselle. À laisser éteint ailleurs : afficher deux fériés qui n'en sont pas ferait rater un jour de travail.
+
 ### Commencer la semaine le dimanche
 
 - **Clé** : `semaineCommenceDimanche`

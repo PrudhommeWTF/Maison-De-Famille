@@ -89,6 +89,12 @@ export const REGISTRE: readonly Declaration[] = [
     defaut: 'Maison de Famille', maxLongueur: 60,
   },
   {
+    cle: 'feriesAlsaceMoselle', type: 'bool', portee: 'instance', section: 'general', module: 'Calendrier',
+    libelle: 'Jours fériés d\'Alsace-Moselle',
+    description: "Ajoute le Vendredi saint et le 26 décembre, fériés dans le Bas-Rhin, le Haut-Rhin et la Moselle. À laisser éteint ailleurs : afficher deux fériés qui n'en sont pas ferait rater un jour de travail.",
+    defaut: false,
+  },
+  {
     cle: 'semaineCommenceDimanche', type: 'bool', portee: 'personnel', section: 'general', module: 'Calendrier',
     libelle: 'Commencer la semaine le dimanche',
     description: "Change la première colonne de la grille du calendrier. Chacun règle le sien, cela n'affecte personne d'autre.",

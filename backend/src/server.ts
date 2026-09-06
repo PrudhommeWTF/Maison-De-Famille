@@ -31,6 +31,7 @@ import { routesImport } from './sejours/import/routes';
 import { routesParametres } from './parametres/routes';
 import { routesFichiers } from './stockage/routes';
 import { routesExport } from './export/routes';
+import { routesCalendrier } from './calendrier/routes';
 import { routesSysteme } from './systeme/routes';
 
 export function construireApp(deps: Deps): express.Express {
@@ -102,6 +103,7 @@ export function construireApp(deps: Deps): express.Express {
     routesSaisons(deps), routesImport(deps), routesArgent(deps), routesEntretien(deps),
     routesMaison(deps), routesCoffre(deps), routesDecisions(deps), routesLocation(deps),
     routesParametres(deps),
+    routesCalendrier(deps),
     routesFichiers(deps), routesExport(deps), routesSysteme(deps),
   ]) app.use('/api', routeur.router);
 

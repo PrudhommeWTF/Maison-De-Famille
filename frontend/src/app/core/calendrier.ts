@@ -41,6 +41,53 @@ export interface Case {
   occupations: OccupationGrille[];
   enConflit: boolean;
   aujourdhui: boolean;
+  /** Les zones scolaires en vacances cette nuit-là. */
+  zones: ZoneVacances[];
+  /** Le nom du jour férié, vide sinon. */
+  ferie: string;
+}
+
+export type ZoneVacances = 'A' | 'B' | 'C';
+
+/**
+ * Les couleurs des trois zones de vacances scolaires.
+ *
+ * Elles ne peuvent pas être prises dans la palette des natures de séjour :
+ * une case porte déjà un fond qui dit qui occupe la maison, et deux
+ * informations ne peuvent pas se partager le même canal visuel. Les zones
+ * s'affichent donc en bandeaux fins sous la case, dans trois teintes choisies
+ * pour rester distinctes entre elles et de tous les fonds existants.
+ */
+export const COULEURS_ZONE: Record<ZoneVacances, string> = {
+  A: '#c98a3f',
+  B: '#5f87a8',
+  C: '#8f7aa8',
+};
+
+export interface PeriodeVacances { nom: string; zone: ZoneVacances | null; debut: string; fin: string }
+export interface JourFerie { date: string; nom: string }
+
+/** Repères nationaux affichés sous la grille d'occupation. */
+export interface Reperes {
+  feries: JourFerie[];
+  vacances: PeriodeVacances[];
+  /** Faux quand la table des vacances ne couvre pas la plage demandée. */
+  couvert: boolean;
+  anneesCouvertes: string[];
+}
+
+export const REPERES_VIDES: Reperes = { feries: [], vacances: [], couvert: true, anneesCouvertes: [] };
+
+/**
+ * Les zones en vacances un jour donné.
+ *
+ * Une période sans zone (Toussaint, Noël, été) vaut pour les trois : c'est ce
+ * qui évite d'écrire trois lignes identiques dans la table.
+ */
+export function zonesDuJour(jour: string, periodes: readonly PeriodeVacances[]): ZoneVacances[] {
+  const dedans = periodes.filter((p) => p.debut <= jour && jour <= p.fin);
+  if (dedans.some((p) => p.zone === null)) return ['A', 'B', 'C'];
+  return (['A', 'B', 'C'] as ZoneVacances[]).filter((z) => dedans.some((p) => p.zone === z));
 }
 
 export interface Semaine { cases: Case[] }
@@ -54,17 +101,22 @@ export interface Semaine { cases: Case[] }
  */
 export function grilleDuMois(
   annee: number, mois: number, occupations: readonly OccupationGrille[],
-  options: { dimancheDabord?: boolean; nuitsEnConflit?: readonly string[]; aujourdhui?: string } = {},
+  options: {
+    dimancheDabord?: boolean; nuitsEnConflit?: readonly string[]; aujourdhui?: string;
+    reperes?: Reperes;
+  } = {},
 ): Semaine[] {
   const premier = premierDuMois(annee, mois);
   const jourSemaine = new Date(`${premier}T00:00:00Z`).getUTCDay();          // 0 = dimanche
   const decalage = options.dimancheDabord ? jourSemaine : (jourSemaine + 6) % 7;
   const nbJours = new Date(Date.UTC(annee, mois + 1, 0)).getUTCDate();
   const conflits = new Set(options.nuitsEnConflit ?? []);
+  const reperes = options.reperes ?? REPERES_VIDES;
+  const feries = new Map(reperes.feries.map((f) => [f.date, f.nom]));
 
   const vide = (): Case => ({
     jour: null, date: '', teinte: { fond: 'transparent', bordure: 'transparent', encre: 'inherit', tirets: false },
-    libelle: '', occupations: [], enConflit: false, aujourdhui: false,
+    libelle: '', occupations: [], enConflit: false, aujourdhui: false, zones: [], ferie: '',
   });
 
   const cases: Case[] = [];
@@ -86,6 +138,8 @@ export function grilleDuMois(
       occupations: ici,
       enConflit: conflits.has(date),
       aujourdhui: date === options.aujourdhui,
+      zones: zonesDuJour(date, reperes.vacances),
+      ferie: feries.get(date) ?? '',
     });
   }
 

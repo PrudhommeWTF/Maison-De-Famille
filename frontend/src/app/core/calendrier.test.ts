@@ -5,7 +5,8 @@
 // s'afficher correctement, avec un seul séjour par case.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { OccupationGrille, grilleDuMois, occupationsDuMois, teinteDe } from './calendrier';
+import { OccupationGrille, grilleDuMois, occupationsDuMois, teinteDe, zonesDuJour } from './calendrier';
+import type { Reperes } from './calendrier';
 
 const occ = (o: Partial<OccupationGrille> & { id: number; arrivee: string; depart: string }): OccupationGrille => ({
   titre: 'Séjour', nature: 'famille', statut: 'valide', ...o,
@@ -110,4 +111,46 @@ test('un séjour qui finit le premier du mois n\'appartient plus à ce mois', ()
   const s = [occ({ id: 1, arrivee: '2026-07-25', depart: '2026-08-01' })];
   assert.equal(occupationsDuMois(2026, 7, s).length, 0);
   assert.equal(occupationsDuMois(2026, 6, s).length, 1);
+});
+
+
+// ---------- Vacances scolaires et jours fériés ----------
+
+const REPERES: Reperes = {
+  feries: [{ date: '2026-02-14', nom: 'Saint-Valentin (pour le test)' }],
+  vacances: [
+    { nom: 'Hiver', zone: 'A', debut: '2026-02-07', fin: '2026-02-22' },
+    { nom: 'Hiver', zone: 'B', debut: '2026-02-14', fin: '2026-03-01' },
+    { nom: 'Hiver', zone: 'C', debut: '2026-02-21', fin: '2026-03-08' },
+  ],
+  couvert: true, anneesCouvertes: ['2025-2026'],
+};
+
+test('les zones en vacances se cumulent sur les jours de recouvrement', () => {
+  // C'est tout l'intérêt d'afficher les trois : la deuxième semaine de février,
+  // deux zones sont dehors, et la maison est demandée par deux branches.
+  assert.deepEqual(zonesDuJour('2026-02-09', REPERES.vacances), ['A']);
+  assert.deepEqual(zonesDuJour('2026-02-16', REPERES.vacances), ['A', 'B']);
+  assert.deepEqual(zonesDuJour('2026-02-23', REPERES.vacances), ['B', 'C']);
+  assert.deepEqual(zonesDuJour('2026-03-05', REPERES.vacances), ['C']);
+  assert.deepEqual(zonesDuJour('2026-03-09', REPERES.vacances), [], 'tout le monde est rentré');
+});
+
+test('une période sans zone met les trois en vacances', () => {
+  const noel = [{ nom: 'Noël', zone: null, debut: '2025-12-20', fin: '2026-01-04' }] as const;
+  assert.deepEqual(zonesDuJour('2025-12-25', noel), ['A', 'B', 'C']);
+});
+
+test('la grille porte les zones et les fériés sur les bonnes cases', () => {
+  const g = grilleDuMois(2026, 1, [], { reperes: REPERES });
+  assert.deepEqual(caseDe(g, '2026-02-16').zones, ['A', 'B']);
+  assert.deepEqual(caseDe(g, '2026-02-02').zones, [], 'avant les vacances');
+  assert.equal(caseDe(g, '2026-02-14').ferie, 'Saint-Valentin (pour le test)');
+  assert.equal(caseDe(g, '2026-02-15').ferie, '');
+});
+
+test('sans repères, la grille reste muette plutôt que fausse', () => {
+  const g = grilleDuMois(2026, 1, []);
+  assert.deepEqual(caseDe(g, '2026-02-16').zones, []);
+  assert.equal(caseDe(g, '2026-02-16').ferie, '');
 });
