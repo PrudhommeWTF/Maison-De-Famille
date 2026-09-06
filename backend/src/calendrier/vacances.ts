@@ -5,15 +5,16 @@
 // publiées deux ou trois ans à l'avance, et l'ordre des zones tourne d'une
 // année sur l'autre. Aucune formule ne les donne.
 //
-// **Pourquoi elles sont ici et non téléchargées.** Le brief est explicite :
-// aucun appel réseau sortant. L'application ne va donc rien chercher chez
-// l'Éducation nationale ; la table vit dans le dépôt et se met à jour par une
-// modification de ce fichier, une fois par an.
+// **Pourquoi ce fichier ne contient plus le calendrier.** Il vivait ici en
+// constante jusqu'à la version 8 du schéma, ce qui obligeait à modifier le code
+// et à redéployer une fois par an. Il est maintenant en base, alimenté par
+// l'import de l'écran Réglages. Ce module garde ce qui reste vrai pour
+// toujours : le découpage en zones, la notion d'année scolaire, et la façon de
+// lire un intervalle. Il ne sait pas d'où viennent les périodes.
 //
-// **Ce que fait l'application quand une année manque.** Elle le dit. Elle
-// n'invente pas, elle ne devine pas par rotation des zones, et elle n'affiche
-// pas un calendrier muet qui laisserait croire qu'il n'y a pas de vacances.
-// Voir `couvre()`.
+// **L'application ne va rien chercher en ligne.** Le brief interdit tout appel
+// réseau sortant. C'est la famille qui télécharge le fichier officiel et le
+// dépose ; l'application ne le fait jamais à sa place.
 //
 // Source à vérifier à chaque mise à jour :
 // https://www.education.gouv.fr/le-calendrier-scolaire
@@ -42,62 +43,81 @@ export interface Periode {
 }
 
 /**
- * Le calendrier, année scolaire par année scolaire.
+ * Une période telle qu'elle est stockée : rattachée à son année scolaire, et
+ * toujours à une zone précise. Le regroupement en « les trois zones » est un
+ * confort d'affichage, pas une forme de stockage. Voir `collapser`.
  *
  * Les bornes suivent l'usage des familles et non la formulation officielle :
- * « du samedi au dimanche inclus », c'est-à-dire tous les jours où les enfants
- * ne sont pas en classe. L'arrêté dit « après la classe » et « au matin de la
- * reprise », ce qui désigne les mêmes journées.
+ * `debut` et `fin` sont des jours **sans classe**, bornes incluses. L'arrêté,
+ * lui, annonce le jour de la reprise, qui est le lendemain de `fin`.
  */
-export const CALENDRIER: Record<string, Periode[]> = {
-  '2025-2026': [
-    { nom: 'Toussaint', zone: null, debut: '2025-10-18', fin: '2025-11-02' },
-    { nom: 'Noël', zone: null, debut: '2025-12-20', fin: '2026-01-04' },
-    { nom: 'Hiver', zone: 'A', debut: '2026-02-07', fin: '2026-02-22' },
-    { nom: 'Hiver', zone: 'B', debut: '2026-02-14', fin: '2026-03-01' },
-    { nom: 'Hiver', zone: 'C', debut: '2026-02-21', fin: '2026-03-08' },
-    { nom: 'Printemps', zone: 'A', debut: '2026-04-04', fin: '2026-04-19' },
-    { nom: 'Printemps', zone: 'B', debut: '2026-04-11', fin: '2026-04-26' },
-    { nom: 'Printemps', zone: 'C', debut: '2026-04-18', fin: '2026-05-03' },
-    { nom: 'Été', zone: null, debut: '2026-07-04', fin: '2026-08-31' },
-  ],
-};
-
-/** Les années scolaires renseignées, triées. */
-export const ANNEES_COUVERTES = Object.keys(CALENDRIER).sort();
+export interface PeriodeAnnuelle {
+  anneeScolaire: string;
+  nom: string;
+  zone: Zone;
+  debut: string;
+  fin: string;
+}
 
 /** L'année scolaire d'une date : le 1er septembre fait basculer. */
 export function anneeScolaire(iso: string): string {
   const a = Number(iso.slice(0, 4));
-  const debutAout = iso.slice(5, 7) >= '09';
-  return debutAout ? `${a}-${a + 1}` : `${a - 1}-${a}`;
+  const apresLaRentree = iso.slice(5, 7) >= '09';
+  return apresLaRentree ? `${a}-${a + 1}` : `${a - 1}-${a}`;
+}
+
+/** Les années scolaires que traverse `[du, au]`, bornes incluses. */
+export function anneesTraversees(du: string, au: string): string[] {
+  const out: string[] = [];
+  for (let a = Number(anneeScolaire(du).slice(0, 4)); a <= Number(anneeScolaire(au).slice(0, 4)); a++) {
+    out.push(`${a}-${a + 1}`);
+  }
+  return out;
 }
 
 /**
- * L'intervalle demandé est-il entièrement couvert par la table ?
+ * L'intervalle demandé est-il entièrement couvert par ce qui est en base ?
  *
  * Sert à afficher un avertissement plutôt qu'un calendrier silencieusement
  * incomplet : une famille qui ne voit aucune vacance en février doit savoir si
  * c'est parce qu'il n'y en a pas, ou parce que personne n'a mis la table à jour.
  */
-export function couvre(du: string, au: string): boolean {
-  const annees = new Set([anneeScolaire(du), anneeScolaire(au)]);
-  return [...annees].every((a) => a in CALENDRIER);
+export function couvre(du: string, au: string, annees: readonly string[]): boolean {
+  return anneesTraversees(du, au).every((a) => annees.includes(a));
+}
+
+/**
+ * Regroupe en une seule période « toutes zones » ce qui porte le même nom et
+ * les mêmes dates dans les trois zones. Sans cela, l'infobulle du 25 décembre
+ * dirait « Noël, Noël, Noël ».
+ */
+export function collapser(periodes: readonly PeriodeAnnuelle[]): Periode[] {
+  const paquets = new Map<string, PeriodeAnnuelle[]>();
+  for (const p of periodes) {
+    const cle = `${p.nom} ${p.debut} ${p.fin}`;
+    const paquet = paquets.get(cle) ?? [];
+    if (!paquet.length) paquets.set(cle, paquet);
+    paquet.push(p);
+  }
+  const out: Periode[] = [];
+  for (const groupe of paquets.values()) {
+    const zones = new Set(groupe.map((p) => p.zone));
+    if (ZONES.every((z) => zones.has(z))) {
+      out.push({ nom: groupe[0].nom, zone: null, debut: groupe[0].debut, fin: groupe[0].fin });
+    } else {
+      for (const p of groupe) out.push({ nom: p.nom, zone: p.zone, debut: p.debut, fin: p.fin });
+    }
+  }
+  return trier(out);
 }
 
 /** Les périodes qui recoupent `[du, au]`, bornes incluses. */
-export function vacancesEntre(du: string, au: string, zones: readonly Zone[] = ZONES): Periode[] {
-  const annees = new Set([anneeScolaire(du), anneeScolaire(au)]);
-  const out: Periode[] = [];
-  for (const a of annees) {
-    for (const p of CALENDRIER[a] ?? []) {
-      if (p.zone && !zones.includes(p.zone)) continue;
-      if (p.fin < du || p.debut > au) continue;
-      out.push(p);
-    }
-  }
-  return out.sort((x, y) => x.debut.localeCompare(y.debut) || (x.zone ?? '').localeCompare(y.zone ?? ''));
+export function entre(periodes: readonly Periode[], du: string, au: string, zones: readonly Zone[] = ZONES): Periode[] {
+  return trier(periodes.filter((p) => !(p.zone && !zones.includes(p.zone)) && p.fin >= du && p.debut <= au));
 }
+
+const trier = (p: Periode[]): Periode[] =>
+  p.sort((x, y) => x.debut.localeCompare(y.debut) || (x.zone ?? '').localeCompare(y.zone ?? ''));
 
 /** Les zones en vacances un jour donné. Vide quand c'est jour de classe. */
 export function zonesEnVacances(jour: string, periodes: readonly Periode[]): Zone[] {

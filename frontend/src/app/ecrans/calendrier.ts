@@ -116,6 +116,9 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
             Les années connues sont {{ reperes().anneesCouvertes.join(', ') }}.
           }
           Les jours fériés, eux, restent justes : ils se calculent.
+          @if (etat.estGeranteIci()) {
+            <a routerLink="/reglages">Déposer le calendrier officiel</a>
+          }
         </div>
       }
 

@@ -1,5 +1,5 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 7
+-- Version du schéma : 8
 -- Régénérer : cd backend && npm run docs:schema
 
 CREATE TABLE acces_temporaire (
@@ -524,6 +524,19 @@ CREATE TABLE tache (
         -- Une tâche faite porte forcément sa date : sans elle, l'historique ment.
         CHECK ((statut = 'faite') = (fait_le IS NOT NULL))
       );
+CREATE TABLE vacance_scolaire (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        annee_scolaire TEXT NOT NULL,
+        nom            TEXT NOT NULL,
+        zone           TEXT NOT NULL CHECK (zone IN ('A','B','C')),
+        debut          TEXT NOT NULL,
+        fin            TEXT NOT NULL,
+        source         TEXT NOT NULL DEFAULT '',
+        importe_le     TEXT NOT NULL,
+        importe_par    INTEGER REFERENCES personne(id),
+        CHECK (fin >= debut),
+        UNIQUE (annee_scolaire, zone, nom, debut)
+      );
 CREATE TABLE ventilation (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         depense_id    INTEGER NOT NULL REFERENCES depense(id),
@@ -598,5 +611,7 @@ CREATE INDEX idx_session_personne ON session(personne_id) WHERE revoque_le IS NU
 CREATE INDEX idx_tache_bien ON tache(bien_id, statut) WHERE archive_le IS NULL;
 CREATE UNIQUE INDEX idx_tache_occurrence ON tache(recurrence_id, echeance)
         WHERE recurrence_id IS NOT NULL AND archive_le IS NULL;
+CREATE INDEX idx_vacance_annee ON vacance_scolaire (annee_scolaire);
+CREATE INDEX idx_vacance_periode ON vacance_scolaire (debut, fin);
 CREATE INDEX idx_ventilation_personne ON ventilation(personne_id);
 CREATE UNIQUE INDEX idx_version_unique ON document_version(document_id, version);
