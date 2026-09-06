@@ -12,6 +12,11 @@ export interface BienResume {
   id: number; nom: string; commune: string; type: TypeBien; couchages: number;
   locationActivee: boolean; structureId: number; structureMode: ModeStructure;
   structureNom: string; role: Role; demandesEnAttente: number;
+  /** « Occupation été » ou « Occupation hiver », selon le type du bien. */
+  occupationLibelle: string;
+  occupationPourcent: number;
+  /** Combien de personnes détiennent aujourd'hui la structure du bien. */
+  detenteurs: number;
 }
 
 export interface Moi {

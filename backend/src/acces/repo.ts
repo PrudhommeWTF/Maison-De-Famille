@@ -7,6 +7,7 @@
 import type { Db } from '../noyau/db';
 import { aujourdhui } from '../noyau/dates';
 import { Entrees, Portee, Role, calculer } from './roles';
+import { TypeBien, taux } from '../sejours/occupation';
 
 /** Tout ce qui compose les portées, à une date donnée. */
 export function lireEntrees(db: Db, date = aujourdhui()): Entrees {
@@ -44,11 +45,39 @@ export interface BienVisible {
   id: number; nom: string; commune: string; type: string; couchages: number;
   locationActivee: boolean; structureId: number; structureMode: string; structureNom: string;
   role: Role;
+  /** « Occupation été » ou « Occupation hiver », selon le type du bien. */
+  occupationLibelle: string;
+  occupationPourcent: number;
+  /** Combien de personnes détiennent, aujourd'hui, la structure du bien. */
+  detenteurs: number;
 }
 
 interface LigneBienVisible {
   id: number; nom: string; commune: string; type: string; couchages: number;
   location_activee: number; structureId: number; structureMode: string; structureNom: string;
+}
+
+/**
+ * Le taux d'occupation de la saison, et le nombre de détenteurs.
+ *
+ * Les deux enrichissent la carte de bien du tableau de bord, que la maquette
+ * veut à trois statistiques. Une requête par bien : une famille en a deux ou
+ * trois, et le tableau de bord se charge une fois par ouverture de session.
+ */
+function saisonEtDetenteurs(db: Db, bienId: number, type: string, structureId: number): {
+  occupationLibelle: string; occupationPourcent: number; detenteurs: number;
+} {
+  const annee = Number(aujourdhui().slice(0, 4));
+  const sejours = db.prepare(
+    `SELECT arrivee, depart FROM sejour
+     WHERE bien_id = ? AND statut = 'valide' AND archive_le IS NULL`,
+  ).all(bienId) as { arrivee: string; depart: string }[];
+  const t = taux(type as TypeBien, annee, sejours);
+  const detenteurs = (db.prepare(
+    `SELECT COUNT(DISTINCT personne_id) AS n FROM detention
+     WHERE structure_id = ? AND effet_du <= ? AND (effet_au IS NULL OR effet_au > ?)`,
+  ).get(structureId, aujourdhui(), aujourdhui()) as { n: number } | undefined)?.n ?? 0;
+  return { occupationLibelle: t.libelle, occupationPourcent: t.pourcent, detenteurs };
 }
 
 export function biensDeLaPortee(db: Db, p: Portee): BienVisible[] {
@@ -66,5 +95,6 @@ export function biensDeLaPortee(db: Db, p: Portee): BienVisible[] {
     locationActivee: !!l.location_activee,
     structureId: l.structureId, structureMode: l.structureMode, structureNom: l.structureNom,
     role: p.biens.get(l.id) as Role,
+    ...saisonEtDetenteurs(db, l.id, l.type, l.structureId),
   }));
 }

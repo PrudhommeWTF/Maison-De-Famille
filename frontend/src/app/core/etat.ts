@@ -55,6 +55,22 @@ export class Etat {
     return role === 'gerant' || role === 'detenteur';
   });
 
+  /**
+   * La même question, mais pour la vue consolidée, où aucun bien n'est ouvert.
+   *
+   * `voitLArgent` répond non quand `bien()` est nul, ce qui est juste dans la
+   * navigation d'un bien et faux au tableau de bord : la carte de trésorerie y
+   * disparaissait alors qu'il y avait bien de l'argent à montrer.
+   */
+  readonly voitLArgentQuelquePart = computed(() =>
+    this.biens().some((b) => b.role === 'gerant' || b.role === 'detenteur'));
+
+  /** Les structures dont cette personne peut voir l'argent, sans doublon. */
+  readonly structuresArgent = computed(() => [...new Map(
+    this.biens().filter((b) => b.role === 'gerant' || b.role === 'detenteur')
+      .map((b) => [b.structureId, b.structureNom] as const),
+  )].map(([id, nom]) => ({ id, nom })));
+
   /** Le badge de la navigation : les demandes en attente **du bien courant**. */
   readonly demandesEnAttente = computed(() => {
     const b = this.bien();
