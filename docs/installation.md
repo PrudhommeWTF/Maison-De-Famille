@@ -3,8 +3,14 @@
 Deux façons de déployer, au choix. Les deux servent la même image : un seul
 processus qui rend l'API et l'application, sur un seul port.
 
-Dans les deux cas, l'application n'écoute **que sur la boucle locale** : c'est le
-reverse-proxy qui expose, avec le certificat.
+Dans les deux cas, l'application écoute **sur toutes les interfaces**, port 8099.
+C'est ce qui permet d'ouvrir l'écran de premier démarrage en tapant l'adresse du
+conteneur, avant même qu'un reverse-proxy existe. Une fois le proxy en place sur
+la même machine, `MDF_HOST=127.0.0.1` ferme l'accès direct au port ; sur une
+machine séparée, c'est au pare-feu de le faire.
+
+La mise en ligne passe de toute façon par le reverse-proxy, qui porte le
+certificat : l'application ne fait pas de TLS elle-même.
 
 ---
 

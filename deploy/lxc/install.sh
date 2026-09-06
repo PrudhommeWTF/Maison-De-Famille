@@ -118,6 +118,11 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 
 NODE_ENV=production
 PORT=${PORT}
+
+# Interface d'écoute. « 0.0.0.0 » (toutes) pour que le premier démarrage soit
+# atteignable depuis un navigateur du réseau local. Une fois un reverse-proxy
+# installé SUR CETTE MACHINE, mettre 127.0.0.1 ferme l'accès direct au port.
+MDF_HOST=0.0.0.0
 MDF_DATA_DIR=${DATA_DIR}
 MDF_STATIC_DIR=${APP_DIR}/frontend/dist/frontend/browser
 
