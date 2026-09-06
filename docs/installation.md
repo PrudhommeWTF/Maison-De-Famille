@@ -30,6 +30,11 @@ disque), démarré au boot. Ces valeurs se règlent par variables d'environnemen
 CTID=210 MEMOIRE=2048 DISK=12 STORAGE=local-zfs bash deploy/lxc/proxmox-create.sh
 ```
 
+Le modèle Debian 12 est **découvert**, pas figé : le script réutilise celui qui
+est déjà sur l'hôte, et va sinon chercher le plus récent du miroir. `TEMPLATE=`
+permet d'en imposer un autre. Si le stockage indiqué n'existe pas, le script
+s'arrête avant de télécharger quoi que ce soit et liste ceux qui existent.
+
 ### 2. Installer, dans le conteneur
 
 ```bash
