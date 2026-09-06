@@ -15,7 +15,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api, ErreurAppel } from '../core/api';
 import { Etat } from '../core/etat';
-import { Case, OccupationGrille, grilleDuMois, occupationsDuMois } from '../core/calendrier';
+import { COULEURS_ZONE, Case, OccupationGrille, REPERES_VIDES, grilleDuMois, occupationsDuMois } from '../core/calendrier';
+import type { Reperes, ZoneVacances } from '../core/calendrier';
 import {
   aujourdhui, dateLongue, enTetesJours, moisPrecedent, moisSuivant, nomMois,
   nuitsEntre, nuitsLisible, personnesLisible, plage,
@@ -44,6 +45,21 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
       display: flex; flex-direction: column; gap: 3px; overflow: hidden;
     }
     .case .num { font-size: 12px; }
+    /* Un jour férié se marque sur le numéro, pas sur le fond : le fond dit déjà
+       qui occupe la maison, et deux informations ne peuvent pas se partager le
+       même canal. Le point suffit à attirer l'oeil, le survol donne le nom. */
+    .case .num.ferie { font-weight: 600; }
+    .case .num.ferie::after {
+      content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+      background: var(--accent); margin-left: 4px; vertical-align: middle;
+    }
+    /* Les zones scolaires : trois bandeaux fins collés au bas de la case, dans
+       l'ordre A, B, C, chacun présent seulement si sa zone est en vacances. La
+       position est fixe, si bien qu'une même zone reste sur la même ligne d'une
+       case à l'autre et se lit en diagonale sur toute une semaine. */
+    .case .zones { margin-top: auto; display: flex; flex-direction: column; gap: 1px; }
+    .case .zones i { display: block; height: 3px; border-radius: 2px; }
+    .case .zones i.creux { background: transparent; }
     .case .lib {
       font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
@@ -87,6 +103,19 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
           <strong>{{ conflits().length }} chevauchement{{ conflits().length > 1 ? 's' : '' }} à arbitrer.</strong>
           {{ conflits()[0].message }}
           @if (etat.estGeranteIci()) { <a routerLink="/bien/demandes">Arbitrer</a> }
+        </div>
+      }
+
+      <!-- L'application dit quand elle ne sait pas. Sans cette ligne, un mois
+           sans bandeau de vacances se lirait « pas de vacances » alors qu'il
+           signifie « table non mise à jour ». -->
+      @if (!reperes().couvert) {
+        <div class="encart">
+          Les vacances scolaires ne sont pas renseignées pour cette période.
+          @if (reperes().anneesCouvertes.length) {
+            Les années connues sont {{ reperes().anneesCouvertes.join(', ') }}.
+          }
+          Les jours fériés, eux, restent justes : ils se calculent.
         </div>
       }
 
@@ -161,6 +190,15 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
             <span><i class="puce" style="background:#fffdf9;border-color:#b0603f;border-style:dashed"></i>Demande</span>
             <span><i class="puce" style="background:#e5e8ea;border-color:#c3ccd1"></i>Entretien</span>
           </div>
+          <div class="legende" style="margin-top:8px">
+            @for (z of ZONES; track z) {
+              <span [attr.title]="'Académies : ' + (academies()[z] || '')">
+                <i class="puce" [style.background]="couleurZone(z)" [style.border-color]="couleurZone(z)"></i>
+                Vacances zone {{ z }}
+              </span>
+            }
+            <span><i class="puce" style="background:var(--accent);border-color:var(--accent);border-radius:50%"></i>Jour férié</span>
+          </div>
         </div>
 
         <div class="entetes" aria-hidden="true">
@@ -174,8 +212,16 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
                    [style.border-style]="c.teinte.tirets ? 'dashed' : 'solid'"
                    [style.color]="c.teinte.encre" [attr.title]="titreCase(c)">
                 @if (c.jour) {
-                  <span class="num chiffres">{{ c.jour }}</span>
+                  <span class="num chiffres" [class.ferie]="!!c.ferie">{{ c.jour }}</span>
                   @if (c.libelle) { <span class="lib">{{ c.libelle }}</span> }
+                  @if (c.zones.length) {
+                    <span class="zones" aria-hidden="true">
+                      @for (z of ZONES; track z) {
+                        <i [class.creux]="!c.zones.includes(z)"
+                           [style.background]="c.zones.includes(z) ? couleurZone(z) : ''"></i>
+                      }
+                    </span>
+                  }
                 }
               </div>
             }
@@ -217,6 +263,8 @@ export class Calendrier {
 
   private readonly sejours = signal<Sejour[]>([]);
   readonly conflits = signal<Conflit[]>([]);
+  /** Jours fériés et vacances scolaires de la plage affichée. */
+  readonly reperes = signal<Reperes & { academies?: Record<string, string> }>(REPERES_VIDES);
   readonly annee = signal(new Date().getUTCFullYear());
   readonly moisIndex = signal(new Date().getUTCMonth());
   readonly formulaire = signal(false);
@@ -236,6 +284,7 @@ export class Calendrier {
     dimancheDabord: this.etat.moi()?.semaineCommenceDimanche ?? false,
     nuitsEnConflit: this.conflits().flatMap((c) => c.nuits),
     aujourdhui: aujourdhui(),
+    reperes: this.reperes(),
   }));
 
   readonly duMois = computed(() => occupationsDuMois(this.annee(), this.moisIndex(), this.sejours()));
@@ -251,6 +300,10 @@ export class Calendrier {
     effect(() => { const b = this.etat.bien(); this.annee(); this.moisIndex(); if (b) void this.charger(b.id); });
   }
 
+  readonly ZONES: ZoneVacances[] = ['A', 'B', 'C'];
+  readonly couleurZone = (z: ZoneVacances): string => COULEURS_ZONE[z];
+  readonly academies = computed(() => this.reperes().academies ?? {} as Record<string, string>);
+
   private async charger(bienId: number): Promise<void> {
     // Trois mois de part et d'autre : passer d'un mois à l'autre est instantané,
     // et un séjour à cheval sur deux mois s'affiche dans les deux.
@@ -258,10 +311,16 @@ export class Calendrier {
     const s = moisSuivant(this.annee(), this.moisIndex());
     const debut = `${p.annee}-${String(p.mois + 1).padStart(2, '0')}-01`;
     const fin = `${s.annee}-${String(s.mois + 1).padStart(2, '0')}-01`;
-    const r = await this.api.get<{ sejours: Sejour[]; conflits: Conflit[] }>(
-      `/biens/${bienId}/sejours?du=${debut}&au=${fin}`);
+    const [r, reperes] = await Promise.all([
+      this.api.get<{ sejours: Sejour[]; conflits: Conflit[] }>(`/biens/${bienId}/sejours?du=${debut}&au=${fin}`),
+      // Les repères ne dépendent d'aucun bien : un échec ne doit pas priver la
+      // famille de son calendrier, il la prive seulement des vacances.
+      this.api.get<Reperes & { academies: Record<string, string> }>(
+        `/calendrier/reperes?du=${debut}&au=${fin}`).catch(() => null),
+    ]);
     this.sejours.set(r.sejours);
     this.conflits.set(r.conflits);
+    this.reperes.set(reperes ?? REPERES_VIDES);
   }
 
   mois(pas: number): void {
@@ -325,7 +384,14 @@ export class Calendrier {
   /** Le survol nomme ce qui occupe la nuit : la grille reste lisible sans texte. */
   titreCase(c: Case): string {
     if (!c.jour) return '';
-    if (!c.occupations.length) return `${dateLongue(c.date)} · libre`;
-    return `${dateLongue(c.date)} · ${c.occupations.map((o) => `${o.titre} (${nuitsLisible(nuitsEntre(o.arrivee, o.depart))})`).join(', ')}`;
+    const bouts = [dateLongue(c.date)];
+    if (c.ferie) bouts.push(c.ferie);
+    bouts.push(c.occupations.length
+      ? c.occupations.map((o) => `${o.titre} (${nuitsLisible(nuitsEntre(o.arrivee, o.depart))})`).join(', ')
+      : 'libre');
+    if (c.zones.length) {
+      bouts.push(`vacances zone ${c.zones.join(', ')}`);
+    }
+    return bouts.join(' · ');
   }
 }
