@@ -10,8 +10,16 @@
 // appliquée, et combien d'octets traînent sans être cités par la base.
 import { Deps, Routeur } from '../noyau/http';
 import { versionCible } from '../noyau/migrations';
+import { etatInvalide, invalide, refuse } from '../noyau/erreurs';
+import { log } from '../noyau/log';
+import { lire } from '../noyau/valider';
+import { verifier } from '../auth/mots-de-passe';
+import { parametre } from '../parametres/repo';
 import { etat } from '../notifications/file';
 import { orphelins } from '../stockage/fichiers';
+import { VerificationImpossible, depotParDefaut, derniereRelease } from './depot';
+import { declencher, enCours, statut } from './maj';
+import { estPlusRecente } from './versions';
 
 export function routesSysteme(deps: Deps): Routeur {
   const r = new Routeur('systeme', deps);
@@ -34,6 +42,15 @@ export function routesSysteme(deps: Deps): Routeur {
         adressePublique: ctx.config.publicUrl,
         file: etat(ctx.db),
       },
+      maj: {
+        // Deux verrous distincts, et l'interface doit pouvoir dire lequel
+        // manque : le réglage autorise l'appel à GitHub, l'assistant root
+        // rend l'installation possible. L'un sans l'autre ne sert à rien.
+        verificationAutorisee: parametre<boolean>(ctx.db, 'majVerification'),
+        installationPossible: ctx.config.majAuto,
+        depot: depotParDefaut(),
+        statut: statut(ctx.config.dataDir),
+      },
       donnees: {
         repertoire: ctx.config.dataDir,
         personnes: compte('SELECT COUNT(*) AS n FROM personne WHERE archive_le IS NULL'),
@@ -43,6 +60,93 @@ export function routesSysteme(deps: Deps): Routeur {
         orphelins: orphelins(ctx.db),
       },
     };
+  });
+
+  /**
+   * Y a-t-il une version plus récente ?
+   *
+   * Rien n'est installé ici, et rien ne part tout seul : la vérification a lieu
+   * quand un gérant la demande, et seulement si le réglage l'autorise.
+   */
+  r.post('/systeme/maj/verification', { acces: 'gerant' }, async (ctx) => {
+    if (!parametre<boolean>(ctx.db, 'majVerification')) {
+      throw etatInvalide(
+        "La vérification des versions n'est pas autorisée sur cette instance. "
+        + 'Un gérant peut l\'activer dans les Réglages, section « Exploitation ».',
+      );
+    }
+    const installee = ctx.config.version;
+    try {
+      const release = await derniereRelease();
+      return {
+        installee,
+        derniere: release.tag.replace(/^v/i, ''),
+        tag: release.tag,
+        nom: release.nom,
+        notes: release.notes,
+        url: release.url,
+        publieeLe: release.publieeLe,
+        misAJourDisponible: estPlusRecente(release.tag, installee),
+        installationPossible: ctx.config.majAuto,
+      };
+    } catch (e) {
+      if (e instanceof VerificationImpossible) {
+        log.attention(`Vérification des versions impossible : ${e.message}`, e.cause);
+        throw etatInvalide(e.message);
+      }
+      throw e;
+    }
+  });
+
+  r.get('/systeme/maj', { acces: 'gerant' }, (ctx) => ({
+    installee: ctx.config.version,
+    verificationAutorisee: parametre<boolean>(ctx.db, 'majVerification'),
+    installationPossible: ctx.config.majAuto,
+    depot: depotParDefaut(),
+    statut: statut(ctx.config.dataDir),
+  }));
+
+  /**
+   * Lancer la mise à jour.
+   *
+   * **Le mot de passe est redemandé ici, et nulle part ailleurs dans
+   * l'application.** Ce bouton fait exécuter du code en root sur la machine :
+   * le service dépose un fichier, une unité systemd root télécharge la dernière
+   * version et la compile. Le dispositif est sain, le service ne gagne aucun
+   * droit, mais il transforme « compte gérant volé » en « root sur le
+   * serveur ». Un jeton dérobé sur un téléphone déverrouillé ne doit pas
+   * suffire : il faut aussi savoir le mot de passe.
+   */
+  r.post('/systeme/maj', { acces: 'gerant' }, async (ctx) => {
+    if (!ctx.config.majAuto) {
+      throw etatInvalide(
+        "La mise à jour depuis l'interface n'est pas installée sur ce serveur. "
+        + 'Relancez l\'installateur avec MAJ_AUTO=true, ou mettez à jour à la main comme le décrit docs/installation.md.',
+      );
+    }
+    const l = lire(ctx.corps);
+    const motDePasse = l.texte('motDePasse', { max: 200, min: 1 });
+    l.fin();
+
+    const moi = ctx.db.prepare('SELECT mot_de_passe_hash AS hash, email FROM personne WHERE id = ?')
+      .get(ctx.personneId) as { hash: string | null; email: string } | undefined;
+    if (!moi || !await verifier(motDePasse, moi.hash)) {
+      log.attention(`Mise à jour refusée : mot de passe incorrect (personne ${ctx.personneId}).`);
+      throw refuse(
+        'Mot de passe incorrect. Cette mise à jour installe et exécute du code sur le serveur : '
+        + 'elle se confirme par votre mot de passe.',
+      );
+    }
+
+    // Un second clic pendant que le script tourne réécrirait l'état et
+    // relancerait l'unité au milieu d'une compilation.
+    if (enCours(ctx.config.dataDir)) {
+      throw invalide('Une mise à jour est déjà en cours. Attendez qu\'elle se termine.');
+    }
+
+    declencher(ctx.config.dataDir);
+    log.info(`Mise à jour lancée par ${moi.email} (personne ${ctx.personneId}).`);
+    return { lancee: true, statut: statut(ctx.config.dataDir) };
   });
 
   return r;

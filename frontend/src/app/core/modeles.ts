@@ -110,8 +110,36 @@ export interface ParametreExpose {
   min?: number; max?: number; maxLongueur?: number;
 }
 
+/** L'état d'une mise à jour, tel que le script root l'écrit à chaque étape. */
+export interface StatutMaj {
+  etat: 'inactif' | 'en_cours' | 'termine' | 'echec';
+  message?: string;
+  ts?: number;
+}
+
+/** Ce que le serveur répond quand on lui demande s'il existe mieux. */
+export interface Maj {
+  installee: string;
+  derniere: string;
+  tag: string;
+  nom: string;
+  notes: string;
+  url: string;
+  publieeLe: string;
+  misAJourDisponible: boolean;
+  installationPossible: boolean;
+}
+
 export interface Etat {
   version: string;
+  maj: {
+    /** Le réglage autorise-t-il l'appel à GitHub ? */
+    verificationAutorisee: boolean;
+    /** L'assistant root est-il installé ? Sans lui, le bouton ne mènerait à rien. */
+    installationPossible: boolean;
+    depot: string;
+    statut: StatutMaj;
+  };
   schema: { applique: number; cible: number; migrations: { version: number; libelle: string; appliqueLe: string; dureeMs: number }[] };
   courriel: {
     relais: string | null; adresseExpediteur: string | null; adressePublique: string | null;

@@ -87,6 +87,9 @@ export async function demarrer(surcharges: Partial<Config> = {}): Promise<Instan
     // clé n'empêche rien d'autre de fonctionner.
     cleCoffre: null,
     publicUrl: 'https://maison.test', smtp: null, version: '0.0.0-test',
+    // Aucun assistant root en test : c'est l'état d'une installation ordinaire,
+    // et les tests qui veulent le bouton de mise à jour le disent.
+    majAuto: false,
     ...surcharges,
   };
   const db = ouvrir(config.dbPath, config.dataDir);

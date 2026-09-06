@@ -153,6 +153,14 @@ S'applique aux photos et aux pièces jointes. Une photo de téléphone récente 
 
 Journalisation et diagnostic.
 
+### Vérifier les nouvelles versions sur GitHub
+
+- **Clé** : `majVerification`
+- **Portée** : Instance
+- **Par défaut** : Non
+
+Ajoute à l'écran « État du service » un bouton qui demande à GitHub s'il existe une version plus récente. C'est un appel réseau sortant : il faut que ce serveur ait le droit de sortir sur Internet. Rien ne s'installe tout seul, et l'installation demande en plus votre mot de passe.
+
 ### Niveau de journalisation
 
 - **Clé** : `journalNiveau`

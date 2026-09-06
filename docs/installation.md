@@ -178,6 +178,44 @@ bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famil
 git pull && docker compose up -d --build
 ```
 
+### Mettre à jour depuis l'application
+
+Un gérant peut aussi lancer la mise à jour depuis l'écran **État du service**,
+sans ouvrir de terminal. Il faut deux choses, et elles sont indépendantes :
+
+1. **L'assistant root**, installé par l'installateur quand on le lui demande :
+
+   ```bash
+   MAJ_AUTO=true bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
+   ```
+
+   Il pose `/usr/local/sbin/maison-de-famille-maj.sh` et deux unités systemd.
+   Sans lui, le bouton n'apparaît pas, parce qu'il ne mènerait à rien.
+
+2. **Le réglage** « Vérifier les nouvelles versions sur GitHub », dans Réglages,
+   section Exploitation. C'est un appel réseau sortant, donc il est éteint par
+   défaut et le serveur doit avoir le droit de sortir sur Internet.
+
+Le service **n'exécute jamais la mise à jour lui-même** : il écrit un fichier
+déclencheur dans son répertoire de données, et une unité systemd appartenant à
+root fait le travail. Le service garde son durcissement, il ne gagne aucun droit,
+et c'est tout l'intérêt du détour.
+
+L'installation **redemande votre mot de passe**. Ce n'est pas de la paperasse :
+ce bouton fait exécuter du code en root sur la machine, et un jeton dérobé sur un
+téléphone déverrouillé ne doit pas suffire.
+
+Pendant la mise à jour, l'écran affiche l'étape en cours. Si le script
+s'interrompt (coupure, disque plein, compilation qui échoue), l'application
+**rend la main d'elle-même** au bout d'un quart d'heure sans progression, avec le
+chemin du journal : `<données>/maj.log`. Le service, lui, est relancé par le
+script même en cas d'échec après l'arrêt.
+
+Pour désactiver, relancez l'installateur sans `MAJ_AUTO` : l'assistant root et
+ses unités sont retirés.
+
+### Pourquoi `git pull` ne marchera jamais
+
 Un `git pull` dans `/opt/maison-de-famille` ne marche pas et ne marchera jamais :
 l'installateur y copie le code **sans le dossier `.git`**, pour ne pas laisser
 l'historique complet du dépôt sur une machine exposée. La commande répondrait
