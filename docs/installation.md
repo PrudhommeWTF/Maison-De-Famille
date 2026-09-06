@@ -131,13 +131,22 @@ dit « je n'ai rien reçu ».
 
 ## Mettre à jour
 
+En LXC, on **relance l'installateur** : il reclone la dernière version, la
+recompile et redémarre le service, sans toucher aux données ni à la
+configuration.
+
 ```bash
 # LXC
-cd /opt/maison-de-famille && git pull && bash deploy/lxc/install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
 
-# Docker
+# Docker (depuis votre clone du dépôt)
 git pull && docker compose up -d --build
 ```
+
+Un `git pull` dans `/opt/maison-de-famille` ne marche pas et ne marchera jamais :
+l'installateur y copie le code **sans le dossier `.git`**, pour ne pas laisser
+l'historique complet du dépôt sur une machine exposée. La commande répondrait
+`fatal: not a git repository`.
 
 Les migrations de schéma s'appliquent au démarrage, dans une transaction, après
 une **sauvegarde automatique** déposée dans `<données>/sauvegardes/`. Si la base
