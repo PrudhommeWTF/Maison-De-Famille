@@ -17,7 +17,7 @@ import { lire as lireCorps } from '../../noyau/valider';
 import { biensDeLaPortee } from '../../acces/repo';
 import { Champ, CHAMPS, proposer } from './correspondance';
 import { Options, annulerImport, executer, preparer } from './execution';
-import { lire } from './tableau';
+import { lire } from '../../noyau/tableau/tableau';
 
 /** Au-delà, ce n'est plus un planning familial, et l'aller-retour deviendrait lourd. */
 const MAX_LIGNES = 5000;

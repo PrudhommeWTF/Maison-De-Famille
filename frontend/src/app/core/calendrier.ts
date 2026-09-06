@@ -78,6 +78,49 @@ export interface Reperes {
 
 export const REPERES_VIDES: Reperes = { feries: [], vacances: [], couvert: true, anneesCouvertes: [] };
 
+/** Une année scolaire présente en base, telle que l'écran Réglages l'affiche. */
+export interface AnneeVacances {
+  anneeScolaire: string;
+  periodes: number;
+  debut: string;
+  fin: string;
+  source: string;
+  importeLe: string;
+  importePar: string | null;
+}
+
+export interface PeriodeImportee {
+  anneeScolaire: string;
+  nom: string;
+  zone: ZoneVacances;
+  debut: string;
+  fin: string;
+}
+
+/**
+ * Ce que le serveur répond à l'analyse d'un fichier téléversé. Rien n'est
+ * encore écrit à ce stade : cet aperçu existe pour être relu avant d'accepter.
+ */
+export interface ApercuVacances {
+  format: string;
+  encodage: string | null;
+  entetes: string[];
+  lues: number;
+  /** Vrai quand les dates de fin du fichier désignent le jour de la reprise. */
+  finEstLaReprise: boolean;
+  periodes: PeriodeImportee[];
+  annees: { anneeScolaire: string; periodes: number }[];
+  rejets: { ligne: number; apercu: string; raison: string }[];
+  /** Les années déjà connues, pour dire lesquelles seront remplacées. */
+  deja: string[];
+}
+
+/** L'année scolaire d'une date : le 1er septembre fait basculer. */
+export function anneeScolaireDe(iso: string): string {
+  const a = Number(iso.slice(0, 4));
+  return iso.slice(5, 7) >= '09' ? `${a}-${a + 1}` : `${a - 1}-${a}`;
+}
+
 /**
  * Les zones en vacances un jour donné.
  *

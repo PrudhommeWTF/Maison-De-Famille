@@ -19,7 +19,8 @@
 import type { Db } from '../../noyau/db';
 import { dateLisible, horodatage } from '../../noyau/dates';
 import { log } from '../../noyau/log';
-import { Champ, Nature, Statut, normaliser, versDate, versEntier, versNature, versStatut } from './correspondance';
+import { normaliser, versDate, versEntier } from '../../noyau/tableau/valeurs';
+import { Champ, Nature, Statut, versNature, versStatut } from './correspondance';
 
 export interface BienConnu { id: number; nom: string }
 

@@ -23,42 +23,77 @@ l'ordre des zones tourne d'une année sur l'autre. Aucune formule ne les donne.
 
 L'application **ne va pas les chercher en ligne** : le brief interdit tout appel
 réseau sortant, et cette règle ne se contourne pas pour un confort d'affichage.
-La table vit donc dans le dépôt :
+C'est vous qui téléchargez le fichier officiel, et vous qui le déposez.
+
+La table vit en base, dans `vacance_scolaire`, et se met à jour depuis l'écran
+**Réglages**, section « Vacances scolaires ». Toucher au code n'est plus
+nécessaire. L'installation part avec l'année 2025-2026 déjà renseignée.
+
+### Mettre à jour, une fois par an
+
+1. Télécharger le calendrier scolaire sur
+   <https://data.education.gouv.fr/explore/dataset/fr-en-calendrier-scolaire/export/>,
+   au format CSV. Le fichier couvre plusieurs années d'un coup.
+2. Ouvrir **Réglages**, section « Vacances scolaires », puis « Déposer un
+   calendrier ».
+3. Relire l'aperçu, et seulement alors enregistrer.
+
+Rien n'est écrit avant ce dernier clic. L'aperçu dit combien de lignes ont été
+lues, combien de périodes ont été retenues, quelles années seront ajoutées ou
+remplacées, et quelles lignes ont été écartées avec leur raison.
+
+Un import **remplace les années qu'il apporte** et ne touche à aucune autre :
+déposer un fichier 2027-2028 ne fait rien perdre de 2026-2027.
+
+### Ce qui est écarté, et pourquoi
+
+Le fichier officiel contient plus que des vacances. Sont écartés, chacun avec sa
+raison affichée :
+
+- les lignes de **rentrée** et de **prérentrée** : ce sont des jours de classe,
+  les importer ferait poser un séjour sur une reprise ;
+- les lignes marquées **Enseignants** : la prérentrée des professeurs n'est pas
+  une vacance pour les enfants ;
+- les **zones hors métropole** (Corse, outre-mer) : le calendrier n'affiche que
+  les zones A, B et C.
+
+### La borne de fin
+
+C'est le seul point où deux fichiers honnêtes peuvent vouloir dire deux choses.
+Le fichier officiel donne le **jour de la reprise des cours** ; un tableau tenu à
+la main donne plutôt le **dernier jour de vacances**.
+
+Les deux se distinguent sans rien supposer : une reprise tombe toujours un jour
+de classe, donc jamais un samedi ni un dimanche. La convention retenue est
+décidée pour le fichier entier et **annoncée dans l'aperçu**, avec les dates
+telles qu'elles seront enregistrées. Si la phrase ne correspond pas à votre
+fichier, n'enregistrez pas.
+
+### Un tableau tenu à la main
+
+Si vous préférez saisir les dates vous-même, un tableau à cinq colonnes suffit,
+en CSV ou en tableur :
 
 ```
-backend/src/calendrier/vacances.ts
+Période;Zone;Début;Fin;Année scolaire
+Toussaint;A;17/10/2026;01/11/2026;2026-2027
+Toussaint;B;17/10/2026;01/11/2026;2026-2027
+Toussaint;C;17/10/2026;01/11/2026;2026-2027
 ```
 
-### Ajouter une année
+Une période commune aux trois zones s'écrit en trois lignes. Le calendrier les
+regroupe tout seul à l'affichage : l'infobulle du 25 décembre dit « Noël » une
+fois, pas trois.
 
-Une entrée par période, dans `CALENDRIER`. Les bornes suivent l'usage des
-familles : **tous les jours où les enfants ne sont pas en classe**, du premier au
-dernier inclus. L'arrêté dit « après la classe » et « au matin de la reprise »,
-ce qui désigne les mêmes journées.
-
-```ts
-'2026-2027': [
-  { nom: 'Toussaint', zone: null, debut: '2026-10-17', fin: '2026-11-01' },
-  { nom: 'Hiver', zone: 'A', debut: '2027-02-06', fin: '2027-02-21' },
-  ...
-],
-```
-
-`zone: null` vaut pour les trois zones : c'est le cas de la Toussaint, de Noël
-et de l'été, qui ne sont pas décalés.
-
-Source à recopier, et à vérifier à chaque mise à jour :
+Source à vérifier à chaque mise à jour :
 <https://www.education.gouv.fr/le-calendrier-scolaire>
-
-Les tests refusent une table incohérente : une date mal formée, une fin avant le
-début, une période rangée dans la mauvaise année scolaire, ou une période
-décalée qui n'existerait que pour deux zones sur trois.
 
 ### Quand une année manque
 
-L'application **le dit**, en haut du calendrier. Elle n'invente pas par rotation
-des zones, et elle n'affiche pas un mois vide qu'on prendrait pour « pas de
-vacances ». Les jours fériés, eux, restent affichés : ils se calculent.
+L'application **le dit**, en haut du calendrier, et propose au gérant d'aller
+déposer le fichier. Elle n'invente pas par rotation des zones, et elle n'affiche
+pas un mois vide qu'on prendrait pour « pas de vacances ». Les jours fériés, eux,
+restent affichés : ils se calculent.
 
 ## Ce que ça donne à l'écran
 

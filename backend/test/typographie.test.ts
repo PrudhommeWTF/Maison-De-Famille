@@ -12,7 +12,7 @@
 // d'écran énonce, là où un trait ne dit rien.
 //
 // Une seule exception, nommée ici plutôt que devinée : la table de décodage
-// cp1252 de l'import doit évidemment porter le caractère, puisque son travail
+// cp1252 du lecteur de tableaux doit évidemment porter le caractère, puisque son travail
 // est de le reconnaître dans un fichier reçu.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -26,7 +26,7 @@ const CADRATIN = String.fromCharCode(0x2014);
 
 const EXCEPTIONS = new Set([
   // Table de correspondance des encodages : reconnaître le caractère est son objet.
-  path.join('backend', 'src', 'sejours', 'import', 'decode.ts'),
+  path.join('backend', 'src', 'noyau', 'tableau', 'decode.ts'),
   // Ce fichier, qui doit bien nommer ce qu'il interdit.
   path.join('backend', 'test', 'typographie.test.ts'),
 ]);

@@ -7,8 +7,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { amorcer, demarrer } from './aide';
-import { lireCsv, separateur, lire } from '../src/sejours/import/tableau';
-import { proposer, versDate, versNature, versStatut } from '../src/sejours/import/correspondance';
+import { lireCsv, separateur, lire } from '../src/noyau/tableau/tableau';
+import { versDate } from '../src/noyau/tableau/valeurs';
+import { proposer, versNature, versStatut } from '../src/sejours/import/correspondance';
 import { preparer } from '../src/sejours/import/execution';
 import { xlsx, zip } from './zip-fabrique';
 
