@@ -81,6 +81,11 @@ $color-contrast-light: #fffdf9;
 $color-contrast-dark: #24201b;
 
 
+// La palette n'a pas de rouge, et n'en veut pas : une erreur de saisie se dit
+// dans le brun d'accent, comme les alertes. Sans cela, `is-invalid` posait le
+// rouge par défaut de Bootstrap au milieu d'un écran chaud.
+$danger: #8d4a2e;
+
 // Une semaine fait sept jours : la grille du calendrier a besoin de
 // `row-cols-7`, que Bootstrap n'engendre pas au-delà de six.
 $grid-row-columns: 7;

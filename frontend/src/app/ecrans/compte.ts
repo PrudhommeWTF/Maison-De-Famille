@@ -20,112 +20,134 @@ import { Etat } from '../core/etat';
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    .secret {
-      font-family: ui-monospace, monospace; font-size: 15px; letter-spacing: .08em;
-      background: var(--pastille-neutre); padding: 12px 14px; border-radius: 10px; word-break: break-all;
-    }
-    .secours { columns: 2; column-gap: 20px; font-family: ui-monospace, monospace; font-size: 14px; line-height: 2; }
+    /* Les codes de secours s'impriment sur une page, en deux colonnes, et rien
+       d'autre ne suit sur le papier. */
+    .secours { columns: 2; column-gap: 20px; line-height: 2; }
     @media print {
       .btn, nav, header { display: none !important; }
     }
   `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Mon compte</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Mon compte</h1>
+        <p class="text-body-secondary mb-0">
           {{ etat.moi()?.personne?.nom }} · {{ etat.moi()?.personne?.email }}
         </p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
-      <section class="carte">
-        <h2>Second facteur</h2>
-        @if (etat.moi()?.secondFacteur?.actif) {
-          <p class="secondaire" style="margin:8px 0 0">
-            Le second facteur est actif. Il vous reste
-            {{ etat.moi()?.secondFacteur?.codesDeSecoursRestants }} code(s) de secours.
-          </p>
-          @if (secours().length) {
-            <div class="encart" style="margin-top:14px">
-              <strong>Imprimez ces codes maintenant : ils ne seront plus jamais affichés.</strong>
-              Chacun vaut une connexion, si vous n'avez pas votre téléphone.
-            </div>
-            <div class="secours" style="margin-top:12px">
-              @for (c of secours(); track c) { <div>{{ c }}</div> }
-            </div>
-            <button class="btn" style="margin-top:14px" (click)="imprimer()">Imprimer</button>
-          }
-          <div style="margin-top:14px">
-            <button class="btn-lien" (click)="desactivation.set(!desactivation())">Désactiver le second facteur</button>
-          </div>
-          @if (desactivation()) {
-            <div class="champ" style="margin-top:12px;max-width:320px">
-              <label for="c-mdp-off">Confirmez avec votre mot de passe</label>
-              <input id="c-mdp-off" name="mdpOff" type="password" [(ngModel)]="mdpDesactivation" autocomplete="current-password">
-              <button class="btn" style="margin-top:10px" (click)="desactiver()" [disabled]="occupe()">Désactiver</button>
-            </div>
-          }
-        } @else if (enrolement()) {
-          <p class="secondaire" style="margin:8px 0 12px">
-            Ouvrez votre application d'authentification (Google Authenticator, Aegis, Bitwarden...),
-            ajoutez un compte, et saisissez ce secret. Puis entrez le code affiché.
-          </p>
-          <div class="secret">{{ enrolement()!.secretLisible }}</div>
-          <div class="champ" style="margin-top:14px;max-width:220px">
-            <label for="c-code">Code à six chiffres</label>
-            <input id="c-code" name="code" [(ngModel)]="code" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
-          </div>
-          <button class="btn btn-primaire" (click)="activer()" [disabled]="occupe()">Activer</button>
-        } @else {
-          <p class="secondaire" style="margin:8px 0 12px">
-            Un code à six chiffres en plus du mot de passe. Cette application publie l'adresse des
-            biens, les codes d'accès et les périodes d'inoccupation : c'est ce que protège le second
-            facteur.
-            @if (etat.moi()?.secondFacteur?.obligatoirePourGerant) {
-              <strong>Il est obligatoire pour les gérants sur cette instance.</strong>
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Second facteur</h2>
+          @if (etat.moi()?.secondFacteur?.actif) {
+            <p class="text-body-secondary small">
+              Le second facteur est actif. Il vous reste
+              {{ etat.moi()?.secondFacteur?.codesDeSecoursRestants }} code(s) de secours.
+            </p>
+            @if (secours().length) {
+              <div class="alert alert-primary">
+                <strong>Imprimez ces codes maintenant : ils ne seront plus jamais affichés.</strong>
+                Chacun vaut une connexion, si vous n'avez pas votre téléphone.
+              </div>
+              <div class="secours font-monospace small">
+                @for (c of secours(); track c) { <div>{{ c }}</div> }
+              </div>
+              <button class="btn btn-sm btn-outline-secondary mt-3" (click)="imprimer()">Imprimer</button>
             }
-          </p>
-          <button class="btn btn-primaire" (click)="preparer()" [disabled]="occupe()">Activer le second facteur</button>
-        }
+            <div class="mt-3">
+              <button class="btn btn-sm btn-link text-body-secondary p-0"
+                      (click)="desactivation.set(!desactivation())">Désactiver le second facteur</button>
+            </div>
+            @if (desactivation()) {
+              <div class="mt-3" style="max-width:320px">
+                <label class="form-label small text-body-secondary" for="c-mdp-off">
+                  Confirmez avec votre mot de passe
+                </label>
+                <input class="form-control" id="c-mdp-off" name="mdpOff" type="password"
+                       [(ngModel)]="mdpDesactivation" autocomplete="current-password">
+                <button class="btn btn-outline-secondary mt-2" (click)="desactiver()"
+                        [disabled]="occupe()">Désactiver</button>
+              </div>
+            }
+          } @else if (enrolement()) {
+            <p class="text-body-secondary small">
+              Ouvrez votre application d'authentification (Google Authenticator, Aegis, Bitwarden...),
+              ajoutez un compte, et saisissez ce secret. Puis entrez le code affiché.
+            </p>
+            <div class="bg-body-tertiary rounded p-3 font-monospace" style="word-break:break-all">
+              {{ enrolement()!.secretLisible }}
+            </div>
+            <div class="mt-3" style="max-width:220px">
+              <label class="form-label small text-body-secondary" for="c-code">Code à six chiffres</label>
+              <input class="form-control" id="c-code" name="code" [(ngModel)]="code" inputmode="numeric"
+                     placeholder="123456" autocomplete="one-time-code">
+            </div>
+            <button class="btn btn-primary mt-3" (click)="activer()" [disabled]="occupe()">Activer</button>
+          } @else {
+            <p class="text-body-secondary small">
+              Un code à six chiffres en plus du mot de passe. Cette application publie l'adresse des
+              biens, les codes d'accès et les périodes d'inoccupation : c'est ce que protège le second
+              facteur.
+              @if (etat.moi()?.secondFacteur?.obligatoirePourGerant) {
+                <strong>Il est obligatoire pour les gérants sur cette instance.</strong>
+              }
+            </p>
+            <button class="btn btn-primary" (click)="preparer()" [disabled]="occupe()">
+              Activer le second facteur
+            </button>
+          }
+        </div>
       </section>
 
-      <section class="carte">
-        <h2>Mot de passe</h2>
-        <form (ngSubmit)="changerMotDePasse()" style="margin-top:12px;max-width:360px">
-          <div class="champ">
-            <label for="c-actuel">Mot de passe actuel</label>
-            <input id="c-actuel" name="actuel" type="password" [(ngModel)]="mdp.actuel" autocomplete="current-password" required>
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Mot de passe</h2>
+          <form style="max-width:360px" (ngSubmit)="changerMotDePasse()">
+            <div class="mb-3">
+              <label class="form-label small text-body-secondary" for="c-actuel">Mot de passe actuel</label>
+              <input class="form-control" id="c-actuel" name="actuel" type="password" [(ngModel)]="mdp.actuel"
+                     autocomplete="current-password" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small text-body-secondary" for="c-nouveau">Nouveau mot de passe</label>
+              <input class="form-control" [class.is-invalid]="champs()['motDePasse']" id="c-nouveau" name="nouveau"
+                     type="password" [(ngModel)]="mdp.nouveau" autocomplete="new-password" required>
+              @if (champs()['motDePasse']) {
+                <div class="invalid-feedback d-block">{{ champs()['motDePasse'] }}</div>
+              }
+            </div>
+            <p class="text-body-secondary small">
+              Changer votre mot de passe ferme toutes vos sessions, y compris celle-ci.
+            </p>
+            <button class="btn btn-outline-secondary" type="submit" [disabled]="occupe()">Changer</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Affichage</h2>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c-semaine"
+                   [checked]="etat.moi()?.semaineCommenceDimanche" (change)="changerSemaine($event)">
+            <label class="form-check-label small" for="c-semaine">
+              Commencer la semaine le dimanche dans le calendrier
+            </label>
           </div>
-          <div class="champ" [class.champ-erreur]="champs()['motDePasse']">
-            <label for="c-nouveau">Nouveau mot de passe</label>
-            <input id="c-nouveau" name="nouveau" type="password" [(ngModel)]="mdp.nouveau" autocomplete="new-password" required>
-            @if (champs()['motDePasse']) { <p class="message-erreur">{{ champs()['motDePasse'] }}</p> }
-          </div>
-          <p class="meta" style="margin:0 0 12px">
-            Changer votre mot de passe ferme toutes vos sessions, y compris celle-ci.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Session</h2>
+          <p class="text-body-secondary small">
+            Vous déconnecter ferme cette session sur cet appareil uniquement.
           </p>
-          <button class="btn" type="submit" [disabled]="occupe()">Changer</button>
-        </form>
-      </section>
-
-      <section class="carte">
-        <h2>Affichage</h2>
-        <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer">
-          <input type="checkbox" style="width:auto;min-height:0" [checked]="etat.moi()?.semaineCommenceDimanche"
-                 (change)="changerSemaine($event)">
-          <span>Commencer la semaine le dimanche dans le calendrier</span>
-        </label>
-      </section>
-
-      <section class="carte">
-        <h2>Session</h2>
-        <p class="secondaire" style="margin:8px 0 12px">
-          Vous déconnecter ferme cette session sur cet appareil uniquement.
-        </p>
-        <button class="btn" (click)="deconnecter()">Se déconnecter</button>
+          <button class="btn btn-outline-secondary" (click)="deconnecter()">Se déconnecter</button>
+        </div>
       </section>
     </div>
   `,

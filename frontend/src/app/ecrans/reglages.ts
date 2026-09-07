@@ -21,269 +21,282 @@ import type { Etat as EtatService, Maj, ParametreExpose } from '../core/modeles'
   standalone: true,
   imports: [FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .reglage { padding: 16px 0; border-top: 1px solid var(--separateur); }
-    .reglage:first-of-type { border-top: none; padding-top: 6px; }
-    .reglage .titre { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
-    .reglage .libelle { font-size: 14px; }
-    .reglage .desc { font-size: 12.5px; color: var(--encre-3); margin: 5px 0 0; max-width: 620px; }
-    .controle { min-width: 200px; }
-    .interrupteur { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
-    .interrupteur input { width: auto; min-height: 0; }
-    .portee { font-size: 11px; }
-    .annees { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
-    .annees th { text-align: left; font-weight: 500; font-size: 12px; color: var(--encre-3); padding: 6px 10px 6px 0; }
-    .annees td { padding: 7px 10px 7px 0; border-top: 1px solid var(--separateur); }
-    .apercu { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--separateur); }
-    .annonces { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
-    .liste { margin-top: 10px; max-height: 260px; overflow-y: auto; }
-    .periode { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 5px 0; border-top: 1px solid var(--separateur); }
-    .periode .nom { min-width: 120px; }
-    .puce { width: 10px; height: 10px; border-radius: 3px; flex: none; }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Réglages</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Réglages</h1>
+        <p class="text-body-secondary mb-0">
           Chaque réglage dit ce qu'il change et où l'effet se voit. Ceux marqués « bien » sont propres
           au bien ouvert.
         </p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @for (s of sectionsRemplies(); track s.id) {
-        <section class="carte">
-          <h2>{{ s.libelle }}</h2>
-          <p class="secondaire" style="margin:4px 0 8px">{{ s.description }}</p>
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">{{ s.libelle }}</h2>
+            <p class="text-body-secondary small">{{ s.description }}</p>
 
-          @for (p of parametresDe(s.id); track p.cle) {
-            <div class="reglage">
-              <div class="titre">
-                <div>
-                  <div class="libelle">
-                    {{ p.libelle }}
-                    <span class="pastille portee">{{ libellePortee(p.portee) }}</span>
-                    @if (!p.parDefaut) { <span class="pastille portee pastille-accent">modifié</span> }
+            <ul class="list-group list-group-flush">
+              @for (p of parametresDe(s.id); track p.cle) {
+                <li class="list-group-item d-flex justify-content-between align-items-start gap-3 flex-wrap px-0 py-3">
+                  <div class="flex-grow-1" style="max-width:620px">
+                    <div class="small fw-medium d-flex align-items-center gap-2 flex-wrap">
+                      {{ p.libelle }}
+                      <span class="badge rounded-pill text-bg-light border fw-normal">
+                        {{ libellePortee(p.portee) }}
+                      </span>
+                      @if (!p.parDefaut) {
+                        <span class="badge rounded-pill text-primary-emphasis bg-primary-subtle
+                                     border border-primary-subtle fw-normal">modifié</span>
+                      }
+                    </div>
+                    <p class="text-body-secondary small mt-1 mb-0">{{ p.description }}</p>
                   </div>
-                  <p class="desc">{{ p.description }}</p>
-                </div>
 
-                <div class="controle">
-                  @switch (p.type) {
-                    @case ('bool') {
-                      <label class="interrupteur">
-                        <input type="checkbox" [checked]="p.valeur === true" (change)="poser(p, $any($event.target).checked)">
-                        <span>{{ p.valeur ? 'Activé' : 'Désactivé' }}</span>
-                      </label>
+                  <div class="flex-shrink-0" style="min-width:220px">
+                    @switch (p.type) {
+                      @case ('bool') {
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" role="switch"
+                                 [attr.id]="'r-' + p.cle" [checked]="p.valeur === true"
+                                 (change)="poser(p, $any($event.target).checked)">
+                          <label class="form-check-label small" [attr.for]="'r-' + p.cle">
+                            {{ p.valeur ? 'Activé' : 'Désactivé' }}
+                          </label>
+                        </div>
+                      }
+                      @case ('int') {
+                        <input class="form-control" type="number" [min]="p.min ?? 0" [max]="p.max ?? 999"
+                               [value]="p.valeur" (change)="poser(p, +$any($event.target).value)"
+                               [attr.aria-label]="p.libelle">
+                      }
+                      @case ('enum') {
+                        <select class="form-select" [value]="p.valeur"
+                                (change)="poser(p, $any($event.target).value)" [attr.aria-label]="p.libelle">
+                          @for (o of p.options ?? []; track o.valeur) {
+                            <option [value]="o.valeur">{{ o.libelle }}</option>
+                          }
+                        </select>
+                      }
+                      @default {
+                        <input class="form-control" type="text" [value]="p.valeur"
+                               [attr.maxlength]="p.maxLongueur ?? 200"
+                               (change)="poser(p, $any($event.target).value)" [attr.aria-label]="p.libelle">
+                      }
                     }
-                    @case ('int') {
-                      <input type="number" [min]="p.min ?? 0" [max]="p.max ?? 999" [value]="p.valeur"
-                             (change)="poser(p, +$any($event.target).value)" [attr.aria-label]="p.libelle">
-                    }
-                    @case ('enum') {
-                      <select [value]="p.valeur" (change)="poser(p, $any($event.target).value)" [attr.aria-label]="p.libelle">
-                        @for (o of p.options ?? []; track o.valeur) { <option [value]="o.valeur">{{ o.libelle }}</option> }
-                      </select>
-                    }
-                    @default {
-                      <input type="text" [value]="p.valeur" [attr.maxlength]="p.maxLongueur ?? 200"
-                             (change)="poser(p, $any($event.target).value)" [attr.aria-label]="p.libelle">
-                    }
-                  }
-                </div>
-              </div>
-            </div>
-          }
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
         </section>
       }
 
       <!-- Les vacances scolaires sont la seule donnée de référence que
            l'application ne sait pas calculer : elle doit lui être donnée. -->
-      <section class="carte">
-        <h2>Vacances scolaires</h2>
-        <p class="secondaire" style="margin:6px 0 14px">
-          Le calendrier fait ressortir les trois zones. Ces dates sont fixées par arrêté et ne se
-          déduisent d'aucune règle : elles se mettent à jour une fois par an, en déposant ici le
-          fichier officiel. L'application ne va jamais le chercher elle-même, rien ne sort d'ici.
-        </p>
-
-        @if (anneeManquante()) {
-          <div class="encart">
-            L'année scolaire {{ anneeManquante() }} n'est pas renseignée. Le calendrier l'annonce
-            plutôt que d'afficher un mois sans vacances qu'on prendrait pour un mois de classe.
-          </div>
-        }
-
-        @if (annees().length) {
-          <table class="annees">
-            <thead>
-              <tr><th>Année scolaire</th><th>Périodes</th><th>Couvre</th><th>Origine</th></tr>
-            </thead>
-            <tbody>
-              @for (a of annees(); track a.anneeScolaire) {
-                <tr>
-                  <td><strong>{{ a.anneeScolaire }}</strong></td>
-                  <td>{{ a.periodes }}</td>
-                  <td class="secondaire">{{ plage(a.debut, a.fin) }}</td>
-                  <td class="secondaire">
-                    <span>{{ a.source }}</span>@if (a.importePar) {<span>, déposé par {{ a.importePar }}</span>}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
-
-        @if (!apercu()) {
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px">
-            <label class="btn" style="cursor:pointer">
-              <i class="bi bi-calendar-plus" aria-hidden="true"></i> Déposer un calendrier
-              <input type="file" accept=".xlsx,.xls,.csv,.txt,text/csv" style="display:none"
-                     [disabled]="occupe()" (change)="analyserCalendrier($event)">
-            </label>
-            <!-- Le seul appel réseau sortant de l'application. Le bouton
-                 n'apparaît que si un gérant l'a autorisé, et il ne fait que
-                 remplir l'aperçu : l'enregistrement reste un second clic. -->
-            @if (telechargementAutorise()) {
-              <button class="btn" (click)="telechargerCalendrier()" [disabled]="occupe()">
-                <i class="bi bi-cloud-arrow-down" aria-hidden="true"></i> Récupérer en ligne
-              </button>
-            }
-          </div>
-          <p class="secondaire" style="margin:8px 0 0;max-width:620px">
-            Le fichier attendu est le calendrier scolaire publié sur data.education.gouv.fr
-            (jeu de données « fr-en-calendrier-scolaire », export CSV). Un tableau tenu à la main
-            convient aussi, avec cinq colonnes : période, zone, début, fin, année scolaire.
-            @if (telechargementAutorise()) {
-              « Récupérer en ligne » va le chercher pour vous : c'est le seul appel réseau
-              sortant de l'application, et il n'enregistre rien sans votre confirmation.
-            } @else {
-              Le réglage « Télécharger le calendrier scolaire » ajoute un bouton qui va le
-              chercher pour vous, au prix du seul appel réseau sortant de l'application.
-            }
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Vacances scolaires</h2>
+          <p class="text-body-secondary small">
+            Le calendrier fait ressortir les trois zones. Ces dates sont fixées par arrêté et ne se
+            déduisent d'aucune règle : elles se mettent à jour une fois par an, en déposant ici le
+            fichier officiel. L'application ne va jamais le chercher elle-même, rien ne sort d'ici.
           </p>
-        } @else {
-          <div class="apercu">
-            <div class="entre">
-              <h3 style="margin:0">Ce qui a été lu</h3>
-              <button class="btn" (click)="apercu.set(null)" [disabled]="occupe()">Annuler</button>
+
+          @if (anneeManquante()) {
+            <div class="alert alert-primary small">
+              L'année scolaire {{ anneeManquante() }} n'est pas renseignée. Le calendrier l'annonce
+              plutôt que d'afficher un mois sans vacances qu'on prendrait pour un mois de classe.
             </div>
-            <p class="secondaire" style="margin:6px 0 0">
-              {{ apercu()!.source }} · {{ apercu()!.format }} · {{ apercu()!.lues }} lignes lues ·
-              {{ apercu()!.periodes.length }} périodes retenues.
-            </p>
-            <!-- La borne de fin est le seul point où deux fichiers honnêtes
-                 peuvent vouloir dire deux choses : on annonce ce qui a été
-                 décidé plutôt que de le supposer en silence. -->
-            <p class="secondaire" style="margin:4px 0 0">
-              @if (apercu()!.finEstLaReprise) {
-                Les dates de fin ont été lues comme des jours de reprise des cours : le dernier
-                jour de vacances retenu est la veille.
+          }
+
+          @if (annees().length) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr class="eyebrow">
+                    <th scope="col">Année scolaire</th><th scope="col">Périodes</th>
+                    <th scope="col">Couvre</th><th scope="col">Origine</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (a of annees(); track a.anneeScolaire) {
+                    <tr>
+                      <td class="small fw-medium">{{ a.anneeScolaire }}</td>
+                      <td class="small tnum">{{ a.periodes }}</td>
+                      <td class="small text-body-secondary tnum">{{ plage(a.debut, a.fin) }}</td>
+                      <td class="small text-body-secondary">
+                        {{ a.source }}@if (a.importePar) {, déposé par {{ a.importePar }}}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (!apercu()) {
+            <div class="d-flex gap-2 flex-wrap align-items-center mt-3">
+              <label class="btn btn-outline-secondary mb-0">
+                <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Déposer un calendrier
+                <input type="file" accept=".xlsx,.xls,.csv,.txt,text/csv" hidden
+                       [disabled]="occupe()" (change)="analyserCalendrier($event)">
+              </label>
+              <!-- Le seul appel réseau sortant de l'application. Le bouton
+                   n'apparaît que si un gérant l'a autorisé, et il ne fait que
+                   remplir l'aperçu : l'enregistrement reste un second clic. -->
+              @if (telechargementAutorise()) {
+                <button class="btn btn-outline-secondary" (click)="telechargerCalendrier()" [disabled]="occupe()">
+                  <i class="bi bi-cloud-arrow-down me-1" aria-hidden="true"></i>Récupérer en ligne
+                </button>
+              }
+            </div>
+            <p class="text-body-secondary small mt-2 mb-0" style="max-width:620px">
+              Le fichier attendu est le calendrier scolaire publié sur data.education.gouv.fr
+              (jeu de données « fr-en-calendrier-scolaire », export CSV). Un tableau tenu à la main
+              convient aussi, avec cinq colonnes : période, zone, début, fin, année scolaire.
+              @if (telechargementAutorise()) {
+                « Récupérer en ligne » va le chercher pour vous : c'est le seul appel réseau
+                sortant de l'application, et il n'enregistre rien sans votre confirmation.
               } @else {
-                Les dates de fin ont été lues comme le dernier jour de vacances, sans décalage.
+                Le réglage « Télécharger le calendrier scolaire » ajoute un bouton qui va le
+                chercher pour vous, au prix du seul appel réseau sortant de l'application.
               }
             </p>
-
-            <ul class="annonces">
-              @for (a of apercu()!.annees; track a.anneeScolaire) {
-                <li>
-                  <strong>{{ a.anneeScolaire }}</strong> : {{ a.periodes }} périodes
-                  @if (apercu()!.deja.includes(a.anneeScolaire)) {
-                    <span class="pastille pastille-accent">remplace l'existant</span>
-                  } @else {
-                    <span class="pastille pastille-positif">nouvelle</span>
-                  }
-                </li>
-              }
-            </ul>
-
-            <div class="liste">
-              @for (p of apercu()!.periodes; track $index) {
-                <div class="periode">
-                  <span class="puce" [style.background]="couleurZone(p.zone)" aria-hidden="true"></span>
-                  <span class="nom">{{ p.nom }}</span>
-                  <span class="secondaire">zone {{ p.zone }}</span>
-                  <span class="secondaire">{{ plage(p.debut, p.fin) }}</span>
-                </div>
-              }
-            </div>
-
-            @if (apercu()!.rejets.length) {
-              <details style="margin-top:12px">
-                <summary>{{ apercu()!.rejets.length }} lignes écartées, et pourquoi</summary>
-                <div class="liste">
-                  @for (r of apercu()!.rejets.slice(0, 40); track $index) {
-                    <div class="periode">
-                      <span class="secondaire">ligne {{ r.ligne }}</span>
-                      <span class="nom">{{ r.raison }}</span>
-                    </div>
-                  }
-                </div>
-                @if (apercu()!.rejets.length > 40) {
-                  <p class="secondaire" style="margin:6px 0 0">
-                    Les {{ apercu()!.rejets.length - 40 }} autres suivent les mêmes raisons.
-                  </p>
+          } @else {
+            <div class="border-top mt-4 pt-3">
+              <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <h3 class="h6 mb-0">Ce qui a été lu</h3>
+                <button class="btn btn-sm btn-outline-secondary" (click)="apercu.set(null)"
+                        [disabled]="occupe()">Annuler</button>
+              </div>
+              <p class="text-body-secondary small mt-2 mb-1">
+                {{ apercu()!.source }} · {{ apercu()!.format }} · {{ apercu()!.lues }} lignes lues ·
+                {{ apercu()!.periodes.length }} périodes retenues.
+              </p>
+              <!-- La borne de fin est le seul point où deux fichiers honnêtes
+                   peuvent vouloir dire deux choses : on annonce ce qui a été
+                   décidé plutôt que de le supposer en silence. -->
+              <p class="text-body-secondary small mb-0">
+                @if (apercu()!.finEstLaReprise) {
+                  Les dates de fin ont été lues comme des jours de reprise des cours : le dernier
+                  jour de vacances retenu est la veille.
+                } @else {
+                  Les dates de fin ont été lues comme le dernier jour de vacances, sans décalage.
                 }
-              </details>
-            }
+              </p>
 
-            <button class="btn btn-primaire" style="margin-top:14px"
-                    (click)="enregistrerCalendrier()" [disabled]="occupe()">
-              Enregistrer ces {{ apercu()!.periodes.length }} périodes
-            </button>
-          </div>
-        }
+              <ul class="list-unstyled d-flex flex-column gap-2 small mt-3">
+                @for (a of apercu()!.annees; track a.anneeScolaire) {
+                  <li>
+                    <strong>{{ a.anneeScolaire }}</strong> : {{ a.periodes }} périodes
+                    @if (apercu()!.deja.includes(a.anneeScolaire)) {
+                      <span class="badge rounded-pill text-primary-emphasis bg-primary-subtle
+                                   border border-primary-subtle">remplace l'existant</span>
+                    } @else {
+                      <span class="badge rounded-pill text-success-emphasis bg-success-subtle
+                                   border border-success-subtle">nouvelle</span>
+                    }
+                  </li>
+                }
+              </ul>
+
+              <ul class="list-group list-group-flush mt-2 overflow-auto" style="max-height:260px">
+                @for (p of apercu()!.periodes; track $index) {
+                  <li class="list-group-item d-flex align-items-center gap-3 px-0 py-1 small">
+                    <span class="d-inline-block rounded-1 flex-shrink-0" style="width:10px;height:10px"
+                          [style.background]="couleurZone(p.zone)" aria-hidden="true"></span>
+                    <span style="min-width:120px">{{ p.nom }}</span>
+                    <span class="text-body-secondary">zone {{ p.zone }}</span>
+                    <span class="text-body-secondary tnum">{{ plage(p.debut, p.fin) }}</span>
+                  </li>
+                }
+              </ul>
+
+              @if (apercu()!.rejets.length) {
+                <details class="mt-3">
+                  <summary class="small" style="cursor:pointer">
+                    {{ apercu()!.rejets.length }} lignes écartées, et pourquoi
+                  </summary>
+                  <ul class="list-group list-group-flush mt-2 overflow-auto" style="max-height:260px">
+                    @for (r of apercu()!.rejets.slice(0, 40); track $index) {
+                      <li class="list-group-item d-flex align-items-center gap-3 px-0 py-1 small">
+                        <span class="text-body-secondary" style="min-width:80px">ligne {{ r.ligne }}</span>
+                        <span>{{ r.raison }}</span>
+                      </li>
+                    }
+                  </ul>
+                  @if (apercu()!.rejets.length > 40) {
+                    <p class="text-body-secondary small mt-2 mb-0">
+                      Les {{ apercu()!.rejets.length - 40 }} autres suivent les mêmes raisons.
+                    </p>
+                  }
+                </details>
+              }
+
+              <button class="btn btn-primary mt-3" (click)="enregistrerCalendrier()" [disabled]="occupe()">
+                Enregistrer ces {{ apercu()!.periodes.length }} périodes
+              </button>
+            </div>
+          }
+        </div>
       </section>
 
       <!-- Les mises à jour se voient ici aussi, parce que c'est l'écran où
            l'on passe. L'installation, elle, reste au seul endroit où le mot de
            passe est demandé : deux formulaires de confirmation pour la même
            opération, c'est un de trop. -->
-      <section class="carte">
-        <h2>Mises à jour</h2>
-        <p class="secondaire" style="margin:6px 0 12px">
-          Version installée : <strong>{{ versionInstallee() }}</strong>.
-          @if (!verificationAutorisee()) {
-            La vérification est désactivée. Le réglage « Vérifier les nouvelles versions sur
-            GitHub », dans la section Exploitation ci-dessus, l'autorise.
-          }
-        </p>
-
-        @if (verificationAutorisee()) {
-          @if (maj(); as m) {
-            @if (m.misAJourDisponible) {
-              <div class="encart">
-                <strong>Version {{ m.tag }} disponible.</strong>
-                @if (m.nom && m.nom !== m.tag) { {{ m.nom }} }
-                <a routerLink="/etat">Installer depuis l'État du service</a>
-              </div>
-            } @else {
-              <p class="secondaire">Vous êtes à jour.</p>
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Mises à jour</h2>
+          <p class="text-body-secondary small">
+            Version installée : <strong>{{ versionInstallee() }}</strong>.
+            @if (!verificationAutorisee()) {
+              La vérification est désactivée. Le réglage « Vérifier les nouvelles versions sur
+              GitHub », dans la section Exploitation ci-dessus, l'autorise.
             }
+          </p>
+
+          @if (verificationAutorisee()) {
+            @if (maj(); as m) {
+              @if (m.misAJourDisponible) {
+                <div class="alert alert-primary">
+                  <strong>Version {{ m.tag }} disponible.</strong>
+                  @if (m.nom && m.nom !== m.tag) { {{ m.nom }} }
+                  <a routerLink="/etat">Installer depuis l'État du service</a>
+                </div>
+              } @else {
+                <p class="text-body-secondary small">Vous êtes à jour.</p>
+              }
+            }
+            <button class="btn btn-outline-secondary" (click)="verifierMaj()" [disabled]="occupe()">
+              <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>
+              {{ occupe() ? 'Vérification...' : 'Vérifier les mises à jour' }}
+            </button>
           }
-          <button class="btn" (click)="verifierMaj()" [disabled]="occupe()">
-            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-            {{ occupe() ? 'Vérification...' : 'Vérifier les mises à jour' }}
-          </button>
-        }
+        </div>
       </section>
 
-      <section class="carte">
-        <h2>Export</h2>
-        <p class="secondaire" style="margin:6px 0 14px">
-          Vous n'êtes prisonnier ni d'un tableur ni de cette application. L'export complet contient la
-          base et toutes les pièces jointes, et se restaure sur une instance vierge.
-        </p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" (click)="exporter('/export/sejours.csv')" [disabled]="occupe()">
-            <i class="bi bi-filetype-csv" aria-hidden="true"></i> Séjours en CSV
-          </button>
-          <button class="btn" (click)="exporter('/export/instance.tar.gz')" [disabled]="occupe()">
-            <i class="bi bi-box-arrow-down" aria-hidden="true"></i> Export complet de l'instance
-          </button>
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Export</h2>
+          <p class="text-body-secondary small">
+            Vous n'êtes prisonnier ni d'un tableur ni de cette application. L'export complet contient la
+            base et toutes les pièces jointes, et se restaure sur une instance vierge.
+          </p>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-secondary" (click)="exporter('/export/sejours.csv')" [disabled]="occupe()">
+              <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Séjours en CSV
+            </button>
+            <button class="btn btn-outline-secondary" (click)="exporter('/export/instance.tar.gz')"
+                    [disabled]="occupe()">
+              <i class="bi bi-box-arrow-down me-1" aria-hidden="true"></i>Export complet de l'instance
+            </button>
+          </div>
         </div>
       </section>
     </div>
