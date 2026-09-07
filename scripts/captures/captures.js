@@ -233,6 +233,20 @@ async function cliquer(selecteur, quoi) {
     await capture('invite-coffre-trop-tot', { full: true });
   }
 
+  // ---------------------------------------------------------------- Au doigt
+  // La navigation du téléphone est la seule chose que les captures du bureau ne
+  // peuvent pas montrer : la barre basse et le tiroir n'existent pas à 1280 px.
+  await deconnexion();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await connexion('helene@exemple.fr');
+  await ouvrirBien("Maison de Kerloc'h");
+  await capture('mobile-barre');
+  if (await cliquer('button:has-text("Menu")', 'bouton Menu de la barre basse')) {
+    await capture('mobile-menu');
+    await cliquer('.btn-close', 'bouton de fermeture du tiroir');
+  }
+  await page.setViewportSize({ width: 1280, height: 860 });
+
   console.log(`CAPTURES (${faites.length}) :\n  ` + faites.join('\n  '));
   if (soucis.length) console.log(`\nSOUCIS :\n  ` + soucis.join('\n  '));
   await nav.close();

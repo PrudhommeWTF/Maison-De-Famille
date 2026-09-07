@@ -45,7 +45,17 @@ L'écran est toujours bâti pareil.
   vous manque, c'est normal, pas une panne.
 - **Au milieu**, l'écran courant.
 
-Sur téléphone, le menu de gauche devient une barre d'onglets en bas.
+Sur téléphone, le menu de gauche se range dans une barre d'onglets en bas :
+**Accueil**, **Calendrier**, **Demandes**, et **Menu**. Les trois premiers sont
+les écrans du quotidien, à portée de pouce.
+
+![La barre d'onglets sur téléphone](images/mobile-barre.png)
+
+« Menu » ouvre le reste : exactement le même menu qu'à l'écran large, thème par
+thème, avec « Mon compte » tout en bas. Toucher une entrée referme le tiroir et
+vous emmène sur l'écran.
+
+![Le menu complet sur téléphone](images/mobile-menu.png)
 
 ### Le tableau de bord
 
