@@ -25,133 +25,148 @@ const MODES = [
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 18px; }
-    .mode {
-      text-align: left; padding: 14px; border-radius: 12px; background: var(--surface);
-      border: 1px solid var(--bordure-controle); cursor: pointer; font-family: inherit; color: var(--encre-2);
-    }
-    .mode[aria-pressed="true"] { border: 1.5px solid var(--accent); color: var(--accent); }
-    .mode i { font-size: 18px; display: block; margin-bottom: 7px; }
-    .mode .titre { font-family: var(--titre); font-size: 15px; font-weight: 500; margin-bottom: 4px; }
-    .mode .desc { font-size: 12px; color: var(--encre-3); }
-    .bien { display: flex; gap: 20px; justify-content: space-between; flex-wrap: wrap; }
-    .bien .actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-    .puces { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 560px) { .deux { grid-template-columns: 1fr; } }
-  `],
   template: `
-    <div class="colonne">
-      <div class="entre">
+    <div class="d-flex flex-column gap-4">
+      <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap">
         <div>
-          <h1>Biens gérés</h1>
-          <p class="secondaire" style="margin:6px 0 0">
+          <h1 class="h2 mb-2">Biens gérés</h1>
+          <p class="text-body-secondary mb-0">
             Chaque bien appartient à une structure : c'est elle qui porte les règles de décision et le vocabulaire.
           </p>
         </div>
-        <button class="btn btn-primaire" (click)="formulaire.set(!formulaire())">
+        <button class="btn btn-primary" (click)="formulaire.set(!formulaire())">
+          <i class="bi me-1" [class.bi-plus-circle]="!formulaire()" [class.bi-x-circle]="formulaire()"></i>
           {{ formulaire() ? 'Fermer le formulaire' : 'Ajouter un bien' }}
         </button>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
 
       @if (formulaire()) {
-        <section class="carte">
-          <h2>Ajouter un bien</h2>
-          <p class="secondaire" style="margin:6px 0 16px">Comment ce bien est-il détenu ?</p>
-          <div class="modes">
-            @for (m of modes; track m.valeur) {
-              <button class="mode" type="button" [attr.aria-pressed]="f.structureMode === m.valeur"
-                      (click)="f.structureMode = m.valeur">
-                <i class="bi" [class]="m.icone" aria-hidden="true"></i>
-                <div class="titre">{{ m.titre }}</div>
-                <div class="desc">{{ m.description }}</div>
-              </button>
-            }
-          </div>
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">Ajouter un bien</h2>
+            <div class="eyebrow mt-4 mb-2">Mode de détention</div>
+            <div class="row row-cols-1 row-cols-md-3 g-2">
+              @for (m of modes; track m.valeur) {
+                <div class="col">
+                  <button class="card h-100 w-100 text-start border-2"
+                          [class.border-primary]="f.structureMode === m.valeur"
+                          [class.text-primary]="f.structureMode === m.valeur"
+                          type="button" [attr.aria-pressed]="f.structureMode === m.valeur"
+                          (click)="f.structureMode = m.valeur">
+                    <span class="card-body p-3">
+                      <span class="small fw-medium d-flex align-items-center gap-2">
+                        <i class="bi" [class]="m.icone" aria-hidden="true"></i>{{ m.titre }}
+                      </span>
+                      <span class="d-block text-body-secondary mt-2" style="font-size:.78rem">{{ m.description }}</span>
+                    </span>
+                  </button>
+                </div>
+              }
+            </div>
 
-          <form (ngSubmit)="creer()">
-            <div class="champ">
-              <label for="b-snom">Nom de la structure</label>
-              <input id="b-snom" name="structureNom" [(ngModel)]="f.structureNom" placeholder="Indivision Kerloc'h" required>
-            </div>
-            <div class="champ">
-              <label for="b-nom">Nom du bien</label>
-              <input id="b-nom" name="nom" [(ngModel)]="f.nom" placeholder="Maison de Kerloc'h" required>
-            </div>
-            <div class="deux">
-              <div class="champ">
-                <label for="b-commune">Commune</label>
-                <input id="b-commune" name="commune" [(ngModel)]="f.commune" required>
+            <form class="row g-3 mt-1" (ngSubmit)="creer()">
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="b-snom">Nom de la structure</label>
+                <input class="form-control" id="b-snom" name="structureNom" [(ngModel)]="f.structureNom"
+                       placeholder="Indivision Kerloc'h" required>
               </div>
-              <div class="champ">
-                <label for="b-type">Type</label>
-                <select id="b-type" name="type" [(ngModel)]="f.type">
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="b-nom">Nom du bien</label>
+                <input class="form-control" id="b-nom" name="nom" [(ngModel)]="f.nom"
+                       placeholder="Maison de Kerloc'h" required>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3">
+                <label class="form-label small text-body-secondary" for="b-commune">Commune</label>
+                <input class="form-control" id="b-commune" name="commune" [(ngModel)]="f.commune" required>
+              </div>
+              <div class="col-12 col-md-6 col-xl-3">
+                <label class="form-label small text-body-secondary" for="b-type">Type</label>
+                <select class="form-select" id="b-type" name="type" [(ngModel)]="f.type">
                   <option value="mer">Bord de mer</option>
                   <option value="montagne">Montagne</option>
                   <option value="campagne">Campagne</option>
                   <option value="ville">Ville</option>
                 </select>
               </div>
-            </div>
-            <div class="deux">
-              <div class="champ">
-                <label for="b-couchages">Couchages</label>
-                <input id="b-couchages" name="couchages" type="number" min="1" max="100" [(ngModel)]="f.couchages" required>
+              <div class="col-12 col-md-6 col-xl-3">
+                <label class="form-label small text-body-secondary" for="b-couchages">Couchages</label>
+                <input class="form-control" id="b-couchages" name="couchages" type="number" min="1" max="100"
+                       [(ngModel)]="f.couchages" required>
               </div>
-              <div class="champ">
-                <label for="b-loc">Location saisonnière</label>
-                <select id="b-loc" name="locationActivee" [(ngModel)]="f.locationActivee">
+              <div class="col-12 col-md-6 col-xl-3">
+                <label class="form-label small text-body-secondary" for="b-loc">Location saisonnière</label>
+                <select class="form-select" id="b-loc" name="locationActivee" [(ngModel)]="f.locationActivee">
                   <option [ngValue]="false">Non louée</option>
                   <option [ngValue]="true">Louée en saison</option>
                 </select>
               </div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Créer le bien</button>
-              <button class="btn" type="button" (click)="formulaire.set(false)">Annuler</button>
-            </div>
-          </form>
+              <div class="col-12 d-flex gap-2 align-items-center flex-wrap">
+                <button class="btn btn-primary" type="submit" [disabled]="occupe()">Créer le bien</button>
+                <button class="btn btn-outline-secondary" type="button" (click)="formulaire.set(false)">Annuler</button>
+                <span class="text-body-secondary small">
+                  La structure choisie détermine les règles de vote et de répartition du bien.
+                </span>
+              </div>
+            </form>
+          </div>
         </section>
       }
 
-      @for (b of etat.biens(); track b.id) {
-        <section class="carte bien">
-          <div style="flex:1;min-width:240px">
-            <h2>{{ b.nom }}</h2>
-            <p class="secondaire" style="margin:4px 0 0">
-              {{ b.commune }} · {{ b.couchages }} couchages · {{ b.locationActivee ? 'louée en saison' : 'non louée' }}
-            </p>
-            <div class="puces">
-              <span class="pastille">{{ libelleMode(b) }} · {{ b.structureNom }}</span>
-              <span class="pastille">{{ b.role === 'gerant' ? 'Vous gérez ce bien' : roleLisible(b.role) }}</span>
-            </div>
-
-            @if (retrait() === b.id) {
-              <div class="encart" style="margin-top:14px">
-                <strong>Retirer ce bien l'archive, cela n'efface rien.</strong>
-                Les séjours, les documents et l'historique restent consultables en lecture seule,
-                et vous pouvez le réactiver à tout moment. Pour supprimer définitivement, exportez
-                d'abord l'instance depuis l'écran d'état.
-                <div style="display:flex;gap:8px;margin-top:10px">
-                  <button class="btn" (click)="archiver(b, true)" [disabled]="occupe()">Retirer</button>
-                  <button class="btn" (click)="retrait.set(null)">Garder</button>
+      <div class="d-flex flex-column gap-3">
+        @for (b of etat.biens(); track b.id) {
+          <section class="card">
+            <div class="card-body d-flex flex-wrap gap-4 align-items-start">
+              <div class="flex-grow-1" style="min-width:260px">
+                <h2 class="h5 card-title mb-1">{{ b.nom }}</h2>
+                <p class="text-body-secondary small mb-2">
+                  {{ b.commune }} · {{ b.couchages }} couchages · {{ b.locationActivee ? 'louée en saison' : 'non louée' }}
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                  <span class="badge rounded-pill text-bg-light border fw-medium">{{ b.structureNom }}</span>
+                  <span class="badge rounded-pill text-bg-light border fw-normal">{{ detenteurs(b) }}</span>
+                  <span class="badge rounded-pill text-bg-light border fw-normal">
+                    {{ b.role === 'gerant' ? 'Vous gérez ce bien' : roleLisible(b.role) }}
+                  </span>
                 </div>
               </div>
-            }
+              <div class="d-flex flex-column gap-2 align-items-start" style="min-width:190px">
+                @if (retrait() === b.id) {
+                  <div class="alert alert-primary mb-0 p-3">
+                    <p class="small mb-3">
+                      <strong>Retirer ce bien l'archive, cela n'efface rien.</strong>
+                      Les séjours, les documents et l'historique restent consultables en lecture seule,
+                      et vous pouvez le réactiver à tout moment. Pour supprimer définitivement, exportez
+                      d'abord l'instance depuis l'écran d'état.
+                    </p>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-sm btn-primary flex-fill" (click)="archiver(b, true)"
+                              [disabled]="occupe()">Retirer</button>
+                      <button class="btn btn-sm btn-outline-secondary flex-fill" (click)="retrait.set(null)">Garder</button>
+                    </div>
+                  </div>
+                } @else {
+                  <button class="btn btn-sm btn-outline-secondary" (click)="ouvrir(b)">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Ouvrir le dossier
+                  </button>
+                  @if (b.role === 'gerant') {
+                    <button class="btn btn-sm btn-link text-body-secondary p-0" (click)="retrait.set(b.id)">
+                      Retirer ce bien
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          </section>
+        } @empty {
+          <div class="card">
+            <div class="card-body">
+              <p class="text-body-secondary small mb-0">Aucun bien pour l'instant. Ajoutez le premier.</p>
+            </div>
           </div>
-          <div class="actions">
-            <button class="btn btn-primaire" (click)="ouvrir(b)">Ouvrir le dossier</button>
-            @if (b.role === 'gerant' && retrait() !== b.id) {
-              <button class="btn-lien" (click)="retrait.set(b.id)">Retirer ce bien</button>
-            }
-          </div>
-        </section>
-      } @empty {
-        <div class="carte"><p class="vide">Aucun bien pour l'instant. Ajoutez le premier.</p></div>
-      }
+        }
+      </div>
     </div>
   `,
 })
@@ -171,8 +186,13 @@ export class Biens {
     type: 'mer', couchages: 6, locationActivee: false,
   };
 
-  libelleMode(b: BienResume): string {
-    return b.structureMode === 'sci' ? 'SCI' : b.structureMode === 'nom_propre' ? 'Nom propre' : 'Indivision';
+  /**
+   * « 3 indivisaires », « 2 associés ». Le mode se lit déjà dans le nom de la
+   * structure : le répéter en puce n'apprenait rien.
+   */
+  detenteurs(b: BienResume): string {
+    const qui = b.structureMode === 'sci' ? 'associé' : b.structureMode === 'nom_propre' ? 'propriétaire' : 'indivisaire';
+    return b.detenteurs ? `${b.detenteurs} ${qui}${b.detenteurs > 1 ? 's' : ''}` : `Aucun ${qui} saisi`;
   }
 
   roleLisible(role: string): string {

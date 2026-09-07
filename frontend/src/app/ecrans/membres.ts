@@ -20,167 +20,183 @@ import type { LigneDetention, Personne, Structure } from '../core/modeles';
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .detenteur { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--separateur); }
-    .detenteur:last-child { border-bottom: none; }
-    .detenteur .nom { font-size: 14px; }
-    .detenteur .part { margin-left: auto; text-align: right; }
-    .detenteur .part .valeur { font-family: var(--titre); font-size: 17px; font-weight: 500; }
-    .histo { font-size: 13px; }
-    .histo .ligne-h { display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid var(--separateur); flex-wrap: wrap; }
-    .histo .periode { width: 190px; flex: none; color: var(--encre-3); font-size: 12px; }
-    .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
-    .role h3 { font-size: 14px; margin-bottom: 5px; }
-    .role p { font-size: 12.5px; color: var(--encre-3); margin: 0; }
-    .saisie { display: grid; grid-template-columns: 1fr 100px auto; gap: 10px; align-items: end; margin-bottom: 10px; }
-    @media (max-width: 640px) {
-      .saisie { grid-template-columns: 1fr; }
-      .histo .periode { width: 100%; }
-    }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Membres &amp; {{ etat.vocabulaire().parts }}</h1>
-        <p class="secondaire" style="margin:6px 0 0">{{ structure()?.structure?.nom }}</p>
+        <h1 class="h2 mb-2">Membres &amp; {{ etat.vocabulaire().parts }}</h1>
+        <p class="text-body-secondary mb-0">{{ structure()?.structure?.nom }}</p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (structure(); as s) {
-        <section class="carte">
-          <div class="entre">
-            <h2>{{ majuscule(etat.vocabulaire().detenteurs) }}</h2>
-            <span class="pastille">{{ s.regles[0]?.libelle }}</span>
-          </div>
-
-          @if (s.detenteurs.length) {
-            <div style="margin-top:8px">
-              @for (d of s.detenteurs; track d.personneId) {
-                <div class="detenteur">
-                  <span class="avatar">{{ initiales(d.nom) }}</span>
-                  <span>
-                    <span class="nom" style="display:block">{{ d.nom }}</span>
-                    <span class="meta">{{ d.foyerNom || 'Sans foyer' }}</span>
-                  </span>
-                  <span class="pastille" [class.pastille-accent]="d.role === 'gerant'">
-                    {{ d.role === 'gerant' ? 'Gérant' : majuscule(etat.vocabulaire().detenteurs.replace(/s$/, '')) }}
-                  </span>
-                  @if (s.partsVisibles) {
-                    <span class="part">
-                      <span class="valeur chiffres">{{ d.quotePart }}</span>
-                      <span class="meta" style="display:block">{{ d.parts }} / {{ d.total }}</span>
-                    </span>
-                  }
-                </div>
-              }
+        <section class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <h2 class="h5 card-title mb-0">{{ majuscule(etat.vocabulaire().detenteurs) }}</h2>
+              <span class="badge rounded-pill text-bg-light border fw-medium text-wrap text-start">{{ s.regles[0]?.libelle }}</span>
             </div>
-          } @else {
-            <p class="vide">
-              Aucune répartition n'est encore saisie. Elle porte une date d'effet (une succession, un
-              acte notarié) qu'aucun amorçage ne peut deviner : c'est à vous de l'entrer.
-            </p>
-          }
-          @if (!s.partsVisibles) {
-            <p class="meta" style="margin-top:12px">
-              La répartition chiffrée n'est pas affichée aux membres de foyer. Un gérant peut changer
-              ce réglage dans la page Réglages.
-            </p>
-          }
+
+            @if (s.detenteurs.length) {
+              <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr class="eyebrow">
+                      <th scope="col">{{ majuscule(etat.vocabulaire().detenteurs.replace(/s$/, '')) }}</th>
+                      <th scope="col">Rôle</th>
+                      @if (s.partsVisibles) { <th class="text-end" scope="col">Quote-part</th> }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (d of s.detenteurs; track d.personneId) {
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center gap-3">
+                            <span class="avatar">{{ initiales(d.nom) }}</span>
+                            <span>
+                              <span class="d-block small fw-medium">{{ d.nom }}</span>
+                              <span class="d-block text-body-secondary" style="font-size:.72rem">{{ d.foyerNom || 'Sans foyer' }}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge rounded-pill"
+                                [class]="d.role === 'gerant'
+                                  ? 'text-primary-emphasis bg-primary-subtle border border-primary-subtle'
+                                  : 'text-bg-light border'">
+                            {{ d.role === 'gerant' ? 'Gérant' : majuscule(etat.vocabulaire().detenteurs.replace(/s$/, '')) }}
+                          </span>
+                        </td>
+                        @if (s.partsVisibles) {
+                          <td class="text-end">
+                            <span class="d-block small fw-medium tnum">{{ d.quotePart }}</span>
+                            <span class="d-block text-body-secondary tnum" style="font-size:.72rem">{{ d.parts }} / {{ d.total }}</span>
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="text-body-secondary small mt-3 mb-0">
+                Aucune répartition n'est encore saisie. Elle porte une date d'effet (une succession, un
+                acte notarié) qu'aucun amorçage ne peut deviner : c'est à vous de l'entrer.
+              </p>
+            }
+            @if (!s.partsVisibles) {
+              <p class="text-body-secondary small mt-3 mb-0">
+                La répartition chiffrée n'est pas affichée aux membres de foyer. Un gérant peut changer
+                ce réglage dans la page Réglages.
+              </p>
+            }
+          </div>
         </section>
 
         @if (etat.estGeranteIci()) {
-          <section class="carte">
-            <h2>Modifier la répartition</h2>
-            <p class="secondaire" style="margin:6px 0 14px">
-              Les {{ etat.vocabulaire().parts }} sont des <strong>nombres entiers</strong> : une indivision à
-              parts égales entre quatre s'écrit 1, 1, 1, 1 ; une SCI de 300 parts s'écrit 120, 90, 90.
-              La date d'effet est celle de l'acte, pas celle de la saisie : les dépenses antérieures
-              garderont la répartition d'alors.
-            </p>
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">Modifier la répartition</h2>
+              <p class="text-body-secondary small">
+                Les {{ etat.vocabulaire().parts }} sont des <strong>nombres entiers</strong> : une indivision à
+                parts égales entre quatre s'écrit 1, 1, 1, 1 ; une SCI de 300 parts s'écrit 120, 90, 90.
+                La date d'effet est celle de l'acte, pas celle de la saisie : les dépenses antérieures
+                garderont la répartition d'alors.
+              </p>
 
-            @for (l of lignes(); track l.cle) {
-              <div class="saisie">
-                <div class="champ" style="margin:0">
-                  <label [attr.for]="'p-' + l.cle">Personne</label>
-                  <select [attr.id]="'p-' + l.cle" [(ngModel)]="l.personneId" [name]="'p-' + l.cle">
-                    <option [ngValue]="0">Choisir...</option>
-                    @for (p of personnes(); track p.id) { <option [ngValue]="p.id">{{ p.nom }}</option> }
-                  </select>
+              @for (l of lignes(); track l.cle) {
+                <div class="row g-2 align-items-end mb-2">
+                  <div class="col">
+                    <label class="form-label small text-body-secondary" [attr.for]="'p-' + l.cle">Personne</label>
+                    <select class="form-select" [attr.id]="'p-' + l.cle" [(ngModel)]="l.personneId" [name]="'p-' + l.cle">
+                      <option [ngValue]="0">Choisir...</option>
+                      @for (p of personnes(); track p.id) { <option [ngValue]="p.id">{{ p.nom }}</option> }
+                    </select>
+                  </div>
+                  <div class="col-auto" style="width:110px">
+                    <label class="form-label small text-body-secondary" [attr.for]="'n-' + l.cle">Parts</label>
+                    <input class="form-control" [attr.id]="'n-' + l.cle" type="number" min="1"
+                           [(ngModel)]="l.parts" [name]="'n-' + l.cle">
+                  </div>
+                  <div class="col-auto">
+                    <button class="btn btn-outline-secondary" type="button" (click)="retirerLigne(l.cle)"
+                            aria-label="Retirer cette ligne">
+                      <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                  </div>
                 </div>
-                <div class="champ" style="margin:0">
-                  <label [attr.for]="'n-' + l.cle">Parts</label>
-                  <input [attr.id]="'n-' + l.cle" type="number" min="1" [(ngModel)]="l.parts" [name]="'n-' + l.cle">
+              }
+              <button class="btn btn-sm btn-outline-secondary mb-4" type="button" (click)="ajouterLigne()">
+                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Ajouter une personne
+              </button>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="d-effet">Date d'effet</label>
+                  <input class="form-control" id="d-effet" name="dateEffet" type="date" [(ngModel)]="dateEffet" required>
                 </div>
-                <button class="btn" type="button" (click)="retirerLigne(l.cle)" aria-label="Retirer cette ligne">
-                  <i class="bi bi-x-lg" aria-hidden="true"></i>
-                </button>
+                <div class="col-12 col-md-8">
+                  <label class="form-label small text-body-secondary" for="d-motif">Motif</label>
+                  <input class="form-control" id="d-motif" name="motif" [(ngModel)]="motif"
+                         placeholder="Succession de Robert Prudhomme, rachat des parts de Julien..." required>
+                </div>
               </div>
-            }
-            <button class="btn" type="button" (click)="ajouterLigne()" style="margin-bottom:14px">
-              <i class="bi bi-plus-circle" aria-hidden="true"></i> Ajouter une personne
-            </button>
-
-            <div class="champ">
-              <label for="d-effet">Date d'effet</label>
-              <input id="d-effet" name="dateEffet" type="date" [(ngModel)]="dateEffet" required>
+              <button class="btn btn-primary mt-3" (click)="enregistrer()" [disabled]="occupe()">
+                Enregistrer la répartition
+              </button>
             </div>
-            <div class="champ">
-              <label for="d-motif">Motif</label>
-              <input id="d-motif" name="motif" [(ngModel)]="motif"
-                     placeholder="Succession de Robert Prudhomme, rachat des parts de Julien..." required>
-            </div>
-            <button class="btn btn-primaire" (click)="enregistrer()" [disabled]="occupe()">
-              Enregistrer la répartition
-            </button>
           </section>
         }
 
         @if (historique().length) {
-          <section class="carte">
-            <h2>Historique des {{ etat.vocabulaire().parts }}</h2>
-            <p class="secondaire" style="margin:6px 0 10px">
-              Rien n'est écrasé : chaque changement ferme une période et en ouvre une autre.
-            </p>
-            <div class="histo">
-              @for (l of historique(); track l.id) {
-                <div class="ligne-h">
-                  <span class="periode chiffres">
-                    {{ dateLongue(l.effetDu) }} → {{ l.effetAu ? dateLongue(l.effetAu) : 'aujourd\\'hui' }}
-                  </span>
-                  <span style="flex:1;min-width:120px">{{ l.nom }}</span>
-                  <span class="chiffres">{{ l.parts }} part{{ l.parts > 1 ? 's' : '' }}</span>
-                  <span class="meta" style="width:100%">{{ l.motif }}</span>
-                </div>
-              }
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">Historique des {{ etat.vocabulaire().parts }}</h2>
+              <p class="text-body-secondary small">
+                Rien n'est écrasé : chaque changement ferme une période et en ouvre une autre.
+              </p>
+              <ul class="list-group list-group-flush">
+                @for (l of historique(); track l.id) {
+                  <li class="list-group-item d-flex gap-3 flex-wrap px-0">
+                    <span class="text-body-secondary tnum flex-shrink-0" style="font-size:.78rem;width:190px">
+                      {{ dateLongue(l.effetDu) }} → {{ l.effetAu ? dateLongue(l.effetAu) : 'aujourd\\'hui' }}
+                    </span>
+                    <span class="small flex-grow-1" style="min-width:120px">{{ l.nom }}</span>
+                    <span class="small tnum">{{ l.parts }} part{{ l.parts > 1 ? 's' : '' }}</span>
+                    <span class="text-body-secondary w-100" style="font-size:.72rem">{{ l.motif }}</span>
+                  </li>
+                }
+              </ul>
             </div>
           </section>
         }
       }
 
-      <section class="carte">
-        <h2>Ce que chaque rôle peut faire</h2>
-        <div class="roles" style="margin-top:14px">
-          <div class="role">
-            <h3>Gérant</h3>
-            <p>Arbitre les demandes, saisit un séjour pour quelqu'un d'autre, modifie la répartition,
-               gère les biens et les réglages.</p>
-          </div>
-          <div class="role">
-            <h3>{{ majuscule(etat.vocabulaire().detenteurs.replace(/s$/, '')) }}</h3>
-            <p>Voit le calendrier et l'historique, demande un séjour, dépose ses voeux, consulte la
-               répartition.</p>
-          </div>
-          <div class="role">
-            <h3>Membre de foyer</h3>
-            <p>Voit le calendrier et la fiche du bien, demande un séjour. La répartition chiffrée
-               dépend d'un réglage.</p>
-          </div>
-          <div class="role">
-            <h3>Invité</h3>
-            <p>Accède par un lien limité dans le temps, sans compte, et ne voit que ce qui concerne
-               son séjour.</p>
+      <section class="card">
+        <div class="card-body">
+          <div class="eyebrow mb-3">Ce que chaque rôle peut faire</div>
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3">
+            <div class="col">
+              <h3 class="h6 mb-1">Gérant</h3>
+              <p class="text-body-secondary small mb-0">Arbitre les demandes, saisit un séjour pour quelqu'un d'autre,
+                 modifie la répartition, gère les biens et les réglages.</p>
+            </div>
+            <div class="col">
+              <h3 class="h6 mb-1">{{ majuscule(etat.vocabulaire().detenteurs.replace(/s$/, '')) }}</h3>
+              <p class="text-body-secondary small mb-0">Voit le calendrier et l'historique, demande un séjour,
+                 dépose ses voeux, consulte la répartition.</p>
+            </div>
+            <div class="col">
+              <h3 class="h6 mb-1">Membre de foyer</h3>
+              <p class="text-body-secondary small mb-0">Voit le calendrier et la fiche du bien, demande un séjour.
+                 La répartition chiffrée dépend d'un réglage.</p>
+            </div>
+            <div class="col">
+              <h3 class="h6 mb-1">Invité</h3>
+              <p class="text-body-secondary small mb-0">Accède par un lien limité dans le temps, sans compte,
+                 et ne voit que ce qui concerne son séjour.</p>
+            </div>
           </div>
         </div>
       </section>

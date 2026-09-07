@@ -14,42 +14,51 @@ import { Api, ErreurAppel } from '../core/api';
   imports: [FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    :host { display: grid; place-items: center; min-height: 100vh; padding: 24px 16px; }
-    .carte { width: 100%; max-width: 420px; padding: 24px; }
-    h1 { font-size: 20px; margin-bottom: 10px; }
-    .aide { color: var(--encre-3); font-size: 12.5px; margin: 0 0 18px; }
-    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+    :host { display: grid; place-items: center; min-height: 100vh; }
   `],
   template: `
-    <div class="carte">
-      @if (fini()) {
-        <h1>Mot de passe enregistré</h1>
-        <p class="aide">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
-        <div class="actions"><a class="btn btn-primaire" routerLink="/connexion">Se connecter</a></div>
-      } @else if (!jeton) {
-        <h1>Lien incomplet</h1>
-        <p class="aide">Ce lien ne porte pas de jeton. Redemandez-en un depuis l'écran de connexion.</p>
-        <div class="actions"><a class="btn" routerLink="/connexion">Retour</a></div>
-      } @else {
-        <h1>Choisir un nouveau mot de passe</h1>
-        <p class="aide">Douze caractères au moins. Une phrase dont vous vous souvenez fait un très bon mot de passe.</p>
-        <form (ngSubmit)="valider()">
-          <div class="champ" [class.champ-erreur]="champs()['motDePasse']">
-            <label for="r-mdp">Nouveau mot de passe</label>
-            <input id="r-mdp" name="motDePasse" type="password" [(ngModel)]="motDePasse" autocomplete="new-password" required autofocus>
-            @if (champs()['motDePasse']) { <p class="message-erreur">{{ champs()['motDePasse'] }}</p> }
-          </div>
-          @if (erreur()) {
-            <div class="encart">
-              {{ erreur() }}
-              <div style="margin-top:8px"><a routerLink="/connexion">Demander un nouveau lien</a></div>
-            </div>
+    <div class="w-100 p-3" style="max-width:420px">
+      <div class="card">
+        <div class="card-body p-4">
+          @if (fini()) {
+            <h1 class="h5 card-title">Mot de passe enregistré</h1>
+            <p class="text-body-secondary small">
+              Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
+            </p>
+            <div class="d-grid"><a class="btn btn-primary" routerLink="/connexion">Se connecter</a></div>
+          } @else if (!jeton) {
+            <h1 class="h5 card-title">Lien incomplet</h1>
+            <p class="text-body-secondary small">
+              Ce lien ne porte pas de jeton. Redemandez-en un depuis l'écran de connexion.
+            </p>
+            <div class="d-grid"><a class="btn btn-outline-secondary" routerLink="/connexion">Retour</a></div>
+          } @else {
+            <h1 class="h5 card-title">Choisir un nouveau mot de passe</h1>
+            <p class="text-body-secondary small">
+              Douze caractères au moins. Une phrase dont vous vous souvenez fait un très bon mot de passe.
+            </p>
+            <form (ngSubmit)="valider()">
+              <div class="mb-3">
+                <label class="form-label small text-body-secondary" for="r-mdp">Nouveau mot de passe</label>
+                <input class="form-control" [class.is-invalid]="champs()['motDePasse']" id="r-mdp" name="motDePasse"
+                       type="password" [(ngModel)]="motDePasse" autocomplete="new-password" required autofocus>
+                @if (champs()['motDePasse']) {
+                  <div class="invalid-feedback d-block">{{ champs()['motDePasse'] }}</div>
+                }
+              </div>
+              @if (erreur()) {
+                <div class="alert alert-primary">
+                  {{ erreur() }}
+                  <div class="mt-2"><a routerLink="/connexion">Demander un nouveau lien</a></div>
+                </div>
+              }
+              <div class="d-grid">
+                <button class="btn btn-primary" type="submit" [disabled]="occupe()">Enregistrer</button>
+              </div>
+            </form>
           }
-          <div class="actions">
-            <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Enregistrer</button>
-          </div>
-        </form>
-      }
+        </div>
+      </div>
     </div>
   `,
 })

@@ -32,237 +32,234 @@ const LIBELLE: Record<Regle, string> = {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .regle { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--separateur); }
-    .regle:first-of-type { border-top: none; }
-    .regle .nom { flex: 1; font-size: 13.5px; }
-    .pastille-regle {
-      border: none; font-family: inherit; cursor: pointer; min-height: 32px;
-      padding: 5px 12px; border-radius: 20px; background: var(--pastille-neutre);
-      color: var(--encre-3); font-size: 12px;
-    }
-    .pastille-regle:hover { background: var(--actif); color: var(--encre); }
-    .pastille-regle:disabled { cursor: default; }
-
-    .depense { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 8px;
-               margin: 0 -8px; border: none; background: none; border-radius: 9px;
-               text-align: left; font-family: inherit; color: inherit; cursor: pointer;
-               border-bottom: 1px solid var(--separateur); }
-    .depense:hover { background: var(--survol-liste); }
-    .depense .date { width: 64px; flex: none; font-size: 12px; color: var(--encre-3); }
-    .depense .corps { flex: 1; min-width: 0; }
-    .depense .libelle { font-size: 13.5px; display: block; }
-    .depense .montant { width: 96px; flex: none; text-align: right; font-size: 14px; }
-    .depense.annulee .libelle, .depense.annulee .montant { text-decoration: line-through; color: var(--encre-faible); }
-
-    .explication { background: var(--pastille-neutre); border-radius: 12px; padding: 14px 16px; margin-top: 12px; }
-    .explication pre { margin: 0; font-family: inherit; font-size: 12.5px; white-space: pre-wrap; line-height: 1.7; }
-    .part { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--separateur); }
-    .part:first-child { border-top: none; }
-
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 640px) {
-      .deux { grid-template-columns: 1fr; }
-      .depense { flex-wrap: wrap; }
-      .depense .montant { width: auto; margin-left: auto; }
-    }
-  `],
   template: `
-    <div class="colonne">
-      <div class="entre">
+    <div class="d-flex flex-column gap-4">
+      <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap">
         <div>
-          <h1>Dépenses &amp; répartition</h1>
-          <p class="secondaire" style="margin:6px 0 0">
-            {{ etat.bien()?.nom }} · exercice {{ annee() }}
-          </p>
+          <h1 class="h2 mb-2">Dépenses &amp; répartition</h1>
+          <p class="text-body-secondary mb-0">{{ etat.bien()?.nom }} · exercice {{ annee() }}</p>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" (click)="changerAnnee(-1)">{{ annee() - 1 }}</button>
-          <button class="btn" (click)="changerAnnee(1)">{{ annee() + 1 }}</button>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-outline-secondary" (click)="changerAnnee(-1)">{{ annee() - 1 }}</button>
+          <button class="btn btn-outline-secondary" (click)="changerAnnee(1)">{{ annee() + 1 }}</button>
           @if (etat.estGeranteIci()) {
-            <button class="btn btn-primaire" (click)="ouvrirSaisie()">
-              <i class="bi bi-plus-circle" aria-hidden="true"></i> Saisir une dépense
+            <button class="btn btn-primary" (click)="ouvrirSaisie()">
+              <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Saisir une dépense
             </button>
           }
         </div>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (saisie()) {
-        <section class="carte">
-          <h2>Saisir une dépense</h2>
-          <p class="secondaire" style="margin:6px 0 16px">
-            La répartition est calculée à l'enregistrement, avec les
-            {{ etat.vocabulaire().parts }} en vigueur à la date de la dépense, puis
-            <strong>figée</strong>. Un changement de parts ultérieur ne la modifiera pas.
-          </p>
-          <form (ngSubmit)="enregistrer()">
-            <div class="deux">
-              <div class="champ">
-                <label for="d-date">Date de la dépense</label>
-                <input id="d-date" name="dateDepense" type="date" [(ngModel)]="f.dateDepense" required>
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">Saisir une dépense</h2>
+            <p class="text-body-secondary small">
+              La répartition est calculée à l'enregistrement, avec les
+              {{ etat.vocabulaire().parts }} en vigueur à la date de la dépense, puis
+              <strong>figée</strong>. Un changement de parts ultérieur ne la modifiera pas.
+            </p>
+            <form class="row g-3" (ngSubmit)="enregistrer()">
+              <div class="col-12 col-md-3">
+                <label class="form-label small text-body-secondary" for="d-date">Date de la dépense</label>
+                <input class="form-control" id="d-date" name="dateDepense" type="date"
+                       [(ngModel)]="f.dateDepense" required>
               </div>
-              <div class="champ">
-                <label for="d-montant">Montant en euros</label>
-                <input id="d-montant" name="montant" type="text" inputmode="decimal"
+              <div class="col-12 col-md-3">
+                <label class="form-label small text-body-secondary" for="d-montant">Montant en euros</label>
+                <input class="form-control" id="d-montant" name="montant" type="text" inputmode="decimal"
                        [(ngModel)]="f.montant" placeholder="2340,00" required>
               </div>
-            </div>
-            <div class="champ">
-              <label for="d-libelle">Libellé</label>
-              <input id="d-libelle" name="libelle" [(ngModel)]="f.libelle" placeholder="Taxe foncière 2026" required>
-            </div>
-            <div class="deux">
-              <div class="champ">
-                <label for="d-cat">Catégorie</label>
-                <select id="d-cat" name="categorieId" [(ngModel)]="f.categorieId">
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="d-libelle">Libellé</label>
+                <input class="form-control" id="d-libelle" name="libelle" [(ngModel)]="f.libelle"
+                       placeholder="Taxe foncière 2026" required>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="d-cat">Catégorie</label>
+                <select class="form-select" id="d-cat" name="categorieId" [(ngModel)]="f.categorieId">
                   @for (c of categories(); track c.id) { <option [ngValue]="c.id">{{ c.libelle }}</option> }
                 </select>
-                <p class="meta" style="margin-top:4px">Règle appliquée : {{ regleDe(f.categorieId) }}</p>
+                <div class="form-text">Règle appliquée : {{ regleDe(f.categorieId) }}</div>
               </div>
-              <div class="champ">
-                <label for="d-paye">Payée par</label>
-                <select id="d-paye" name="payePar" [(ngModel)]="f.payePar">
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="d-paye">Payée par</label>
+                <select class="form-select" id="d-paye" name="payePar" [(ngModel)]="f.payePar">
                   <option value="structure">Le compte commun</option>
                   <option value="personne">Une personne, qui a avancé</option>
                 </select>
               </div>
-            </div>
-            @if (f.payePar === 'personne') {
-              <div class="champ">
-                <label for="d-avance">Qui a avancé</label>
-                <select id="d-avance" name="avanceParId" [(ngModel)]="f.avanceParId">
-                  <option [ngValue]="0">Choisir...</option>
-                  @for (p of personnes(); track p.id) { <option [ngValue]="p.id">{{ p.nom }}</option> }
-                </select>
-              </div>
-            }
-            <div class="champ">
-              <label>Justificatif (photo ou PDF)</label>
-              @if (justificatif()) {
-                <div class="encart-positif">{{ justificatif()!.nom }} joint.</div>
-              } @else {
-                <input type="file" accept="image/*,application/pdf" (change)="joindre($event)">
+              @if (f.payePar === 'personne') {
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="d-avance">Qui a avancé</label>
+                  <select class="form-select" id="d-avance" name="avanceParId" [(ngModel)]="f.avanceParId">
+                    <option [ngValue]="0">Choisir...</option>
+                    @for (p of personnes(); track p.id) { <option [ngValue]="p.id">{{ p.nom }}</option> }
+                  </select>
+                </div>
               }
-            </div>
-            <div class="champ">
-              <label for="d-note">Note</label>
-              <textarea id="d-note" name="note" [(ngModel)]="f.note" maxlength="1000"></textarea>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Enregistrer</button>
-              <button class="btn" type="button" (click)="saisie.set(false)">Annuler</button>
-            </div>
-          </form>
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="d-just">Justificatif (photo ou PDF)</label>
+                @if (justificatif()) {
+                  <div class="alert alert-success mb-0 py-2 px-3 small">{{ justificatif()!.nom }} joint.</div>
+                } @else {
+                  <input class="form-control" id="d-just" type="file" accept="image/*,application/pdf"
+                         (change)="joindre($event)">
+                }
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-body-secondary" for="d-note">Note</label>
+                <textarea class="form-control" id="d-note" name="note" rows="2"
+                          [(ngModel)]="f.note" maxlength="1000"></textarea>
+              </div>
+              <div class="col-12 d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" [disabled]="occupe()">Enregistrer</button>
+                <button class="btn btn-outline-secondary" type="button" (click)="saisie.set(false)">Annuler</button>
+              </div>
+            </form>
+          </div>
         </section>
       }
 
-      <section class="carte">
-        <div class="entre">
-          <h2>Dépenses {{ annee() }} · {{ euros(liste()?.total ?? 0) }}</h2>
-          <button class="btn" (click)="exporter()" [disabled]="occupe()">
-            <i class="bi bi-filetype-csv" aria-hidden="true"></i> Exporter
-          </button>
-        </div>
-
-        @if (depenses().length) {
-          <div style="margin-top:10px">
-            @for (d of depenses(); track d.id) {
-              <button class="depense" [class.annulee]="d.statut === 'annulee'" (click)="ouvrir(d)"
-                      [attr.aria-expanded]="detail()?.depense?.id === d.id">
-                <span class="date chiffres">{{ dateCourte(d.dateDepense) }}</span>
-                <span class="corps">
-                  <span class="libelle">{{ d.libelle }}</span>
-                  <span class="meta">
-                    {{ d.categorieLibelle }} · {{ nomBiens(d) }} ·
-                    {{ d.payePar === 'personne' ? 'avancé par ' + d.avanceParNom : 'compte commun' }}
-                  </span>
-                </span>
-                @if (d.regleAppliquee) { <span class="pastille">{{ libelleRegle(d.regleAppliquee) }}</span> }
-                <span class="montant chiffres">{{ euros(d.partVisibleCents) }}</span>
-              </button>
-
-              @if (detail(); as det) {
-                @if (det.depense.id === d.id) {
-                  <div class="explication">
-                    <h3>Détail du calcul</h3>
-                    <div style="margin:10px 0 14px">
-                      @for (v of det.ventilation; track v.personneId) {
-                        <div class="part">
-                          <span>{{ v.nom }}</span>
-                          <span class="chiffres">{{ euros(v.montantCents) }}</span>
-                        </div>
-                      }
-                    </div>
-                    <pre>{{ det.explication.join('\n') }}</pre>
-
-                    @if (det.recalculs.length) {
-                      <h3 style="margin-top:14px">Recalculs</h3>
-                      @for (rc of det.recalculs; track rc.faitLe) {
-                        <p class="meta" style="margin:4px 0">
-                          {{ dateLongue(rc.faitLe.slice(0, 10)) }}{{ rc.parNom ? ', par ' + rc.parNom : '' }} :
-                          {{ rc.motif }}
-                        </p>
-                      }
-                    }
-
-                    @if (det.depense.justificatifId) {
-                      <p style="margin-top:12px">
-                        <a class="btn" [href]="urlFichier(det.depense.justificatifId!)" target="_blank" rel="noopener">
-                          <i class="bi bi-paperclip" aria-hidden="true"></i> Voir le justificatif
-                        </a>
-                      </p>
-                    }
-
-                    @if (etat.estGeranteIci() && det.depense.statut !== 'annulee') {
-                      <div class="separateur" style="margin:14px 0 12px"></div>
-                      <div class="champ" style="max-width:420px;margin:0">
-                        <label [attr.for]="'motif-' + d.id">Recalculer, en disant pourquoi</label>
-                        <input [attr.id]="'motif-' + d.id" name="motif" [(ngModel)]="motif"
-                               placeholder="La succession a été rectifiée par le notaire">
-                      </div>
-                      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-                        <button class="btn" (click)="recalculer(d)" [disabled]="occupe() || !motif.trim()">
-                          Recalculer la répartition
-                        </button>
-                        <button class="btn-lien" (click)="annuler(d)">Annuler cette dépense</button>
-                      </div>
-                      <p class="meta" style="margin-top:8px">
-                        L'ancienne répartition est conservée : c'est ce qui permet de répondre
-                        à « pourquoi ce chiffre a changé ».
-                      </p>
-                    }
-                  </div>
-                }
-              }
-            }
-          </div>
-        } @else {
-          <p class="vide">Aucune dépense enregistrée sur cet exercice.</p>
-        }
-      </section>
-
-      <section class="carte">
-        <h2>Règles de répartition</h2>
-        <p class="secondaire" style="margin:6px 0 12px">
-          Chaque catégorie porte sa règle. La changer <strong>ne recalcule pas</strong> les dépenses
-          déjà saisies : elle ouvre une nouvelle période à partir d'aujourd'hui.
-        </p>
-        @for (r of regles(); track r.categorieId) {
-          <div class="regle">
-            <span class="nom">{{ r.categorieLibelle }}</span>
-            @if (!r.parDefaut) {
-              <span class="meta">depuis le {{ dateLongue(r.applicableDu) }}</span>
-            }
-            <button class="pastille-regle" [disabled]="!etat.estGeranteIci() || occupe()"
-                    (click)="cyclerRegle(r)"
-                    [attr.aria-label]="'Règle de ' + r.categorieLibelle + ' : ' + libelleRegle(r.regle)">
-              {{ libelleRegle(r.regle) }}
+      <section class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+            <div class="eyebrow">Dépenses {{ annee() }} · {{ euros(liste()?.total ?? 0) }}</div>
+            <button class="btn btn-sm btn-outline-secondary" (click)="exporter()" [disabled]="occupe()">
+              <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Exporter
             </button>
           </div>
-        }
+
+          @if (depenses().length) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr class="eyebrow">
+                    <th scope="col">Date</th><th scope="col">Libellé</th>
+                    <th scope="col">Avancé par</th><th scope="col">Règle</th>
+                    <th class="text-end" scope="col">Montant</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (d of depenses(); track d.id) {
+                    <tr role="button" (click)="ouvrir(d)"
+                        [class.text-decoration-line-through]="d.statut === 'annulee'"
+                        [attr.aria-expanded]="detail()?.depense?.id === d.id">
+                      <td class="tnum small text-body-secondary">{{ dateCourte(d.dateDepense) }}</td>
+                      <td>
+                        <span class="d-block small fw-medium">{{ d.libelle }}</span>
+                        <span class="d-block text-body-secondary" style="font-size:.72rem">
+                          {{ d.categorieLibelle }} · {{ nomBiens(d) }}
+                        </span>
+                      </td>
+                      <td class="small text-body-secondary">
+                        {{ d.payePar === 'personne' ? d.avanceParNom : 'Compte commun' }}
+                      </td>
+                      <td>
+                        @if (d.regleAppliquee) {
+                          <span class="badge rounded-pill text-bg-light border fw-normal">
+                            {{ libelleRegle(d.regleAppliquee) }}
+                          </span>
+                        }
+                      </td>
+                      <td class="small fw-medium tnum text-end">{{ euros(d.partVisibleCents) }}</td>
+                    </tr>
+
+                    @if (detail(); as det) {
+                      @if (det.depense.id === d.id) {
+                        <tr>
+                          <td class="bg-body-tertiary" colspan="5">
+                            <h3 class="h6">Détail du calcul</h3>
+                            <ul class="list-group list-group-flush mb-3">
+                              @for (v of det.ventilation; track v.personneId) {
+                                <li class="list-group-item d-flex justify-content-between gap-2 px-0 small bg-transparent">
+                                  <span>{{ v.nom }}</span>
+                                  <span class="fw-medium tnum">{{ euros(v.montantCents) }}</span>
+                                </li>
+                              }
+                            </ul>
+                            <pre class="small lh-lg mb-0" style="white-space:pre-wrap;font-family:inherit">{{ det.explication.join('\n') }}</pre>
+
+                            @if (det.recalculs.length) {
+                              <h3 class="h6 mt-3">Recalculs</h3>
+                              @for (rc of det.recalculs; track rc.faitLe) {
+                                <p class="text-body-secondary small mb-1">
+                                  {{ dateLongue(rc.faitLe.slice(0, 10)) }}{{ rc.parNom ? ', par ' + rc.parNom : '' }} :
+                                  {{ rc.motif }}
+                                </p>
+                              }
+                            }
+
+                            @if (det.depense.justificatifId) {
+                              <a class="btn btn-sm btn-outline-secondary mt-3"
+                                 [href]="urlFichier(det.depense.justificatifId!)" target="_blank" rel="noopener">
+                                <i class="bi bi-paperclip me-1" aria-hidden="true"></i>Voir le justificatif
+                              </a>
+                            }
+
+                            @if (etat.estGeranteIci() && det.depense.statut !== 'annulee') {
+                              <hr>
+                              <label class="form-label small text-body-secondary" [attr.for]="'motif-' + d.id">
+                                Recalculer, en disant pourquoi
+                              </label>
+                              <input class="form-control" style="max-width:420px" [attr.id]="'motif-' + d.id"
+                                     name="motif" [(ngModel)]="motif"
+                                     placeholder="La succession a été rectifiée par le notaire">
+                              <div class="d-flex gap-2 flex-wrap align-items-center mt-3">
+                                <button class="btn btn-sm btn-outline-secondary" (click)="recalculer(d)"
+                                        [disabled]="occupe() || !motif.trim()">Recalculer la répartition</button>
+                                <button class="btn btn-sm btn-link text-body-secondary p-0"
+                                        (click)="annuler(d)">Annuler cette dépense</button>
+                              </div>
+                              <p class="text-body-secondary small mt-2 mb-0">
+                                L'ancienne répartition est conservée : c'est ce qui permet de répondre
+                                à « pourquoi ce chiffre a changé ».
+                              </p>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="text-body-secondary small mb-0">Aucune dépense enregistrée sur cet exercice.</p>
+          }
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-body">
+          <div class="eyebrow">Règles de répartition</div>
+          <p class="text-body-secondary small mt-2 mb-2">
+            Chaque catégorie porte sa règle. La changer <strong>ne recalcule pas</strong> les dépenses
+            déjà saisies : elle ouvre une nouvelle période à partir d'aujourd'hui.
+          </p>
+          <ul class="list-group list-group-flush">
+            @for (r of regles(); track r.categorieId) {
+              <li class="list-group-item d-flex justify-content-between align-items-center gap-3 px-0">
+                <span class="small fw-medium">
+                  {{ r.categorieLibelle }}
+                  @if (!r.parDefaut) {
+                    <span class="d-block text-body-secondary fw-normal" style="font-size:.72rem">
+                      depuis le {{ dateLongue(r.applicableDu) }}
+                    </span>
+                  }
+                </span>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0"
+                        [disabled]="!etat.estGeranteIci() || occupe()" (click)="cyclerRegle(r)"
+                        [attr.aria-label]="'Règle de ' + r.categorieLibelle + ' : ' + libelleRegle(r.regle)">
+                  {{ libelleRegle(r.regle) }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
       </section>
     </div>
   `,

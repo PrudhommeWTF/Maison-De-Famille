@@ -10,15 +10,24 @@
 import { decale, premierDuMois } from './format';
 import type { Nature, StatutSejour } from './modeles';
 
-/** Les couleurs de la maquette, par nature d'occupation. */
-export interface Teinte { fond: string; bordure: string; encre: string; tirets: boolean }
+/**
+ * La teinte d'une case, en classes Bootstrap plutôt qu'en couleurs.
+ *
+ * La palette vit dans le thème, pas ici : le module dit *quel rôle* porte la
+ * nuit (une location est une réussite, un entretien une information), Bootstrap
+ * dit de quelle couleur cela se traduit. Le jour où la palette bouge, ce
+ * fichier ne bouge pas.
+ */
+export interface Teinte { classes: string }
 
 export const TEINTES: Record<string, Teinte> = {
-  famille: { fond: '#f0e0d5', bordure: '#ddc3b0', encre: '#8d4a2e', tirets: false },
-  location: { fond: '#e4e9dc', bordure: '#c3cfb1', encre: '#556340', tirets: false },
-  entretien: { fond: '#e5e8ea', bordure: '#c3ccd1', encre: '#3f545f', tirets: false },
-  demande: { fond: '#fffdf9', bordure: '#b0603f', encre: '#8d4a2e', tirets: true },
-  libre: { fond: '#fffdf9', bordure: '#efe8de', encre: '#6b6157', tirets: false },
+  famille: { classes: 'bg-primary-subtle border-primary-subtle text-primary-emphasis' },
+  location: { classes: 'bg-success-subtle border-success-subtle text-success-emphasis' },
+  entretien: { classes: 'bg-info-subtle border-info-subtle text-info-emphasis' },
+  // Une demande n'est pas acquise : bordure tiretée, aucun fond, pour qu'on ne
+  // la confonde ni avec un séjour validé ni avec une date libre.
+  demande: { classes: 'border-primary text-primary-emphasis cal-dashed' },
+  libre: { classes: 'text-body-secondary' },
 };
 
 /** La teinte d'une occupation : une demande se distingue de ce qui est acquis. */
@@ -160,7 +169,7 @@ export function grilleDuMois(
   const feries = new Map(reperes.feries.map((f) => [f.date, f.nom]));
 
   const vide = (): Case => ({
-    jour: null, date: '', teinte: { fond: 'transparent', bordure: 'transparent', encre: 'inherit', tirets: false },
+    jour: null, date: '', teinte: { classes: 'border-0' },
     libelle: '', occupations: [], enConflit: false, aujourdhui: false, zones: [], ferie: '',
   });
 

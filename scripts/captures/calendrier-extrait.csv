@@ -1,0 +1,19 @@
+description;start_date;end_date;location;zones;annee_scolaire;population
+Vacances de la Toussaint;2026-10-17T00:00:00+02:00;2026-11-02T00:00:00+01:00;Lyon;Zone A;2026-2027;-
+Vacances de la Toussaint;2026-10-17T00:00:00+02:00;2026-11-02T00:00:00+01:00;Rennes;Zone B;2026-2027;-
+Vacances de la Toussaint;2026-10-17T00:00:00+02:00;2026-11-02T00:00:00+01:00;Paris;Zone C;2026-2027;-
+Vacances de Noël;2026-12-19T00:00:00+01:00;2027-01-04T00:00:00+01:00;Lyon;Zone A;2026-2027;-
+Vacances de Noël;2026-12-19T00:00:00+01:00;2027-01-04T00:00:00+01:00;Rennes;Zone B;2026-2027;-
+Vacances de Noël;2026-12-19T00:00:00+01:00;2027-01-04T00:00:00+01:00;Paris;Zone C;2026-2027;-
+Vacances d'Hiver;2027-02-06T00:00:00+01:00;2027-02-22T00:00:00+01:00;Lyon;Zone A;2026-2027;Élèves
+Vacances d'Hiver;2027-02-13T00:00:00+01:00;2027-03-01T00:00:00+01:00;Rennes;Zone B;2026-2027;Élèves
+Vacances d'Hiver;2027-02-20T00:00:00+01:00;2027-03-08T00:00:00+01:00;Paris;Zone C;2026-2027;Élèves
+Vacances de Printemps;2027-04-10T00:00:00+02:00;2027-04-26T00:00:00+02:00;Lyon;Zone A;2026-2027;Élèves
+Vacances de Printemps;2027-04-17T00:00:00+02:00;2027-05-03T00:00:00+02:00;Rennes;Zone B;2026-2027;Élèves
+Vacances de Printemps;2027-04-24T00:00:00+02:00;2027-05-10T00:00:00+02:00;Paris;Zone C;2026-2027;Élèves
+Vacances d'Été;2027-07-06T00:00:00+02:00;2027-09-01T00:00:00+02:00;Lyon;Zone A;2026-2027;Élèves
+Vacances d'Été;2027-07-06T00:00:00+02:00;2027-09-01T00:00:00+02:00;Rennes;Zone B;2026-2027;Élèves
+Vacances d'Été;2027-07-06T00:00:00+02:00;2027-09-01T00:00:00+02:00;Paris;Zone C;2026-2027;Élèves
+Rentrée scolaire des élèves;2026-09-01T00:00:00+02:00;2026-09-01T00:00:00+02:00;Lyon;Zone A;2026-2027;Élèves
+Prérentrée des enseignants;2026-08-31T00:00:00+02:00;2026-08-31T00:00:00+02:00;Lyon;Zone A;2026-2027;Enseignants
+Vacances d'Hiver;2027-02-20T00:00:00+01:00;2027-03-08T00:00:00+01:00;Corse;Corse;2026-2027;Élèves

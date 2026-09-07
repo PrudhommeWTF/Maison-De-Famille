@@ -10,12 +10,17 @@ gestion de biens familiaux. À lire avant toute modification.
   Pas d'i18n : l'interface est en français uniquement.
 - **Pile :** Angular 21 + Node/Express + TypeScript + SQLite via
   `better-sqlite3`. Un seul processus sert `/api` **et** l'application compilée.
+  L'interface est **Bootstrap 5.3, compilé depuis ses sources Sass** dans
+  `frontend/src/styles.scss`, avec la palette du paquet de transmission.
 - **Déploiement :** Docker (image unique) ou LXC natif Proxmox sous systemd.
   Voir `deploy/lxc/` et `docker-compose.yml`.
 - **La maquette est contractuelle.** `docs/design/handoff/` fixe les couleurs,
-  les typographies, les espacements, les rayons et les libellés. On les
-  reproduit, on ne les réinvente pas. `support.js` et `image-slot.js` sont le
-  moteur du prototype et **ne sont jamais portés**.
+  les typographies, les espacements, les rayons et les libellés. La référence
+  est `Maison de Famille Bootstrap.dc.html` ; l'autre fichier `.dc.html` est la
+  version précédente, gardée pour comparer les intentions. On les reproduit, on
+  ne les réinvente pas. `support.js` et `image-slot.js` sont le moteur du
+  prototype et **ne sont jamais portés**, pas plus que sa surcharge des
+  variables `--bs-*` de composants, que son propre paquet déconseille.
 
 ## Architecture
 
@@ -49,6 +54,12 @@ gestion de biens familiaux. À lire avant toute modification.
 
 ## Conventions de code
 
+- **Bootstrap d'abord.** Un écran se compose de composants et d'utilitaires
+  Bootstrap : `card`, `list-group`, `table`, `badge`, `alert`, `nav`, la grille
+  et les marges. Un bloc `styles` de composant ne se justifie que pour ce que
+  Bootstrap ne porte pas (le point d'un jour férié, les bandeaux de zones
+  scolaires), et il le dit en commentaire. Les seules classes maison vivent
+  dans `styles.scss` et se comptent sur les doigts d'une main.
 - **Angular moderne obligatoire** : composants `standalone`,
   `ChangeDetectionStrategy.OnPush`, **signals** (pas de RxJS pour l'état local),
   control flow intégré (`@if` / `@for` / `@switch`, jamais `*ngIf` / `*ngFor`).

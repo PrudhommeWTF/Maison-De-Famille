@@ -329,8 +329,12 @@ fusionnées, une ligne par personne ou une ligne par semaine selon la mise en fo
 
 ## Accessibilité
 
-Les jetons de la maquette respectent déjà 4,5:1, à une exception près que le paquet signale
-lui-même (le gris de tâche barrée `#a29889`, remplacé par `#8c8377`). Contraintes tenues :
+Les jetons de la maquette respectent 4,5:1, à trois exceptions près. Le paquet en signale une
+lui-même (le gris de tâche barrée `#a29889`, remplacé par `#8c8377`) ; les deux autres sont
+apparues au calcul en reprenant la palette Bootstrap : sur l'olive `#7a8b5c` et l'ambre
+`#a5813f`, **aucune** couleur de libellé n'atteignait 4,5:1 (le blanc donnait 3,64 et 3,56,
+l'encre 4,37 et 4,48). L'olive prend donc la teinte de survol que le paquet nomme déjà
+(`#68784c`, 4,72:1) et l'ambre est assombri de 14 % (`#8e6f36`, 4,62:1). Contraintes tenues :
 taille de texte jamais sous 11 px, cibles tactiles de 44 px minimum sur mobile, navigation au
 clavier sur tous les contrôles, libellés de formulaire associés, et messages d'erreur explicites
 plutôt que des champs rouges muets. Une partie des utilisateurs a plus de soixante-dix ans : la
@@ -348,3 +352,5 @@ page de connexion et l'écran d'accueil sont conçus pour être compris sans exp
 | Coffre-fort | L'écran de la maquette montre tous les documents. | Le serveur filtre selon la portée et le rôle. L'écran rend ce qu'il reçoit, et n'affiche pas un document qu'il n'a pas. |
 | Codes sur l'accueil mobile | La maquette place un bouton « Codes » sur la carte du séjour à venir. | Conservé, mais le bouton ne rend rien hors de la fenêtre de validité du séjour, et chaque affichage est journalisé. |
 | Prototype | `support.js` et `image-slot.js` sont dans `docs/design/handoff/`. | Référence uniquement. Aucun de leurs octets n'entre dans le produit. |
+| Surcharge des variables Bootstrap | Le prototype réécrit une trentaine de variables `--bs-*` de composants pour contourner un piège de spécificité, et son propre paquet dit de ne pas reproduire ce contournement. | Bootstrap est **compilé depuis ses sources Sass** avec la palette du projet : les variantes dérivées restent cohérentes, et rien n'est à contourner. |
+| Accordéon des rôles | La maquette replie « Ce que chaque rôle peut faire » dans un `accordion`, seul composant qui réclame le JavaScript de Bootstrap. | Les quatre rôles sont affichés dépliés, en colonnes. On évite ainsi d'embarquer le JavaScript de Bootstrap pour un seul écran, et le texte se lit sans un clic de plus. |

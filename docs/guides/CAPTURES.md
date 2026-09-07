@@ -11,6 +11,7 @@ Deux scripts font le travail, dans `scripts/captures/` :
 | --- | --- |
 | `instance-demo.js` | Amorce une instance vide et la remplit, **uniquement par l'API publique** |
 | `captures.js` | Se connecte tour à tour comme chaque rôle et prend les images |
+| `captures-maj.js` | Les deux images de l'écran de mise à jour, seule réponse simulée |
 
 `instance-demo.js` n'écrit jamais directement en base : tout passe par les mêmes
 routes que l'interface. C'est ce qui garantit que ce que montrent les captures
@@ -62,7 +63,10 @@ node scripts/captures/captures.js docs/guides/images "<lienProche>" "<lienLointa
 
 Le dernier argument est facultatif : c'est un export du calendrier scolaire, qui
 sert à montrer l'import des vacances en action. Sans lui, les trois captures
-correspondantes ne sont pas refaites.
+correspondantes ne sont pas refaites. `scripts/captures/calendrier-extrait.csv`
+en tient lieu : c'est un **extrait** au format du fichier officiel, assez pour
+montrer l'écran, et il ne remplace pas le vrai fichier pour une instance
+réelle.
 
 Le script termine en listant les images produites, avec leur taille, puis les
 **soucis** rencontrés (un bouton introuvable, un écran qui ne s'est pas ouvert).
@@ -81,7 +85,7 @@ MDF_PLAYWRIGHT=/chemin/vers/playwright MDF_CHROMIUM=/chemin/vers/chromium \
 Sans elles, le script fait un `require('playwright')` ordinaire et laisse
 Chromium se trouver tout seul.
 
-## Deux pièges déjà rencontrés
+## Trois pièges déjà rencontrés
 
 **Le serveur lit l'index une seule fois au démarrage.** Après une recompilation
 du frontend, redémarrez-le, sinon il sert un index qui référence des fichiers
@@ -93,11 +97,26 @@ et l'on se retrouve avec douze fois la même image sans s'en apercevoir. Le scri
 ouvre le bien et vérifie que le menu s'est bien rempli ; si ce n'est pas le cas,
 il le signale dans les soucis.
 
+**Une capture pleine page fige les barres collantes où le défilement les a
+laissées.** L'en-tête et la barre de contexte se retrouvent alors au milieu de
+l'image, par-dessus le contenu. Ne faites défiler qu'avant une capture de
+fenêtre, jamais avant une capture pleine page ; s'il faut absolument défiler,
+rechargez la page avant de photographier.
+
 Un moyen simple de repérer ce genre d'accident : comparer les tailles des
 fichiers dans la liste finale. Plusieurs images qui pèsent exactement pareil sont
 la même image.
 
 ## Deux images faites avec une réponse simulée
+
+**4. Prendre les deux images de mise à jour.**
+
+```bash
+node scripts/captures/captures-maj.js docs/guides/images
+```
+
+Le serveur doit tourner avec `MDF_MAJ_AUTO=true` pour ce script, sinon le
+formulaire d'installation n'existe pas et les deux images sont incomplètes.
 
 `gerant-maj-disponible.png` et `gerant-maj-en-cours.png` sont la seule exception
 à la règle « tout vient de l'application réelle », et il faut le savoir.

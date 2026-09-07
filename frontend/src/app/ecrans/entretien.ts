@@ -39,220 +39,231 @@ const LIBELLE_CATEGORIE: Record<Categorie, string> = {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .tache { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0;
-             border-bottom: 1px solid var(--separateur); }
-    .tache:last-child { border-bottom: none; }
-    .tache .coche { width: 20px; height: 20px; flex: none; border: 1.5px solid var(--bordure);
-                    border-radius: 6px; background: transparent; cursor: pointer; margin-top: 2px; }
-    .tache .coche:hover { border-color: var(--accent); }
-    .tache .quoi { flex: 1; min-width: 180px; }
-    .tache .libelle { font-size: 14px; display: block; }
-    .tache .meta { font-size: 12.5px; color: var(--encre-3); }
-    .cat-obligatoire { background: #f0e0d5; color: #8d4a2e; }
-    .cat-saison { background: #e5e8ea; color: #3f545f; }
-    .cat-courant, .cat-inventaire { background: #f2ede5; color: #6b6157; }
-    .retard { color: #8d4a2e; font-weight: 500; }
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .ligne-r { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0;
-               border-top: 1px solid var(--separateur); font-size: 13px; }
-    .ligne-r:first-of-type { border-top: none; }
-    /* Une action textuelle discrète : la maquette n'en définit pas, et un
-       bouton plein pour « retirer » écraserait la ligne qu'il accompagne. */
-    .lien { border: none; background: none; padding: 0; font: inherit; font-size: 12.5px;
-            color: var(--encre-3); text-decoration: underline; cursor: pointer; }
-    .lien:hover { color: var(--accent); }
-    .saisie { display: grid; grid-template-columns: 1fr 150px 150px auto; gap: 10px; align-items: end; }
-    .cocher { display: grid; grid-template-columns: 150px 130px auto auto; gap: 10px; align-items: end; }
-    @media (max-width: 860px) {
-      .deux, .saisie, .cocher { grid-template-columns: 1fr; }
-    }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Carnet d'entretien</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Carnet d'entretien</h1>
+        <p class="text-body-secondary mb-0">
           Les obligations récurrentes, les tâches ouvertes et l'historique des interventions.
         </p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (carnet(); as c) {
-        <section class="carte">
-          <div class="entre">
-            <h2><i class="bi bi-tools" aria-hidden="true"></i> Tâches ouvertes</h2>
-            <span class="pastille">{{ c.ouvertes.length }}</span>
-          </div>
-
-          @if (!c.ouvertes.length) {
-            <p class="secondaire" style="margin:10px 0 0">Rien en attente.</p>
-          }
-          @for (t of c.ouvertes; track t.id) {
-            <div class="tache">
-              @if (gerant()) {
-                <button class="coche" type="button" [attr.aria-label]="'Cocher ' + t.libelle"
-                        (click)="ouvrirCochage(t)"></button>
-              }
-              <span class="quoi">
-                <span class="libelle">{{ t.libelle }}</span>
-                <span class="meta">
-                  @if (t.echeance) {
-                    <span [class.retard]="t.urgence === 'en_retard'">
-                      {{ t.urgence === 'en_retard' ? 'En retard depuis le' : 'Avant le' }}
-                      {{ dateLongue(t.echeance) }}
-                    </span>
-                  } @else { Sans date limite }
-                  @if (t.signaleParNom) { · signalé par {{ t.signaleParNom }} }
-                  @if (t.detail) { · {{ t.detail }} }
-                </span>
-              </span>
-              <span class="pastille" [class]="'pastille cat-' + t.categorie">{{ categorie(t.categorie) }}</span>
+        <section class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+              <div class="eyebrow"><i class="bi bi-tools me-2" aria-hidden="true"></i>Tâches ouvertes</div>
+              <span class="badge rounded-pill text-bg-light border">{{ c.ouvertes.length }}</span>
             </div>
 
-            @if (cochage() === t.id) {
-              <form class="cocher" style="padding:10px 0 14px" (ngSubmit)="cocher(t)">
-                <div>
-                  <label [attr.for]="'d-' + t.id">Fait le</label>
-                  <input [attr.id]="'d-' + t.id" type="date" [name]="'d-' + t.id"
-                         [(ngModel)]="fFaitLe" [max]="aujourdhui()" required>
-                </div>
-                <div>
-                  <label [attr.for]="'c-' + t.id">Coût (euros)</label>
-                  <input [attr.id]="'c-' + t.id" type="number" min="0" step="0.01"
-                         [name]="'c-' + t.id" [(ngModel)]="fCout" placeholder="facultatif">
-                </div>
-                <label class="btn">
-                  <i class="bi bi-paperclip" aria-hidden="true"></i>
-                  {{ fFactureNom || 'Facture' }}
-                  <input type="file" accept="image/*,application/pdf" style="display:none"
-                         (change)="choisirFacture($event)">
-                </label>
-                <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Enregistrer</button>
-              </form>
+            @if (c.ouvertes.length) {
+              <ul class="list-group list-group-flush">
+                @for (t of c.ouvertes; track t.id) {
+                  <li class="list-group-item px-0">
+                    <div class="d-flex align-items-start gap-3">
+                      @if (gerant()) {
+                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                               [checked]="cochage() === t.id" [attr.aria-label]="'Cocher ' + t.libelle"
+                               (change)="ouvrirCochage(t)">
+                      }
+                      <span class="flex-grow-1" style="min-width:180px">
+                        <span class="d-block small fw-medium">{{ t.libelle }}</span>
+                        <span class="d-block text-body-secondary" style="font-size:.78rem">
+                          @if (t.echeance) {
+                            <span [class.text-primary-emphasis]="t.urgence === 'en_retard'"
+                                  [class.fw-medium]="t.urgence === 'en_retard'">
+                              {{ t.urgence === 'en_retard' ? 'En retard depuis le' : 'Avant le' }}
+                              {{ dateLongue(t.echeance) }}
+                            </span>
+                          } @else { Sans date limite }
+                          @if (t.signaleParNom) { · signalé par {{ t.signaleParNom }} }
+                          @if (t.detail) { · {{ t.detail }} }
+                        </span>
+                      </span>
+                      <span class="badge rounded-pill flex-shrink-0"
+                            [class]="classeCategorie(t.categorie)">{{ categorie(t.categorie) }}</span>
+                    </div>
+
+                    @if (cochage() === t.id) {
+                      <form class="row g-2 align-items-end mt-1" (ngSubmit)="cocher(t)">
+                        <div class="col-12 col-md-3">
+                          <label class="form-label small text-body-secondary" [attr.for]="'d-' + t.id">Fait le</label>
+                          <input class="form-control" [attr.id]="'d-' + t.id" type="date" [name]="'d-' + t.id"
+                                 [(ngModel)]="fFaitLe" [max]="aujourdhui()" required>
+                        </div>
+                        <div class="col-12 col-md-3">
+                          <label class="form-label small text-body-secondary" [attr.for]="'c-' + t.id">Coût (euros)</label>
+                          <input class="form-control" [attr.id]="'c-' + t.id" type="number" min="0" step="0.01"
+                                 [name]="'c-' + t.id" [(ngModel)]="fCout" placeholder="facultatif">
+                        </div>
+                        <div class="col-12 col-md-3">
+                          <label class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-paperclip me-1" aria-hidden="true"></i>{{ fFactureNom || 'Facture' }}
+                            <input type="file" accept="image/*,application/pdf" hidden
+                                   (change)="choisirFacture($event)">
+                          </label>
+                        </div>
+                        <div class="col-12 col-md-3">
+                          <button class="btn btn-primary w-100" type="submit" [disabled]="occupe()">Enregistrer</button>
+                        </div>
+                      </form>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-body-secondary small mb-0">Rien en attente.</p>
             }
-          }
+          </div>
         </section>
 
-        <div class="deux">
-          <section class="carte">
-            <h2>Récurrences</h2>
-            <p class="secondaire" style="margin:4px 0 10px">
-              Chacune engendre sa tâche avec sa date limite, d'elle-même.
-            </p>
-            @for (r of c.recurrences; track r.id) {
-              <div class="ligne-r">
-                <span>{{ r.libelle }}</span>
-                <span style="color:var(--encre-3);text-align:right">
-                  {{ r.lisible }}
-                  @if (gerant()) {
-                    <button class="lien" type="button" style="margin-left:8px"
-                            (click)="supprimerRecurrence(r)">Retirer</button>
-                  }
-                </span>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Récurrences</div>
+                <p class="text-body-secondary small">
+                  Chacune engendre sa tâche avec sa date limite, d'elle-même.
+                </p>
+                @if (c.recurrences.length) {
+                  <ul class="list-group list-group-flush">
+                    @for (r of c.recurrences; track r.id) {
+                      <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                        <span>{{ r.libelle }}</span>
+                        <span class="text-body-secondary text-end">
+                          {{ r.lisible }}
+                          @if (gerant()) {
+                            <button class="btn btn-sm btn-link text-body-secondary p-0 ms-2" type="button"
+                                    (click)="supprimerRecurrence(r)">Retirer</button>
+                          }
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="text-body-secondary small mb-0">Aucune récurrence.</p>
+                }
+
+                @if (gerant()) {
+                  <details class="mt-3">
+                    <summary class="text-body-secondary small" style="cursor:pointer">Ajouter une récurrence</summary>
+                    <form class="row g-2 mt-0" (ngSubmit)="ajouterRecurrence()">
+                      <div class="col-12 col-md-6">
+                        <label class="form-label small text-body-secondary" for="r-lib">Intitulé</label>
+                        <input class="form-control" id="r-lib" name="rlib" [(ngModel)]="fRecLibelle"
+                               placeholder="Ramonage de la cheminée">
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label small text-body-secondary" for="r-cat">Catégorie</label>
+                        <select class="form-select" id="r-cat" name="rcat" [(ngModel)]="fRecCategorie">
+                          @for (k of CATEGORIES; track k) { <option [value]="k">{{ categorie(k) }}</option> }
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label small text-body-secondary" for="r-per">Rythme</label>
+                        <select class="form-select" id="r-per" name="rper" [(ngModel)]="fRecPeriodicite">
+                          <option value="annuelle">Tous les ans</option>
+                          <option value="mensuelle">Tous les mois</option>
+                          <option value="sejour">À chaque séjour</option>
+                        </select>
+                      </div>
+                      @if (fRecPeriodicite === 'annuelle') {
+                        <div class="col-12 col-md-6">
+                          <label class="form-label small text-body-secondary" for="r-lim">Avant le (mois-jour)</label>
+                          <input class="form-control" id="r-lim" name="rlim" [(ngModel)]="fRecLimite" placeholder="10-15">
+                        </div>
+                      }
+                      @if (fRecPeriodicite === 'mensuelle') {
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-body-secondary" for="r-md">De (mois)</label>
+                          <input class="form-control" id="r-md" name="rmd" type="number" min="1" max="12"
+                                 [(ngModel)]="fRecMoisDebut">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label small text-body-secondary" for="r-mf">À (mois)</label>
+                          <input class="form-control" id="r-mf" name="rmf" type="number" min="1" max="12"
+                                 [(ngModel)]="fRecMoisFin">
+                        </div>
+                      }
+                      <div class="col-12">
+                        <button class="btn btn-primary" type="submit"
+                                [disabled]="occupe() || !fRecLibelle.trim()">Ajouter</button>
+                      </div>
+                    </form>
+                  </details>
+                }
               </div>
-            }
-            @if (!c.recurrences.length) {
-              <p class="secondaire" style="margin:0">Aucune récurrence.</p>
-            }
+            </section>
+          </div>
 
-            @if (gerant()) {
-              <details style="margin-top:12px">
-                <summary class="secondaire" style="cursor:pointer;font-size:13px">Ajouter une récurrence</summary>
-                <form class="saisie" style="margin-top:10px;grid-template-columns:1fr 1fr" (ngSubmit)="ajouterRecurrence()">
-                  <div>
-                    <label for="r-lib">Intitulé</label>
-                    <input id="r-lib" name="rlib" [(ngModel)]="fRecLibelle" placeholder="Ramonage de la cheminée">
-                  </div>
-                  <div>
-                    <label for="r-cat">Catégorie</label>
-                    <select id="r-cat" name="rcat" [(ngModel)]="fRecCategorie">
-                      @for (k of CATEGORIES; track k) { <option [value]="k">{{ categorie(k) }}</option> }
-                    </select>
-                  </div>
-                  <div>
-                    <label for="r-per">Rythme</label>
-                    <select id="r-per" name="rper" [(ngModel)]="fRecPeriodicite">
-                      <option value="annuelle">Tous les ans</option>
-                      <option value="mensuelle">Tous les mois</option>
-                      <option value="sejour">À chaque séjour</option>
-                    </select>
-                  </div>
-                  @if (fRecPeriodicite === 'annuelle') {
-                    <div>
-                      <label for="r-lim">Avant le (mois-jour)</label>
-                      <input id="r-lim" name="rlim" [(ngModel)]="fRecLimite" placeholder="10-15">
-                    </div>
-                  }
-                  @if (fRecPeriodicite === 'mensuelle') {
-                    <div>
-                      <label for="r-md">De (mois)</label>
-                      <input id="r-md" name="rmd" type="number" min="1" max="12" [(ngModel)]="fRecMoisDebut">
-                    </div>
-                    <div>
-                      <label for="r-mf">À (mois)</label>
-                      <input id="r-mf" name="rmf" type="number" min="1" max="12" [(ngModel)]="fRecMoisFin">
-                    </div>
-                  }
-                  <button class="btn btn-primaire" type="submit"
-                          [disabled]="occupe() || !fRecLibelle.trim()">Ajouter</button>
-                </form>
-              </details>
-            }
-          </section>
-
-          <section class="carte">
-            <h2><i class="bi bi-list-check" aria-hidden="true"></i> Checklist de départ</h2>
-            <p class="secondaire" style="margin:4px 0 10px">
-              Envoyée automatiquement la veille de chaque fin de séjour, à l'occupant.
-            </p>
-            <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.9">
-              @for (l of c.checklist; track l.id) {
-                <li>
-                  {{ l.libelle }}
-                  @if (gerant()) {
-                    <button class="lien" type="button" (click)="supprimerChecklist(l)">retirer</button>
-                  }
-                </li>
-              }
-            </ul>
-            @if (!c.checklist.length) {
-              <p class="secondaire" style="margin:0">
-                Aucune ligne : rien ne partira. Ajoutez ce qu'il faut vérifier avant de fermer la maison.
-              </p>
-            }
-            @if (gerant()) {
-              <form class="saisie" style="margin-top:12px;grid-template-columns:1fr auto"
-                    (ngSubmit)="ajouterChecklist()">
-                <div>
-                  <label for="k-lib">Ajouter une ligne</label>
-                  <input id="k-lib" name="klib" [(ngModel)]="fChecklist"
-                         placeholder="Compteur d'eau relevé et vanne fermée">
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">
+                  <i class="bi bi-list-check me-2" aria-hidden="true"></i>Checklist de départ
                 </div>
-                <button class="btn" type="submit" [disabled]="occupe() || !fChecklist.trim()">Ajouter</button>
-              </form>
-            }
-          </section>
+                <p class="text-body-secondary small">
+                  Envoyée automatiquement la veille de chaque fin de séjour, à l'occupant.
+                </p>
+                @if (c.checklist.length) {
+                  <ul class="mb-0 small lh-lg">
+                    @for (l of c.checklist; track l.id) {
+                      <li>
+                        {{ l.libelle }}
+                        @if (gerant()) {
+                          <button class="btn btn-sm btn-link text-body-secondary p-0 ms-1" type="button"
+                                  (click)="supprimerChecklist(l)">retirer</button>
+                        }
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="text-body-secondary small mb-0">
+                    Aucune ligne : rien ne partira. Ajoutez ce qu'il faut vérifier avant de fermer la maison.
+                  </p>
+                }
+                @if (gerant()) {
+                  <form class="row g-2 align-items-end mt-1" (ngSubmit)="ajouterChecklist()">
+                    <div class="col">
+                      <label class="form-label small text-body-secondary" for="k-lib">Ajouter une ligne</label>
+                      <input class="form-control" id="k-lib" name="klib" [(ngModel)]="fChecklist"
+                             placeholder="Compteur d'eau relevé et vanne fermée">
+                    </div>
+                    <div class="col-auto">
+                      <button class="btn btn-outline-secondary" type="submit"
+                              [disabled]="occupe() || !fChecklist.trim()">Ajouter</button>
+                    </div>
+                  </form>
+                }
+              </div>
+            </section>
+          </div>
         </div>
 
         @if (c.historique.length) {
-          <section class="carte">
-            <h2>Historique des interventions</h2>
-            @for (t of c.historique; track t.id) {
-              <div class="tache">
-                <span class="quoi">
-                  <span class="libelle">{{ t.libelle }}</span>
-                  <span class="meta">
-                    Fait le {{ dateLongue(t.faitLe!) }}
-                    @if (t.faitParNom) { par {{ t.faitParNom }} }
-                    @if (t.coutCents !== null) { · {{ euros(t.coutCents) }} }
-                  </span>
-                </span>
-                <span class="pastille" [class]="'pastille cat-' + t.categorie">{{ categorie(t.categorie) }}</span>
-              </div>
-            }
+          <section class="card">
+            <div class="card-body">
+              <div class="eyebrow mb-2">Historique des interventions</div>
+              <ul class="list-group list-group-flush">
+                @for (t of c.historique; track t.id) {
+                  <li class="list-group-item d-flex align-items-start gap-3 px-0">
+                    <span class="flex-grow-1">
+                      <span class="d-block small fw-medium">{{ t.libelle }}</span>
+                      <span class="d-block text-body-secondary" style="font-size:.78rem">
+                        Fait le {{ dateLongue(t.faitLe!) }}
+                        @if (t.faitParNom) { par {{ t.faitParNom }} }
+                        @if (t.coutCents !== null) { · {{ euros(t.coutCents) }} }
+                      </span>
+                    </span>
+                    <span class="badge rounded-pill flex-shrink-0"
+                          [class]="classeCategorie(t.categorie)">{{ categorie(t.categorie) }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
           </section>
         }
       }
@@ -288,6 +299,13 @@ export class Entretien {
 
   readonly gerant = computed(() => this.etat.estGeranteIci());
   readonly categorie = (c: Categorie): string => LIBELLE_CATEGORIE[c] ?? c;
+
+  /** Une obligation légale se voit, une tâche courante ne crie pas. */
+  classeCategorie(c: Categorie): string {
+    if (c === 'obligatoire') return 'text-primary-emphasis bg-primary-subtle border border-primary-subtle';
+    if (c === 'saison') return 'text-info-emphasis bg-info-subtle border border-info-subtle';
+    return 'text-bg-light border';
+  }
 
   constructor() {
     effect(() => { const b = this.etat.bien(); if (b) void this.charger(b.id); });

@@ -21,171 +21,238 @@ import type { SoldeActeur, Soldes as SoldesModele, VirementPropose } from '../co
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
-    .personne { background: var(--surface); border: 1px solid var(--bordure-carte); border-radius: 16px; padding: 18px; }
-    .personne .haut { display: flex; align-items: center; gap: 10px; }
-    .personne .avatar { width: 30px; height: 30px; font-size: 11px; }
-    .personne .montant { font-family: var(--titre); font-size: 25px; font-weight: 500; margin: 12px 0 2px; }
-    .crediteur { color: var(--positif-encre); }
-    .debiteur { color: var(--accent); }
-    .detail { margin-top: 10px; font-size: 12px; color: var(--encre-3); }
-    .detail div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
-
-    .virement { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--separateur); flex-wrap: wrap; }
-    .virement:first-of-type { border-top: none; }
-    .virement .fleche { flex: 1; min-width: 200px; font-size: 13.5px; }
-    .virement .montant { font-size: 15px; }
-    @media (max-width: 560px) { .virement .montant { margin-left: auto; } }
-  `],
   template: `
-    <div class="colonne">
-      <div class="entre">
+    <div class="d-flex flex-column gap-4">
+      <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap">
         <div>
-          <h1>Soldes &amp; remboursements</h1>
-          <p class="secondaire" style="margin:6px 0 0">{{ donnees()?.structure?.nom }}</p>
+          <h1 class="h2 mb-2">Soldes &amp; remboursements</h1>
+          <p class="text-body-secondary mb-0">{{ donnees()?.structure?.nom }}</p>
         </div>
         @if (etat.estGeranteIci() && aDesDebiteurs()) {
-          <button class="btn btn-primaire" (click)="appel.set(!appel())">
+          <button class="btn btn-primary" (click)="appel.set(!appel())">
+            <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>
             {{ appel() ? 'Fermer' : 'Générer l\\'appel de fonds' }}
           </button>
         }
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (donnees(); as d) {
         @if (d.controle !== 0) {
           <!-- La somme des soldes doit valoir zéro. Si elle ne vaut pas zéro,
                il faut le dire haut et fort plutôt que d'afficher des chiffres
                dont personne ne pourra expliquer l'écart. -->
-          <div class="encart">
+          <div class="alert alert-primary mb-0">
             <strong>Incohérence détectée.</strong> La somme des soldes vaut {{ euros(d.controle) }} au lieu de zéro.
             Signalez-le : les montants affichés ci-dessous ne sont pas fiables.
           </div>
         }
 
         @if (appel()) {
-          <section class="carte">
-            <h2>Appel de fonds</h2>
-            <p class="secondaire" style="margin:6px 0 14px">
-              Chaque personne débitrice recevra un courriel avec son montant, l'échéance, et un lien
-              vers le détail du calcul.
-            </p>
-            <form (ngSubmit)="emettre()">
-              <div class="champ">
-                <label for="a-libelle">Libellé</label>
-                <input id="a-libelle" name="libelle" [(ngModel)]="f.libelle"
-                       [placeholder]="d.vocabulaire.regularisation + ' ' + annee" required>
-              </div>
-              <div class="champ">
-                <label for="a-echeance">Échéance</label>
-                <input id="a-echeance" name="echeance" type="date" [(ngModel)]="f.echeance" required>
-              </div>
-              <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Émettre l'appel</button>
-            </form>
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">Appel de fonds</h2>
+              <p class="text-body-secondary small">
+                Chaque personne débitrice recevra un courriel avec son montant, l'échéance, et un lien
+                vers le détail du calcul.
+              </p>
+              <form class="row g-3" (ngSubmit)="emettre()">
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="a-libelle">Libellé</label>
+                  <input class="form-control" id="a-libelle" name="libelle" [(ngModel)]="f.libelle"
+                         [placeholder]="d.vocabulaire.regularisation + ' ' + annee" required>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="a-echeance">Échéance</label>
+                  <input class="form-control" id="a-echeance" name="echeance" type="date"
+                         [(ngModel)]="f.echeance" required>
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-primary" type="submit" [disabled]="occupe()">Émettre l'appel</button>
+                </div>
+              </form>
+            </div>
           </section>
         }
 
-        <div class="cartes">
-          @for (s of d.soldes; track s.acteurId) {
-            <div class="personne">
-              <div class="haut">
-                <span class="avatar">{{ s.estStructure ? '€' : initiales(s.nom) }}</span>
-                <span>
-                  <span style="display:block;font-size:13.5px">{{ s.nom }}</span>
-                  @if (s.estStructure) { <span class="meta">compte commun</span> }
-                </span>
-              </div>
-              <div class="montant chiffres" [class.crediteur]="s.montantCents > 0" [class.debiteur]="s.montantCents < 0">
-                {{ s.montantCents > 0 ? '+ ' : s.montantCents < 0 ? '− ' : '' }}{{ euros(Math.abs(s.montantCents)) }}
-              </div>
-              <div class="meta">{{ motDeSolde(s) }}</div>
-              <div class="detail">
-                <div><span>A avancé</span><span class="chiffres">{{ euros(s.avanceCents) }}</span></div>
-                <div><span>Sa part des dépenses</span><span class="chiffres">{{ euros(s.duCents) }}</span></div>
-                @if (s.regleCents !== 0) {
-                  <div><span>Virements confirmés</span><span class="chiffres">{{ euros(s.regleCents) }}</span></div>
-                }
-              </div>
-            </div>
-          } @empty {
-            <p class="vide">Aucun solde : rien n'a encore été dépensé sur cet exercice.</p>
-          }
-        </div>
-
-        @if (d.virements.length) {
-          <section class="carte">
-            <h2>Virements proposés</h2>
-            <p class="secondaire" style="margin:6px 0 6px">
-              {{ d.virements.length }} virement{{ d.virements.length > 1 ? 's' : '' }} suffi{{ d.virements.length > 1 ? 'sent' : 't' }}
-              à remettre tout le monde à zéro. Tant qu'un virement n'est pas confirmé par celui qui
-              reçoit, il ne déplace aucun solde.
-            </p>
-            @for (v of d.virements; track v.deId + '-' + v.versId) {
-              <div class="virement">
-                <span class="fleche">
-                  <strong>{{ v.deNom }}</strong> vers <strong>{{ v.versNom }}</strong>
-                  <span class="meta" style="display:block">{{ v.motif }}</span>
-                </span>
-                <span class="montant chiffres">{{ euros(v.montantCents) }}</span>
-                @if (peutAnnoncer(v)) {
-                  <button class="btn" (click)="annoncer(v)" [disabled]="occupe()">J'ai fait le virement</button>
-                }
+        @if (d.soldes.length) {
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3">
+            @for (s of d.soldes; track s.acteurId) {
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="avatar">{{ s.estStructure ? '€' : initiales(s.nom) }}</span>
+                      <span>
+                        <span class="d-block small fw-medium">{{ s.nom }}</span>
+                        @if (s.estStructure) {
+                          <span class="d-block text-body-secondary" style="font-size:.72rem">compte commun</span>
+                        }
+                      </span>
+                    </div>
+                    <div class="fs-3 mt-3 tnum card-title"
+                         [class.text-success-emphasis]="s.montantCents > 0"
+                         [class.text-primary]="s.montantCents < 0">
+                      {{ s.montantCents > 0 ? '+ ' : s.montantCents < 0 ? '− ' : '' }}{{ euros(Math.abs(s.montantCents)) }}
+                    </div>
+                    <p class="text-body-secondary mt-2 mb-2" style="font-size:.78rem">{{ motDeSolde(s) }}</p>
+                    <ul class="list-group list-group-flush">
+                      <li class="list-group-item d-flex justify-content-between gap-2 px-0 py-1"
+                          style="font-size:.72rem">
+                        <span class="text-body-secondary">A avancé</span>
+                        <span class="tnum">{{ euros(s.avanceCents) }}</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between gap-2 px-0 py-1"
+                          style="font-size:.72rem">
+                        <span class="text-body-secondary">Sa part des dépenses</span>
+                        <span class="tnum">{{ euros(s.duCents) }}</span>
+                      </li>
+                      @if (s.regleCents !== 0) {
+                        <li class="list-group-item d-flex justify-content-between gap-2 px-0 py-1"
+                            style="font-size:.72rem">
+                          <span class="text-body-secondary">Virements confirmés</span>
+                          <span class="tnum">{{ euros(s.regleCents) }}</span>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </div>
               </div>
             }
+          </div>
+        } @else {
+          <div class="card"><div class="card-body">
+            <p class="text-body-secondary small mb-0">Aucun solde : rien n'a encore été dépensé sur cet exercice.</p>
+          </div></div>
+        }
+
+        @if (d.virements.length) {
+          <section class="card">
+            <div class="card-body">
+              <div class="eyebrow">Virements proposés</div>
+              <p class="text-body-secondary small mt-2 mb-2">
+                {{ d.virements.length }} virement{{ d.virements.length > 1 ? 's' : '' }} suffi{{ d.virements.length > 1 ? 'sent' : 't' }}
+                à remettre tout le monde à zéro. Tant qu'un virement n'est pas confirmé par celui qui
+                reçoit, il ne déplace aucun solde.
+              </p>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr class="eyebrow">
+                      <th scope="col">Virement</th><th scope="col">Motif</th>
+                      <th class="text-end" scope="col">Montant</th><th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (v of d.virements; track v.deId + '-' + v.versId) {
+                      <tr>
+                        <td class="small">
+                          <span class="fw-medium">{{ v.deNom }}</span>
+                          <i class="bi bi-arrow-right mx-1 text-body-secondary" aria-hidden="true"></i>
+                          <span class="fw-medium">{{ v.versNom }}</span>
+                        </td>
+                        <td class="small text-body-secondary">{{ v.motif }}</td>
+                        <td class="small fw-medium tnum text-end">{{ euros(v.montantCents) }}</td>
+                        <td class="text-end">
+                          @if (peutAnnoncer(v)) {
+                            <button class="btn btn-sm btn-outline-secondary" (click)="annoncer(v)"
+                                    [disabled]="occupe()">J'ai fait le virement</button>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </section>
         }
 
         @if (d.reglements.length) {
-          <section class="carte">
-            <h2>Virements annoncés</h2>
-            @for (r of d.reglements; track r.id) {
-              <div class="virement">
-                <span class="fleche">
-                  <strong>{{ r.deNom }}</strong> vers <strong>{{ r.versNom }}</strong>
-                  <span class="meta" style="display:block">
-                    {{ r.motif || 'Virement' }} · {{ dateLongue(r.dateReglement) }}
-                  </span>
-                </span>
-                <span class="montant chiffres">{{ euros(r.montantCents) }}</span>
-                <span class="pastille" [class.pastille-positif]="r.statut === 'confirme'"
-                      [class.pastille-accent]="r.statut === 'annonce'">
-                  {{ r.statut === 'confirme' ? 'Reçu' : r.statut === 'annonce' ? 'Annoncé' : 'Proposé' }}
-                </span>
-                @if (r.statut !== 'confirme' && peutConfirmer(r.versId)) {
-                  <button class="btn" (click)="confirmer(r.id)" [disabled]="occupe()">J'ai reçu l'argent</button>
-                }
+          <section class="card">
+            <div class="card-body">
+              <div class="eyebrow mb-2">Virements annoncés</div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr class="eyebrow">
+                      <th scope="col">Virement</th><th scope="col">Motif</th>
+                      <th class="text-end" scope="col">Montant</th>
+                      <th scope="col">Statut</th><th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (r of d.reglements; track r.id) {
+                      <tr>
+                        <td class="small">
+                          <span class="fw-medium">{{ r.deNom }}</span>
+                          <i class="bi bi-arrow-right mx-1 text-body-secondary" aria-hidden="true"></i>
+                          <span class="fw-medium">{{ r.versNom }}</span>
+                        </td>
+                        <td class="small text-body-secondary">
+                          {{ r.motif || 'Virement' }} · {{ dateLongue(r.dateReglement) }}
+                        </td>
+                        <td class="small fw-medium tnum text-end">{{ euros(r.montantCents) }}</td>
+                        <td>
+                          <span class="badge rounded-pill"
+                                [class]="r.statut === 'confirme'
+                                  ? 'text-success-emphasis bg-success-subtle border border-success-subtle'
+                                  : r.statut === 'annonce'
+                                    ? 'text-primary-emphasis bg-primary-subtle border border-primary-subtle'
+                                    : 'text-bg-light border'">
+                            {{ r.statut === 'confirme' ? 'Reçu' : r.statut === 'annonce' ? 'Annoncé' : 'Proposé' }}
+                          </span>
+                        </td>
+                        <td class="text-end">
+                          @if (r.statut !== 'confirme' && peutConfirmer(r.versId)) {
+                            <button class="btn btn-sm btn-outline-secondary" (click)="confirmer(r.id)"
+                                    [disabled]="occupe()">J'ai reçu l'argent</button>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
-            }
-            <p class="meta" style="margin-top:12px">
-              Seul le bénéficiaire confirme avoir reçu : sans cette règle, un débiteur solderait sa
-              propre dette d'un clic.
-            </p>
+              <p class="text-body-secondary small mt-3 mb-0">
+                Seul le bénéficiaire confirme avoir reçu : sans cette règle, un débiteur solderait sa
+                propre dette d'un clic.
+              </p>
+            </div>
           </section>
         }
 
         @if (d.appels.length) {
-          <section class="carte">
-            <h2>Appels de fonds</h2>
-            @for (a of d.appels; track a.id) {
-              <div style="padding:12px 0;border-top:1px solid var(--separateur)">
-                <div class="entre">
-                  <strong>{{ a.libelle }}</strong>
-                  <span class="meta">émis le {{ dateLongue(a.dateAppel) }}, échéance le {{ dateLongue(a.echeance) }}</span>
-                </div>
-                @for (l of a.lignes; track l.personneId) {
-                  <div class="virement" style="border:none;padding:6px 0">
-                    <span class="fleche">{{ l.nom }}</span>
-                    <span class="montant chiffres">{{ euros(l.montantCents) }}</span>
-                    <span class="pastille" [class.pastille-positif]="l.statut === 'confirme'">
-                      {{ l.statut === 'confirme' ? 'Réglé' : l.statut === 'annonce' ? 'Annoncé' : 'Attendu' }}
+          <section class="card">
+            <div class="card-body">
+              <div class="eyebrow mb-2">Appels de fonds</div>
+              @for (a of d.appels; track a.id) {
+                <div class="border-top pt-3 mt-3">
+                  <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                    <strong class="small">{{ a.libelle }}</strong>
+                    <span class="text-body-secondary" style="font-size:.72rem">
+                      émis le {{ dateLongue(a.dateAppel) }}, échéance le {{ dateLongue(a.echeance) }}
                     </span>
                   </div>
-                }
-              </div>
-            }
+                  <ul class="list-group list-group-flush">
+                    @for (l of a.lignes; track l.personneId) {
+                      <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                        <span class="small flex-grow-1">{{ l.nom }}</span>
+                        <span class="small fw-medium tnum">{{ euros(l.montantCents) }}</span>
+                        <span class="badge rounded-pill"
+                              [class]="l.statut === 'confirme'
+                                ? 'text-success-emphasis bg-success-subtle border border-success-subtle'
+                                : 'text-bg-light border'">
+                          {{ l.statut === 'confirme' ? 'Réglé' : l.statut === 'annonce' ? 'Annoncé' : 'Attendu' }}
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
           </section>
         }
       }

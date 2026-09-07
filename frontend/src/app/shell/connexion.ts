@@ -21,89 +21,85 @@ type Vue = 'connexion' | 'oubli' | 'oubli-envoye' | 'amorce';
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    :host { display: block; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px 60px; }
-    .boite { width: 100%; max-width: 420px; }
-    .marque {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      font-family: var(--titre); font-size: 21px; font-weight: 500; margin-bottom: 6px;
-    }
-    .marque i { color: var(--accent); }
-    .sous { text-align: center; color: var(--encre-3); font-size: 13px; margin: 0 0 22px; }
-    .carte { padding: 24px; }
-    h1 { font-size: 20px; margin-bottom: 4px; }
-    .aide { color: var(--encre-3); font-size: 12.5px; margin: 0 0 18px; }
-    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
-    .liens { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-    fieldset { border: none; padding: 0; margin: 0 0 4px; }
-    legend { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--libelle-section); padding: 0; margin-bottom: 10px; }
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 480px) { .deux { grid-template-columns: 1fr; } }
+    /* La page de connexion n'a pas de cadre : elle centre sa boîte, et rien
+       d'autre. Bootstrap n'a pas d'utilitaire pour « au milieu de la fenêtre ». */
+    :host { display: grid; place-items: center; min-height: 100vh; }
   `],
   template: `
-    <div class="boite">
-      <div class="marque"><i class="bi bi-houses" aria-hidden="true"></i> Maison de Famille</div>
-      <p class="sous">Le planning, les séjours et les décisions de la famille, au même endroit.</p>
+    <div class="w-100 p-3 pb-5" style="max-width:420px">
+      <div class="d-flex align-items-center justify-content-center gap-2 h4 mb-1">
+        <i class="bi bi-houses text-primary" aria-hidden="true"></i>Maison de Famille
+      </div>
+      <p class="text-center text-body-secondary small mb-4">
+        Le planning, les séjours et les décisions de la famille, au même endroit.
+      </p>
 
-      <div class="carte">
-        @switch (vue()) {
+      <div class="card">
+        <div class="card-body p-4">
+          @switch (vue()) {
 
-          @case ('amorce') {
-            <h1>Première installation</h1>
-            <p class="aide">
-              Cette instance est vierge. Créez le premier compte, qui sera gérant, ainsi que la
-              structure et le premier bien. Le reste se saisit ensuite tranquillement.
-            </p>
-            <form (ngSubmit)="amorcer()">
-              <fieldset>
-                <legend>Vous</legend>
-                <div class="champ" [class.champ-erreur]="champs()['nom']">
-                  <label for="a-nom">Votre nom</label>
-                  <input id="a-nom" name="nom" [(ngModel)]="f.nom" autocomplete="name" required>
-                  @if (champs()['nom']) { <p class="message-erreur">{{ champs()['nom'] }}</p> }
+            @case ('amorce') {
+              <h1 class="h5 card-title">Première installation</h1>
+              <p class="text-body-secondary small">
+                Cette instance est vierge. Créez le premier compte, qui sera gérant, ainsi que la
+                structure et le premier bien. Le reste se saisit ensuite tranquillement.
+              </p>
+              <form (ngSubmit)="amorcer()">
+                <div class="eyebrow mt-4 mb-2">Vous</div>
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-nom">Votre nom</label>
+                  <input class="form-control" [class.is-invalid]="champs()['nom']" id="a-nom" name="nom"
+                         [(ngModel)]="f.nom" autocomplete="name" required>
+                  @if (champs()['nom']) { <div class="invalid-feedback d-block">{{ champs()['nom'] }}</div> }
                 </div>
-                <div class="champ" [class.champ-erreur]="champs()['email']">
-                  <label for="a-email">Votre adresse de courriel</label>
-                  <input id="a-email" name="email" type="email" [(ngModel)]="f.email" autocomplete="username" required>
-                  @if (champs()['email']) { <p class="message-erreur">{{ champs()['email'] }}</p> }
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-email">Votre adresse de courriel</label>
+                  <input class="form-control" [class.is-invalid]="champs()['email']" id="a-email" name="email"
+                         type="email" [(ngModel)]="f.email" autocomplete="username" required>
+                  @if (champs()['email']) { <div class="invalid-feedback d-block">{{ champs()['email'] }}</div> }
                 </div>
-                <div class="champ" [class.champ-erreur]="champs()['motDePasse']">
-                  <label for="a-mdp">Mot de passe</label>
-                  <input id="a-mdp" name="motDePasse" type="password" [(ngModel)]="f.motDePasse" autocomplete="new-password" required>
-                  @if (champs()['motDePasse']) { <p class="message-erreur">{{ champs()['motDePasse'] }}</p> }
-                  @else { <p class="aide" style="margin:4px 0 0">Douze caractères au moins. Une phrase dont vous vous souvenez fait un très bon mot de passe.</p> }
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-mdp">Mot de passe</label>
+                  <input class="form-control" [class.is-invalid]="champs()['motDePasse']" id="a-mdp" name="motDePasse"
+                         type="password" [(ngModel)]="f.motDePasse" autocomplete="new-password" required>
+                  @if (champs()['motDePasse']) {
+                    <div class="invalid-feedback d-block">{{ champs()['motDePasse'] }}</div>
+                  } @else {
+                    <div class="form-text">
+                      Douze caractères au moins. Une phrase dont vous vous souvenez fait un très bon mot de passe.
+                    </div>
+                  }
                 </div>
-              </fieldset>
 
-              <fieldset>
-                <legend>La structure</legend>
-                <div class="champ">
-                  <label for="a-mode">Mode de détention</label>
-                  <select id="a-mode" name="structureMode" [(ngModel)]="f.structureMode">
+                <div class="eyebrow mt-4 mb-2">La structure</div>
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-mode">Mode de détention</label>
+                  <select class="form-select" id="a-mode" name="structureMode" [(ngModel)]="f.structureMode">
                     <option value="indivision">Indivision</option>
                     <option value="sci">SCI</option>
                     <option value="nom_propre">Nom propre</option>
                   </select>
                 </div>
-                <div class="champ">
-                  <label for="a-snom">Nom de la structure</label>
-                  <input id="a-snom" name="structureNom" [(ngModel)]="f.structureNom" placeholder="Indivision Kerloc'h" required>
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-snom">Nom de la structure</label>
+                  <input class="form-control" id="a-snom" name="structureNom" [(ngModel)]="f.structureNom"
+                         placeholder="Indivision Kerloc'h" required>
                 </div>
-              </fieldset>
 
-              <fieldset>
-                <legend>Le premier bien</legend>
-                <div class="champ">
-                  <label for="a-bnom">Nom du bien</label>
-                  <input id="a-bnom" name="bienNom" [(ngModel)]="f.bienNom" placeholder="Maison de Kerloc'h" required>
+                <div class="eyebrow mt-4 mb-2">Le premier bien</div>
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-bnom">Nom du bien</label>
+                  <input class="form-control" id="a-bnom" name="bienNom" [(ngModel)]="f.bienNom"
+                         placeholder="Maison de Kerloc'h" required>
                 </div>
-                <div class="deux">
-                  <div class="champ">
-                    <label for="a-commune">Commune</label>
-                    <input id="a-commune" name="commune" [(ngModel)]="f.commune" required>
+                <div class="row g-3 mb-3">
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label small text-body-secondary" for="a-commune">Commune</label>
+                    <input class="form-control" id="a-commune" name="commune" [(ngModel)]="f.commune" required>
                   </div>
-                  <div class="champ">
-                    <label for="a-type">Type</label>
-                    <select id="a-type" name="type" [(ngModel)]="f.type">
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label small text-body-secondary" for="a-type">Type</label>
+                    <select class="form-select" id="a-type" name="type" [(ngModel)]="f.type">
                       <option value="mer">Bord de mer</option>
                       <option value="montagne">Montagne</option>
                       <option value="campagne">Campagne</option>
@@ -111,82 +107,89 @@ type Vue = 'connexion' | 'oubli' | 'oubli-envoye' | 'amorce';
                     </select>
                   </div>
                 </div>
-                <div class="champ">
-                  <label for="a-couchages">Couchages</label>
-                  <input id="a-couchages" name="couchages" type="number" min="1" max="100" [(ngModel)]="f.couchages" required>
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="a-couchages">Couchages</label>
+                  <input class="form-control" id="a-couchages" name="couchages" type="number" min="1" max="100"
+                         [(ngModel)]="f.couchages" required>
                 </div>
-              </fieldset>
 
-              @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-              <div class="actions">
-                <button class="btn btn-primaire" type="submit" [disabled]="occupe()">
+                @if (erreur()) { <div class="alert alert-primary">{{ erreur() }}</div> }
+                <button class="btn btn-primary w-100" type="submit" [disabled]="occupe()">
                   {{ occupe() ? 'Création en cours...' : 'Créer l\\'instance' }}
                 </button>
-              </div>
-            </form>
-          }
+              </form>
+            }
 
-          @case ('oubli') {
-            <h1>Mot de passe oublié</h1>
-            <p class="aide">Indiquez votre adresse de courriel : vous recevrez un lien pour choisir un nouveau mot de passe.</p>
-            <form (ngSubmit)="demanderLien()">
-              <div class="champ">
-                <label for="o-email">Adresse de courriel</label>
-                <input id="o-email" name="email" type="email" [(ngModel)]="f.email" autocomplete="username" required>
-              </div>
-              @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-              <div class="actions">
-                <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Envoyer le lien</button>
-                <button class="btn" type="button" (click)="vue.set('connexion')">Revenir à la connexion</button>
-              </div>
-            </form>
-          }
-
-          @case ('oubli-envoye') {
-            <h1>C'est envoyé</h1>
-            <!-- Le message ne dit jamais si l'adresse existe : sinon, cet écran
-                 permettrait de savoir qui fait partie de la famille. -->
-            <p class="aide">
-              Si un compte utilise cette adresse, un courriel vient de partir avec un lien valable
-              quatre heures. Pensez à regarder dans les indésirables.
-            </p>
-            <div class="actions">
-              <button class="btn" type="button" (click)="vue.set('connexion')">Revenir à la connexion</button>
-            </div>
-          }
-
-          @default {
-            <h1>Connexion</h1>
-            <p class="aide">Entrez votre adresse de courriel et votre mot de passe.</p>
-            <form (ngSubmit)="connecter()">
-              <div class="champ">
-                <label for="c-email">Adresse de courriel</label>
-                <input id="c-email" name="email" type="email" [(ngModel)]="f.email" autocomplete="username" required autofocus>
-              </div>
-              <div class="champ">
-                <label for="c-mdp">Mot de passe</label>
-                <input id="c-mdp" name="motDePasse" type="password" [(ngModel)]="f.motDePasse" autocomplete="current-password" required>
-              </div>
-              @if (codeAttendu()) {
-                <div class="champ">
-                  <label for="c-code">Code de votre application d'authentification</label>
-                  <input id="c-code" name="code" [(ngModel)]="f.code" inputmode="numeric" autocomplete="one-time-code"
-                         placeholder="123456" autofocus>
-                  <p class="aide" style="margin:4px 0 0">Un code de secours convient aussi.</p>
+            @case ('oubli') {
+              <h1 class="h5 card-title">Mot de passe oublié</h1>
+              <p class="text-body-secondary small">
+                Indiquez votre adresse de courriel : vous recevrez un lien pour choisir un nouveau mot de passe.
+              </p>
+              <form (ngSubmit)="demanderLien()">
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="o-email">Adresse de courriel</label>
+                  <input class="form-control" id="o-email" name="email" type="email" [(ngModel)]="f.email"
+                         autocomplete="username" required>
                 </div>
-              }
-              @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-              <div class="actions">
-                <button class="btn btn-primaire" type="submit" [disabled]="occupe()">
-                  {{ occupe() ? 'Connexion...' : 'Se connecter' }}
-                </button>
+                @if (erreur()) { <div class="alert alert-primary">{{ erreur() }}</div> }
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primary" type="submit" [disabled]="occupe()">Envoyer le lien</button>
+                  <button class="btn btn-outline-secondary" type="button"
+                          (click)="vue.set('connexion')">Revenir à la connexion</button>
+                </div>
+              </form>
+            }
+
+            @case ('oubli-envoye') {
+              <h1 class="h5 card-title">C'est envoyé</h1>
+              <!-- Le message ne dit jamais si l'adresse existe : sinon, cet écran
+                   permettrait de savoir qui fait partie de la famille. -->
+              <p class="text-body-secondary small">
+                Si un compte utilise cette adresse, un courriel vient de partir avec un lien valable
+                quatre heures. Pensez à regarder dans les indésirables.
+              </p>
+              <div class="d-grid">
+                <button class="btn btn-outline-secondary" type="button"
+                        (click)="vue.set('connexion')">Revenir à la connexion</button>
               </div>
-            </form>
-            <div class="liens">
-              <button class="btn-lien" type="button" (click)="allerOubli()">J'ai oublié mon mot de passe</button>
-            </div>
+            }
+
+            @default {
+              <h1 class="h5 card-title">Connexion</h1>
+              <p class="text-body-secondary small">Entrez votre adresse de courriel et votre mot de passe.</p>
+              <form (ngSubmit)="connecter()">
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="c-email">Adresse de courriel</label>
+                  <input class="form-control" id="c-email" name="email" type="email" [(ngModel)]="f.email"
+                         autocomplete="username" required autofocus>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-body-secondary" for="c-mdp">Mot de passe</label>
+                  <input class="form-control" id="c-mdp" name="motDePasse" type="password" [(ngModel)]="f.motDePasse"
+                         autocomplete="current-password" required>
+                </div>
+                @if (codeAttendu()) {
+                  <div class="mb-3">
+                    <label class="form-label small text-body-secondary" for="c-code">
+                      Code de votre application d'authentification
+                    </label>
+                    <input class="form-control" id="c-code" name="code" [(ngModel)]="f.code" inputmode="numeric"
+                           autocomplete="one-time-code" placeholder="123456" autofocus>
+                    <div class="form-text">Un code de secours convient aussi.</div>
+                  </div>
+                }
+                @if (erreur()) { <div class="alert alert-primary">{{ erreur() }}</div> }
+                <div class="d-grid">
+                  <button class="btn btn-primary" type="submit" [disabled]="occupe()">
+                    {{ occupe() ? 'Connexion...' : 'Se connecter' }}
+                  </button>
+                </div>
+              </form>
+              <button class="btn btn-sm btn-link text-body-secondary p-0 mt-3" type="button"
+                      (click)="allerOubli()">J'ai oublié mon mot de passe</button>
+            }
           }
-        }
+        </div>
       </div>
     </div>
   `,

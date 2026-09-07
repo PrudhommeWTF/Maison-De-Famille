@@ -29,62 +29,38 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
   imports: [FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    .mois { display: flex; align-items: center; gap: 10px; }
-    .mois button { width: 34px; height: 34px; min-height: 34px; padding: 0; border-radius: 8px; }
-    .mois .titre { font-family: var(--titre); font-size: 17px; font-weight: 500; min-width: 140px; text-align: center; }
-    .legende { display: flex; gap: 14px; flex-wrap: wrap; }
-    .legende span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--encre-3); }
-    .puce { width: 11px; height: 11px; border-radius: 3px; border: 1px solid; flex: none; }
+    /* Trois marques que Bootstrap ne porte pas, et qui sont propres au projet.
+       Elles restent ici, dans le composant, plutôt que dans le thème : aucun
+       autre écran n'a de grille de calendrier. */
 
-    .entetes, .semaine { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
-    .entetes { margin: 14px 0 6px; }
-    .entetes span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--libelle-section); text-align: center; }
-    .semaine { margin-bottom: 5px; }
-    .case {
-      min-height: 74px; border-radius: 9px; padding: 7px 8px; border: 1px solid;
-      display: flex; flex-direction: column; gap: 3px; overflow: hidden;
-    }
-    .case .num { font-size: 12px; }
     /* Un jour férié se marque sur le numéro, pas sur le fond : le fond dit déjà
        qui occupe la maison, et deux informations ne peuvent pas se partager le
        même canal. Le point suffit à attirer l'oeil, le survol donne le nom. */
-    .case .num.ferie { font-weight: 600; }
-    .case .num.ferie::after {
+    .num.ferie { font-weight: 600; }
+    .num.ferie::after {
       content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%;
-      background: var(--accent); margin-left: 4px; vertical-align: middle;
+      background: var(--bs-primary); margin-left: 4px; vertical-align: middle;
     }
     /* Les zones scolaires : trois bandeaux fins collés au bas de la case, dans
        l'ordre A, B, C, chacun présent seulement si sa zone est en vacances. La
        position est fixe, si bien qu'une même zone reste sur la même ligne d'une
        case à l'autre et se lit en diagonale sur toute une semaine. */
-    .case .zones { margin-top: auto; display: flex; flex-direction: column; gap: 1px; }
-    .case .zones i { display: block; height: 3px; border-radius: 2px; }
-    .case .zones i.creux { background: transparent; }
-    .case .lib {
-      font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .case.aujourdhui .num { font-weight: 700; text-decoration: underline; }
-    .case.conflit { box-shadow: inset 0 0 0 2px var(--accent); }
-
-    .sejours .ligne { border-bottom: 1px solid var(--separateur); border-radius: 0; margin: 0; }
-    .sejours .ligne:last-child { border-bottom: none; }
-    .col-plage { width: 120px; flex: none; font-size: 12px; color: var(--encre-3); }
-
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .zones { margin-top: auto; display: flex; flex-direction: column; gap: 1px; }
+    .zones i { display: block; height: 3px; border-radius: 2px; }
+    /* Une nuit en conflit se cercle par l'intérieur : la bordure porte déjà la
+       nature de l'occupation, et l'anneau ne doit pas la remplacer. */
+    .conflit { box-shadow: inset 0 0 0 2px var(--bs-primary); }
     @media (max-width: 640px) {
-      .case { min-height: 54px; padding: 5px; }
-      .case .lib { display: none; }
-      .deux { grid-template-columns: 1fr; }
-      .col-plage { width: 100%; }
-      .sejours .ligne { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .cal-cell { min-height: 54px; }
+      .lib { display: none; }
     }
   `],
   template: `
-    <div class="colonne">
-      <div class="entre">
+    <div class="d-flex flex-column gap-4">
+      <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap">
         <div>
-          <h1>Calendrier d'occupation</h1>
-          <p class="secondaire" style="margin:6px 0 0">
+          <h1 class="h2 mb-2">Calendrier d'occupation</h1>
+          <p class="text-body-secondary mb-0">
             {{ etat.bien()?.nom }} · {{ etat.bien()?.couchages }} couchages ·
             nuit d'arrivée incluse, nuit de départ libre
           </p>
@@ -92,17 +68,22 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
         <!-- Un locataire ou un invité ne demande pas de séjour : il en a un,
              c'est même la raison de son accès. Le bouton le mènerait à un refus. -->
         @if (etat.roleIci() !== 'invite') {
-          <button class="btn btn-primaire" (click)="ouvrirDemande()">
-            <i class="bi bi-calendar-plus" aria-hidden="true"></i> Demander un séjour
+          <button class="btn btn-primary" (click)="ouvrirDemande()">
+            <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Demander un séjour
           </button>
         }
       </div>
 
       @if (conflits().length) {
-        <div class="encart">
-          <strong>{{ conflits().length }} chevauchement{{ conflits().length > 1 ? 's' : '' }} à arbitrer.</strong>
-          {{ conflits()[0].message }}
-          @if (etat.estGeranteIci()) { <a routerLink="/bien/demandes">Arbitrer</a> }
+        <div class="alert alert-primary d-flex gap-3 align-items-start mb-0" role="alert">
+          <i class="bi bi-exclamation-circle fs-5" aria-hidden="true"></i>
+          <div class="small">
+            <strong>{{ conflits().length }} chevauchement{{ conflits().length > 1 ? 's' : '' }} à arbitrer.</strong>
+            {{ conflits()[0].message }}
+            @if (etat.estGeranteIci()) {
+              <a class="ms-1" routerLink="/bien/demandes">Arbitrer</a>
+            }
+          </div>
         </div>
       }
 
@@ -110,148 +91,190 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
            sans bandeau de vacances se lirait « pas de vacances » alors qu'il
            signifie « table non mise à jour ». -->
       @if (!reperes().couvert) {
-        <div class="encart">
+        <div class="alert alert-primary mb-0 small">
           Les vacances scolaires ne sont pas renseignées pour cette période.
           @if (reperes().anneesCouvertes.length) {
             Les années connues sont {{ reperes().anneesCouvertes.join(', ') }}.
           }
           Les jours fériés, eux, restent justes : ils se calculent.
           @if (etat.estGeranteIci()) {
-            <a routerLink="/reglages">Déposer le calendrier officiel</a>
+            <a class="ms-1" routerLink="/reglages">Déposer le calendrier officiel</a>
           }
         </div>
       }
 
       @if (formulaire()) {
-        <section class="carte">
-          <h2>Demander un séjour</h2>
-          <p class="secondaire" style="margin:6px 0 16px">
-            Les dates sont vérifiées avant l'envoi. Un chevauchement n'empêche pas de demander :
-            la gérante arbitre.
-          </p>
-          <form (ngSubmit)="envoyer()">
-            <div class="deux">
-              <div class="champ">
-                <label for="d-arrivee">Arrivée</label>
-                <input id="d-arrivee" name="arrivee" type="date" [(ngModel)]="f.arrivee" (ngModelChange)="verifier()" required>
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">Demander un séjour</h2>
+            <p class="text-body-secondary small">
+              Les dates sont vérifiées avant l'envoi. Un chevauchement n'empêche pas de demander :
+              la gérante arbitre.
+            </p>
+            <form class="row g-3" (ngSubmit)="envoyer()">
+              <div class="col-12 col-md-4">
+                <label class="form-label small text-body-secondary" for="d-arrivee">Arrivée</label>
+                <input class="form-control" id="d-arrivee" name="arrivee" type="date"
+                       [(ngModel)]="f.arrivee" (ngModelChange)="verifier()" required>
               </div>
-              <div class="champ">
-                <label for="d-depart">Départ</label>
-                <input id="d-depart" name="depart" type="date" [(ngModel)]="f.depart" (ngModelChange)="verifier()" required>
+              <div class="col-12 col-md-4">
+                <label class="form-label small text-body-secondary" for="d-depart">Départ</label>
+                <input class="form-control" id="d-depart" name="depart" type="date"
+                       [(ngModel)]="f.depart" (ngModelChange)="verifier()" required>
               </div>
-            </div>
-            <div class="champ">
-              <label for="d-occupants">Occupants ({{ f.occupants }} / {{ etat.bien()?.couchages }} couchages)</label>
-              <input id="d-occupants" name="occupants" type="number" min="1" max="60"
-                     [(ngModel)]="f.occupants" (ngModelChange)="verifier()" required>
-            </div>
-            <div class="champ">
-              <label for="d-note">Un mot pour la gérante (facultatif)</label>
-              <textarea id="d-note" name="note" [(ngModel)]="f.note" maxlength="1000"></textarea>
-            </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label small text-body-secondary" for="d-occupants">
+                  Occupants ({{ f.occupants }} / {{ etat.bien()?.couchages }} couchages)
+                </label>
+                <input class="form-control" id="d-occupants" name="occupants" type="number" min="1" max="60"
+                       [(ngModel)]="f.occupants" (ngModelChange)="verifier()" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-body-secondary" for="d-note">Un mot pour la gérante (facultatif)</label>
+                <textarea class="form-control" id="d-note" name="note" rows="3"
+                          [(ngModel)]="f.note" maxlength="1000"></textarea>
+              </div>
 
-            @if (verification(); as v) {
-              @if (v.conflits.length) {
-                <div class="encart">
-                  @for (c of v.conflits; track c.message) { <div>{{ c.message }}</div> }
-                  @if (v.envoiPossible) {
-                    <div style="margin-top:6px">Vous pouvez envoyer quand même : la gérante tranchera.</div>
+              @if (verification(); as v) {
+                <div class="col-12">
+                  @if (v.conflits.length) {
+                    <div class="alert alert-primary mb-0 small">
+                      @for (c of v.conflits; track c.message) { <div>{{ c.message }}</div> }
+                      @if (v.envoiPossible) {
+                        <div class="mt-2">Vous pouvez envoyer quand même : la gérante tranchera.</div>
+                      }
+                    </div>
+                  } @else if (v.nuits > 0) {
+                    <div class="alert alert-success mb-0 small">
+                      Ces dates sont libres. {{ nuitsLisible(v.nuits) }}, {{ personnesLisible(f.occupants) }}.
+                    </div>
                   }
                 </div>
-              } @else if (v.nuits > 0) {
-                <div class="encart-positif">
-                  Ces dates sont libres. {{ nuitsLisible(v.nuits) }}, {{ personnesLisible(f.occupants) }}.
-                </div>
               }
-            }
-            @if (erreur()) { <div class="encart" style="margin-top:10px">{{ erreur() }}</div> }
+              @if (erreur()) { <div class="col-12"><div class="alert alert-primary mb-0 small">{{ erreur() }}</div></div> }
 
-            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-              <button class="btn btn-primaire" type="submit" [disabled]="occupe() || !envoiPossible()">
-                {{ etat.estGeranteIci() ? 'Enregistrer le séjour' : 'Envoyer la demande' }}
-              </button>
-              <button class="btn" type="button" (click)="formulaire.set(false)">Annuler</button>
-            </div>
-          </form>
+              <div class="col-12 d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit" [disabled]="occupe() || !envoiPossible()">
+                  {{ etat.estGeranteIci() ? 'Enregistrer le séjour' : 'Envoyer la demande' }}
+                </button>
+                <button class="btn btn-outline-secondary" type="button" (click)="formulaire.set(false)">Annuler</button>
+              </div>
+            </form>
+          </div>
         </section>
       }
 
-      <section class="carte">
-        <div class="entre">
-          <div class="mois">
-            <button class="btn" type="button" (click)="mois(-1)" aria-label="Mois précédent">
-              <i class="bi bi-chevron-left" aria-hidden="true"></i>
-            </button>
-            <span class="titre">{{ nomMois(annee(), moisIndex()) }}</span>
-            <button class="btn" type="button" (click)="mois(1)" aria-label="Mois suivant">
-              <i class="bi bi-chevron-right" aria-hidden="true"></i>
-            </button>
-          </div>
-          <div class="legende">
-            <span><i class="puce" style="background:#f0e0d5;border-color:#ddc3b0"></i>Famille</span>
-            <span><i class="puce" style="background:#e4e9dc;border-color:#c3cfb1"></i>Location</span>
-            <span><i class="puce" style="background:#fffdf9;border-color:#b0603f;border-style:dashed"></i>Demande</span>
-            <span><i class="puce" style="background:#e5e8ea;border-color:#c3ccd1"></i>Entretien</span>
-          </div>
-          <div class="legende" style="margin-top:8px">
-            @for (z of ZONES; track z) {
-              <span [attr.title]="'Académies : ' + (academies()[z] || '')">
-                <i class="puce" [style.background]="couleurZone(z)" [style.border-color]="couleurZone(z)"></i>
-                Vacances zone {{ z }}
-              </span>
-            }
-            <span><i class="puce" style="background:var(--accent);border-color:var(--accent);border-radius:50%"></i>Jour férié</span>
-          </div>
-        </div>
-
-        <div class="entetes" aria-hidden="true">
-          @for (j of enTetes(); track j) { <span>{{ j }}</span> }
-        </div>
-        @for (s of grille(); track $index) {
-          <div class="semaine">
-            @for (c of s.cases; track $index) {
-              <div class="case" [class.aujourdhui]="c.aujourdhui" [class.conflit]="c.enConflit"
-                   [style.background]="c.teinte.fond" [style.border-color]="c.teinte.bordure"
-                   [style.border-style]="c.teinte.tirets ? 'dashed' : 'solid'"
-                   [style.color]="c.teinte.encre" [attr.title]="titreCase(c)">
-                @if (c.jour) {
-                  <span class="num chiffres" [class.ferie]="!!c.ferie">{{ c.jour }}</span>
-                  @if (c.libelle) { <span class="lib">{{ c.libelle }}</span> }
-                  @if (c.zones.length) {
-                    <span class="zones" aria-hidden="true">
-                      @for (z of ZONES; track z) {
-                        <i [class.creux]="!c.zones.includes(z)"
-                           [style.background]="c.zones.includes(z) ? couleurZone(z) : ''"></i>
-                      }
-                    </span>
-                  }
-                }
+      <section class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="mois(-1)"
+                      aria-label="Mois précédent">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <div class="h5 mb-0 text-center" style="min-width:170px">{{ nomMois(annee(), moisIndex()) }}</div>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="mois(1)"
+                      aria-label="Mois suivant">
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex gap-3 flex-wrap small text-body-secondary">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="d-inline-block rounded-1 bg-primary-subtle border border-primary-subtle"
+                        style="width:12px;height:12px"></span>Séjour famille
+                </span>
+                <span class="d-flex align-items-center gap-2">
+                  <span class="d-inline-block rounded-1 bg-success-subtle border border-success-subtle"
+                        style="width:12px;height:12px"></span>Location
+                </span>
+                <span class="d-flex align-items-center gap-2">
+                  <span class="d-inline-block rounded-1 border border-primary cal-dashed"
+                        style="width:12px;height:12px"></span>Demande en attente
+                </span>
+                <span class="d-flex align-items-center gap-2">
+                  <span class="d-inline-block rounded-1 bg-info-subtle border border-info-subtle"
+                        style="width:12px;height:12px"></span>Entretien
+                </span>
               </div>
-            }
+              <div class="d-flex gap-3 flex-wrap small text-body-secondary">
+                @for (z of ZONES; track z) {
+                  <span class="d-flex align-items-center gap-2"
+                        [attr.title]="'Académies : ' + (academies()[z] || '')">
+                    <span class="d-inline-block rounded-1" style="width:12px;height:12px"
+                          [style.background]="couleurZone(z)"></span>Vacances zone {{ z }}
+                  </span>
+                }
+                <span class="d-flex align-items-center gap-2">
+                  <span class="d-inline-block rounded-circle bg-primary" style="width:8px;height:8px"></span>Jour férié
+                </span>
+              </div>
+            </div>
           </div>
-        }
+
+          <div class="row row-cols-7 g-1 mb-1" aria-hidden="true">
+            @for (j of enTetes(); track j) { <div class="col text-center eyebrow">{{ j }}</div> }
+          </div>
+          @for (s of grille(); track $index) {
+            <div class="row row-cols-7 g-1 mb-1">
+              @for (c of s.cases; track $index) {
+                <div class="col">
+                  <div class="cal-cell rounded-2 p-2 h-100 overflow-hidden border d-flex flex-column"
+                       [class]="c.teinte.classes" [class.conflit]="c.enConflit"
+                       [attr.title]="titreCase(c)">
+                    @if (c.jour) {
+                      <div class="num tnum" style="font-size:.78rem"
+                           [class.ferie]="!!c.ferie" [class.fw-bold]="c.aujourdhui"
+                           [class.text-decoration-underline]="c.aujourdhui">{{ c.jour }}</div>
+                      @if (c.libelle) {
+                        <div class="lib fw-medium text-truncate mt-1" style="font-size:.7rem">{{ c.libelle }}</div>
+                      }
+                      @if (c.zones.length) {
+                        <span class="zones" aria-hidden="true">
+                          @for (z of ZONES; track z) {
+                            <i [style.background]="c.zones.includes(z) ? couleurZone(z) : 'transparent'"></i>
+                          }
+                        </span>
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </section>
 
-      <section class="carte">
-        <h2>Séjours du mois</h2>
-        @if (duMois().length) {
-          <div class="sejours" style="margin-top:8px">
-            @for (s of duMois(); track s.id) {
-              <div class="ligne">
-                <span class="col-plage chiffres">{{ plage(s.arrivee, s.depart) }}</span>
-                <span style="flex:1;min-width:0">
-                  <span style="display:block">{{ s.titre }}</span>
-                  <span class="meta">{{ nuitsLisible(s.nuits) }} · {{ personnesLisible(s.occupants) }}</span>
-                </span>
-                <span class="pastille" [class.pastille-accent]="s.nature === 'famille' && s.statut === 'valide'"
-                      [class.pastille-positif]="s.nature === 'location'"
-                      [class.pastille-info]="s.nature === 'entretien'">{{ etiquette(s) }}</span>
-              </div>
-            }
-          </div>
-        } @else {
-          <p class="vide">Aucun séjour ce mois-ci.</p>
-        }
+      <section class="card">
+        <div class="card-body">
+          <div class="eyebrow mb-2">Séjours du mois</div>
+          @if (duMois().length) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr class="eyebrow">
+                    <th scope="col">Dates</th><th scope="col">Qui</th>
+                    <th scope="col">Détail</th><th scope="col">Nature</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (s of duMois(); track s.id) {
+                    <tr>
+                      <td class="tnum small text-body-secondary">{{ plage(s.arrivee, s.depart) }}</td>
+                      <td class="small fw-medium">{{ s.titre }}</td>
+                      <td class="small text-body-secondary">
+                        {{ nuitsLisible(s.nuits) }} · {{ personnesLisible(s.occupants) }}
+                      </td>
+                      <td><span class="badge rounded-pill" [class]="classeEtiquette(s)">{{ etiquette(s) }}</span></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="text-body-secondary small mb-0">Aucun séjour ce mois-ci.</p>
+          }
+        </div>
       </section>
     </div>
   `,
@@ -376,6 +399,14 @@ export class Calendrier {
     } finally {
       this.occupe.set(false);
     }
+  }
+
+  /** L'étiquette prend la même couleur que la case : le lien se fait tout seul. */
+  classeEtiquette(s: Sejour): string {
+    if (s.statut !== 'valide') return 'border border-primary text-primary-emphasis cal-dashed';
+    if (s.nature === 'location') return 'text-success-emphasis bg-success-subtle border border-success-subtle';
+    if (s.nature === 'entretien') return 'text-info-emphasis bg-info-subtle border border-info-subtle';
+    return 'text-primary-emphasis bg-primary-subtle border border-primary-subtle';
   }
 
   etiquette(s: Sejour): string {

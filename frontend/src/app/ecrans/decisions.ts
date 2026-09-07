@@ -61,230 +61,253 @@ const RESULTAT: Record<string, string> = {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .vote { border-left: 3px solid var(--accent); }
-    .entete-vote { display: grid; grid-template-columns: 1fr 260px; gap: 24px; }
-    .barre { display: flex; height: 9px; border-radius: 5px; overflow: hidden; background: var(--actif); margin: 8px 0 10px; }
-    .barre span { display: block; height: 100%; }
-    .part-pour { background: #7a8b5c; }
-    .part-contre { background: #b0603f; }
-    .legende { font-size: 12.5px; }
-    .legende div { display: flex; justify-content: space-between; padding: 3px 0; }
-    .seuil { font-size: 12px; color: var(--encre-3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--separateur); }
-    .choix { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px;
-             padding-top: 14px; border-top: 1px solid var(--separateur); }
-    .choix button { min-width: 108px; }
-    .choix .pour.actif { border-color: #7a8b5c; color: #556340; }
-    .choix .contre.actif { border-color: #b0603f; color: #8d4a2e; }
-    .choix .abstention.actif { border-color: var(--encre-3); }
-    .hint { font-size: 12.5px; color: var(--encre-3); flex: 1; min-width: 200px; }
-    .histo { font-size: 13px; }
-    .ligne-h { display: grid; grid-template-columns: 90px 1fr 190px 100px; gap: 12px; padding: 10px 0;
-               border-top: 1px solid var(--separateur); align-items: center; }
-    .ligne-h:first-of-type { border-top: none; }
-    .pastille.adopte { background: #e4e9dc; color: #556340; }
-    .pastille.rejete { background: #f0e0d5; color: #8d4a2e; }
-    .detail { font-size: 12.5px; white-space: pre-wrap; background: var(--pastille-neutre);
-              border-radius: 10px; padding: 12px 14px; margin-top: 10px; }
-    .lien { border: none; background: none; padding: 0 0 0 8px; font: inherit; font-size: 12.5px;
-            color: var(--encre-3); text-decoration: underline; cursor: pointer; }
-    .lien:hover { color: var(--accent); }
-    .saisie { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
-    @media (max-width: 860px) {
-      .entete-vote, .saisie { grid-template-columns: 1fr; }
-      .ligne-h { grid-template-columns: 1fr; gap: 3px; }
-    }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Décisions &amp; votes</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Décisions &amp; votes</h1>
+        <p class="text-body-secondary mb-0">
           Les voix sont pondérées par les {{ etat.vocabulaire().parts }}, avec la majorité requise
           selon la nature de l'acte.
         </p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (liste(); as l) {
         @if (!l.voteApplicable) {
-          <section class="carte">
-            <p class="secondaire" style="margin:0 0 4px">{{ l.structure.nom }}</p>
-            <h2>Aucun vote sur ce bien</h2>
-            <p class="secondaire" style="margin:8px 0 0">
-              Ce bien est détenu en nom propre : le propriétaire décide et invite les autres,
-              sans scrutin. Les décisions prises se consignent quand même, pour mémoire.
-            </p>
+          <section class="card">
+            <div class="card-body">
+              <span class="badge rounded-pill text-bg-light border fw-medium">{{ l.structure.nom }}</span>
+              <h2 class="h4 mt-3 mb-2">Aucun vote sur ce bien</h2>
+              <p class="small text-secondary-emphasis mb-0" style="max-width:60ch">
+                Ce bien est détenu en nom propre : le propriétaire décide et invite les autres,
+                sans scrutin. Les décisions prises se consignent quand même, pour mémoire.
+              </p>
+            </div>
           </section>
         }
 
         @for (s of ouverts(); track s.id) {
-          <article class="carte vote">
-            <div class="entete-vote">
-              <div>
-                <div class="secondaire" style="font-size:12.5px">
-                  Vote ouvert · clôture le {{ dateLongue(s.clotureLe) }}
-                  @if (s.creeParNom) { · ouvert par {{ s.creeParNom }} }
+          <article class="card">
+            <div class="card-body">
+              <div class="row g-4">
+                <div class="col-12 col-lg-7">
+                  <div class="small fw-medium text-primary">
+                    Vote ouvert · clôture le {{ dateLongue(s.clotureLe) }}
+                    @if (s.creeParNom) { · ouvert par {{ s.creeParNom }} }
+                  </div>
+                  <h2 class="h4 mt-2 mb-2">{{ s.titre }}</h2>
+                  <!-- Une puce Bootstrap ne se coupe jamais, et celle-ci porte
+                       une phrase entière : elle se replie. -->
+                  <span class="badge rounded-pill text-bg-light border fw-medium text-wrap text-start">
+                    {{ l.structure.nom }} · {{ s.regle }}
+                    @if (s.montantCents !== null) { · {{ euros(s.montantCents) }} }
+                  </span>
+                  @if (s.expose) {
+                    <p class="small text-secondary-emphasis mt-3 mb-0" style="max-width:60ch">{{ s.expose }}</p>
+                  }
                 </div>
-                <h2 style="margin:4px 0 2px">{{ s.titre }}</h2>
-                <div class="secondaire" style="font-size:12.5px">
-                  {{ l.structure.nom }} · {{ s.regle }}
-                  @if (s.montantCents !== null) { · {{ euros(s.montantCents) }} }
-                </div>
-                @if (s.expose) { <p class="secondaire" style="margin:10px 0 0">{{ s.expose }}</p> }
+
+                @if (detail()[s.id]; as d) {
+                  <div class="col-12 col-lg-5">
+                    <div class="eyebrow">Voix exprimées</div>
+                    <div class="progress-stacked mt-2" style="height:9px"
+                         role="img"
+                         [attr.aria-label]="'Pour ' + pct(d.depouillement.pour, d.depouillement.total)
+                           + ', contre ' + pct(d.depouillement.contre, d.depouillement.total)">
+                      <div class="progress" [style.width.%]="part(d.depouillement.pour, d.depouillement.total)">
+                        <div class="progress-bar bg-success"></div>
+                      </div>
+                      <div class="progress" [style.width.%]="part(d.depouillement.contre, d.depouillement.total)">
+                        <div class="progress-bar bg-primary"></div>
+                      </div>
+                    </div>
+                    <ul class="list-group list-group-flush mt-2">
+                      <li class="list-group-item d-flex justify-content-between px-0 py-1 small">
+                        <span class="text-body-secondary">Pour</span>
+                        <span class="fw-medium tnum">{{ pct(d.depouillement.pour, d.depouillement.total) }}</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between px-0 py-1 small">
+                        <span class="text-body-secondary">Contre</span>
+                        <span class="fw-medium tnum">{{ pct(d.depouillement.contre, d.depouillement.total) }}</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between px-0 py-1 small">
+                        <span class="text-body-secondary">En attente</span>
+                        <span class="fw-medium tnum">{{ pct(d.depouillement.abstention, d.depouillement.total) }}</span>
+                      </li>
+                    </ul>
+                    <div class="text-body-secondary mt-2" style="font-size:.72rem">
+                      Seuil à atteindre : {{ d.depouillement.requis }} sur {{ d.depouillement.total }}
+                      ({{ pct(d.depouillement.requis, d.depouillement.total) }})
+                    </div>
+                  </div>
+                }
               </div>
 
               @if (detail()[s.id]; as d) {
-                <div>
-                  <div class="secondaire" style="font-size:11.5px;letter-spacing:.08em;text-transform:uppercase">
-                    Voix exprimées
+                @if (d.monPoids !== null) {
+                  <div class="d-flex gap-2 align-items-center flex-wrap border-top mt-4 pt-3">
+                    @for (c of CHOIX; track c.sens) {
+                      <button class="btn" type="button" style="min-width:118px"
+                              [class]="classeChoix(c.sens, d.monSens)" [disabled]="occupe()"
+                              (click)="voter(s, c.sens)">
+                        @if (d.monSens === c.sens) { <i class="bi bi-check2 me-1" aria-hidden="true"></i> }
+                        {{ c.libelle }}
+                      </button>
+                    }
+                    <span class="text-body-secondary small flex-grow-1" style="min-width:200px">{{ d.phrase }}</span>
                   </div>
-                  <div class="barre" role="img"
-                       [attr.aria-label]="'Pour ' + pct(d.depouillement.pour, d.depouillement.total)
-                         + ', contre ' + pct(d.depouillement.contre, d.depouillement.total)">
-                    <span class="part-pour" [style.width]="pct(d.depouillement.pour, d.depouillement.total)"></span>
-                    <span class="part-contre" [style.width]="pct(d.depouillement.contre, d.depouillement.total)"></span>
-                  </div>
-                  <div class="legende">
-                    <div><span>Pour</span><span>{{ pct(d.depouillement.pour, d.depouillement.total) }}</span></div>
-                    <div><span>Contre</span><span>{{ pct(d.depouillement.contre, d.depouillement.total) }}</span></div>
-                    <div><span>En attente</span><span>{{ pct(d.depouillement.abstention, d.depouillement.total) }}</span></div>
-                  </div>
-                  <div class="seuil">
-                    Seuil à atteindre : {{ d.depouillement.requis }} sur {{ d.depouillement.total }}
-                    ({{ pct(d.depouillement.requis, d.depouillement.total) }})
-                  </div>
-                </div>
-              }
-            </div>
+                } @else {
+                  <p class="text-body-secondary small border-top mt-4 pt-3 mb-0">
+                    Vous ne faites pas partie du corps électoral de ce scrutin, figé à son ouverture.
+                  </p>
+                }
 
-            @if (detail()[s.id]; as d) {
-              @if (d.monPoids !== null) {
-                <div class="choix">
-                  @for (c of CHOIX; track c.sens) {
-                    <button class="btn" type="button" [class]="'btn ' + c.sens"
-                            [class.actif]="d.monSens === c.sens" [disabled]="occupe()"
-                            (click)="voter(s, c.sens)">
-                      @if (d.monSens === c.sens) { <i class="bi bi-check2" aria-hidden="true"></i> }
-                      {{ c.libelle }}
-                    </button>
-                  }
-                  <span class="hint">{{ d.phrase }}</span>
-                </div>
+                @if (etat.estGeranteIci()) {
+                  <div class="d-flex gap-2 align-items-center flex-wrap border-top mt-3 pt-3">
+                    <button class="btn btn-primary" type="button" [disabled]="occupe()"
+                            (click)="depouiller(s)">Dépouiller et clore</button>
+                    <button class="btn btn-outline-secondary" type="button" [disabled]="occupe()"
+                            (click)="annuler(s)">Annuler</button>
+                    <span class="text-body-secondary small flex-grow-1" style="min-width:200px">
+                      @if (d.issueCertaine) {
+                        Plus aucune voix ne peut changer le résultat : vous pouvez clore sans attendre.
+                      } @else {
+                        Clôture prévue le {{ dateLongue(s.clotureLe) }}.
+                      }
+                    </span>
+                  </div>
+                  <details class="mt-3">
+                    <summary class="text-body-secondary small" style="cursor:pointer">Qui a voté quoi</summary>
+                    <ul class="list-group list-group-flush mt-2">
+                      @for (v of d.voix; track v.personneId) {
+                        <li class="list-group-item d-flex align-items-center gap-3 px-0 small">
+                          <span class="flex-grow-1">{{ v.nom }}</span>
+                          <span class="tnum">{{ v.poids }}</span>
+                          <span class="badge rounded-pill text-bg-light border fw-normal">{{ sensLisible(v.sens) }}</span>
+                        </li>
+                      }
+                    </ul>
+                  </details>
+                }
               } @else {
-                <p class="secondaire" style="margin:14px 0 0;font-size:12.5px">
-                  Vous ne faites pas partie du corps électoral de ce scrutin, figé à son ouverture.
+                <!-- Le serveur ne rend le détail d'un scrutin qu'à ses
+                     électeurs. Sans cette phrase, un membre de foyer voyait une
+                     carte de vote sans décompte, sans bouton et sans un mot :
+                     l'écran avait l'air cassé alors qu'il faisait son travail. -->
+                <p class="text-body-secondary small border-top mt-4 pt-3 mb-0">
+                  Vous ne faites pas partie du corps électoral de ce scrutin, figé à son ouverture,
+                  et le détail des voix ne vous est donc pas rendu. Vous suivez le vote sans y prendre part.
                 </p>
               }
-
-              @if (etat.estGeranteIci()) {
-                <div class="choix">
-                  <button class="btn btn-primaire" type="button" [disabled]="occupe()"
-                          (click)="depouiller(s)">Dépouiller et clore</button>
-                  <button class="btn" type="button" [disabled]="occupe()" (click)="annuler(s)">Annuler</button>
-                  <span class="hint">
-                    @if (d.issueCertaine) {
-                      Plus aucune voix ne peut changer le résultat : vous pouvez clore sans attendre.
-                    } @else {
-                      Clôture prévue le {{ dateLongue(s.clotureLe) }}.
-                    }
-                  </span>
-                </div>
-                <details style="margin-top:10px">
-                  <summary class="secondaire" style="cursor:pointer;font-size:12.5px">
-                    Qui a voté quoi
-                  </summary>
-                  <div class="histo" style="margin-top:8px">
-                    @for (v of d.voix; track v.personneId) {
-                      <div class="ligne-h" style="grid-template-columns:1fr 90px 110px">
-                        <span>{{ v.nom }}</span>
-                        <span class="chiffres">{{ v.poids }}</span>
-                        <span class="pastille">{{ sensLisible(v.sens) }}</span>
-                      </div>
-                    }
-                  </div>
-                </details>
-              }
-            }
+            </div>
           </article>
         }
 
         @if (l.voteApplicable && etat.estGeranteIci()) {
-          <section class="carte">
-            <h2>Ouvrir un vote</h2>
-            <form class="saisie" style="margin-top:12px" (ngSubmit)="ouvrir()">
-              <div style="grid-column:1/-1">
-                <label for="v-titre">Objet de la décision</label>
-                <input id="v-titre" name="vtitre" [(ngModel)]="fTitre"
-                       placeholder="Remplacement de la chaudière">
-              </div>
-              <div>
-                <label for="v-regle">Nature de l'acte</label>
-                <select id="v-regle" name="vregle" [(ngModel)]="fRegleId">
-                  @for (g of l.regles; track g.id) {
-                    @if (g.voteRequis) { <option [ngValue]="g.id">{{ g.libelle }}</option> }
-                  }
-                </select>
-              </div>
-              <div>
-                <label for="v-cloture">Clôture le</label>
-                <input id="v-cloture" name="vcloture" type="date" [(ngModel)]="fClotureLe" [min]="demain()">
-              </div>
-              <div>
-                <label for="v-montant">Montant en jeu (euros, facultatif)</label>
-                <input id="v-montant" name="vmontant" type="number" min="0" step="0.01" [(ngModel)]="fMontant">
-              </div>
-              <div>
-                <label for="v-convoc">Convocation d'assemblée (facultatif)</label>
-                <input id="v-convoc" name="vconvoc" type="date" [(ngModel)]="fConvoqueLe">
-              </div>
-              <div style="grid-column:1/-1">
-                <label for="v-expose">Exposé</label>
-                <textarea id="v-expose" name="vexpose" rows="3" [(ngModel)]="fExpose"
-                          placeholder="Devis, contexte, ce que chacun doit savoir avant de se prononcer."></textarea>
-              </div>
-              <div style="grid-column:1/-1">
-                <button class="btn btn-primaire" type="submit"
-                        [disabled]="occupe() || !fTitre.trim() || !fClotureLe">
-                  Ouvrir le vote
-                </button>
-                <span class="hint" style="margin-left:12px">
-                  Le corps électoral est figé à l'ouverture, avec les {{ etat.vocabulaire().parts }}
-                  en vigueur ce jour-là. Chaque électeur reçoit un courriel.
-                </span>
-              </div>
-            </form>
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">Ouvrir un vote</h2>
+              <form class="row g-3" (ngSubmit)="ouvrir()">
+                <div class="col-12">
+                  <label class="form-label small text-body-secondary" for="v-titre">Objet de la décision</label>
+                  <input class="form-control" id="v-titre" name="vtitre" [(ngModel)]="fTitre"
+                         placeholder="Remplacement de la chaudière">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="v-regle">Nature de l'acte</label>
+                  <select class="form-select" id="v-regle" name="vregle" [(ngModel)]="fRegleId">
+                    @for (g of l.regles; track g.id) {
+                      @if (g.voteRequis) { <option [ngValue]="g.id">{{ g.libelle }}</option> }
+                    }
+                  </select>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="v-cloture">Clôture le</label>
+                  <input class="form-control" id="v-cloture" name="vcloture" type="date"
+                         [(ngModel)]="fClotureLe" [min]="demain()">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="v-montant">
+                    Montant en jeu (euros, facultatif)
+                  </label>
+                  <input class="form-control" id="v-montant" name="vmontant" type="number" min="0" step="0.01"
+                         [(ngModel)]="fMontant">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="v-convoc">
+                    Convocation d'assemblée (facultatif)
+                  </label>
+                  <input class="form-control" id="v-convoc" name="vconvoc" type="date" [(ngModel)]="fConvoqueLe">
+                </div>
+                <div class="col-12">
+                  <label class="form-label small text-body-secondary" for="v-expose">Exposé</label>
+                  <textarea class="form-control" id="v-expose" name="vexpose" rows="3" [(ngModel)]="fExpose"
+                            placeholder="Devis, contexte, ce que chacun doit savoir avant de se prononcer."></textarea>
+                </div>
+                <div class="col-12 d-flex gap-3 align-items-center flex-wrap">
+                  <button class="btn btn-primary" type="submit"
+                          [disabled]="occupe() || !fTitre.trim() || !fClotureLe">Ouvrir le vote</button>
+                  <span class="text-body-secondary small">
+                    Le corps électoral est figé à l'ouverture, avec les {{ etat.vocabulaire().parts }}
+                    en vigueur ce jour-là. Chaque électeur reçoit un courriel.
+                  </span>
+                </div>
+              </form>
+            </div>
           </section>
         }
 
-        <section class="carte">
-          <h2>Historique</h2>
-          <div class="histo" style="margin-top:8px">
-            @for (s of clos(); track s.id) {
-              <div class="ligne-h">
-                <span class="secondaire">{{ mois(s.ouvertLe) }}</span>
-                <span>
-                  {{ s.titre }}
-                  @if (s.resultat) {
-                    <button class="lien" type="button" (click)="basculerDetail(s.id)">
-                      {{ montre()[s.id] ? 'masquer le détail' : 'voir le détail' }}
-                    </button>
-                  }
-                </span>
-                <span class="secondaire">{{ s.regle }}</span>
-                <span class="pastille" [class.adopte]="s.statut === 'adopte'"
-                      [class.rejete]="s.statut === 'rejete'">{{ resultat(s.statut) }}</span>
+        <section class="card">
+          <div class="card-body">
+            <div class="eyebrow mb-2">Historique</div>
+            @if (clos().length) {
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr class="eyebrow">
+                      <th scope="col">Date</th><th scope="col">Objet</th>
+                      <th scope="col">Majorité</th><th scope="col">Résultat</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (s of clos(); track s.id) {
+                      <tr>
+                        <td class="tnum small text-body-secondary">{{ mois(s.ouvertLe) }}</td>
+                        <td class="small fw-medium">
+                          {{ s.titre }}
+                          @if (s.resultat) {
+                            <button class="btn btn-sm btn-link text-body-secondary p-0 ms-2" type="button"
+                                    (click)="basculerDetail(s.id)">
+                              {{ montre()[s.id] ? 'masquer le détail' : 'voir le détail' }}
+                            </button>
+                          }
+                        </td>
+                        <td class="small text-body-secondary">{{ s.regle }}</td>
+                        <td>
+                          <span class="badge rounded-pill"
+                                [class]="s.statut === 'adopte'
+                                  ? 'text-success-emphasis bg-success-subtle border border-success-subtle'
+                                  : s.statut === 'rejete'
+                                    ? 'text-primary-emphasis bg-primary-subtle border border-primary-subtle'
+                                    : 'text-bg-light border'">{{ resultat(s.statut) }}</span>
+                        </td>
+                      </tr>
+                      @if (montre()[s.id] && s.resultat) {
+                        <tr>
+                          <td class="bg-body-tertiary small" colspan="4"
+                              style="white-space:pre-wrap">{{ s.resultat.explication }}</td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
               </div>
-              @if (montre()[s.id] && s.resultat) {
-                <div class="detail">{{ s.resultat.explication }}</div>
-              }
+            } @else {
+              <p class="text-body-secondary small mb-0">Aucune décision enregistrée.</p>
             }
           </div>
-          @if (!clos().length) {
-            <p class="secondaire" style="margin:8px 0 0">Aucune décision enregistrée.</p>
-          }
         </section>
       }
     </div>
@@ -320,14 +343,31 @@ export class Decisions {
   readonly clos = computed(() => (this.liste()?.scrutins ?? []).filter((s) => s.statut !== 'ouvert'));
 
   readonly resultat = (s: string): string => RESULTAT[s] ?? s;
+
+  /**
+   * Le bouton du sens choisi se remplit, les autres restent en contour : la
+   * couleur dit « voilà ce que vous avez voté », pas « voilà ce qu'il faut voter ».
+   */
+  classeChoix(sens: Sens, mien: Sens | null): string {
+    const plein = sens === 'pour' ? 'btn-success' : sens === 'contre' ? 'btn-primary' : 'btn-secondary';
+    return mien === sens ? plein : `btn-outline-${plein.slice(4)}`;
+  }
+
   readonly sensLisible = (s: Sens | null): string =>
     s === 'pour' ? 'Pour' : s === 'contre' ? 'Contre' : s === 'abstention' ? 'Abstention' : 'En attente';
   readonly demain = (): string => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   readonly mois = (iso: string): string => dateLongue(iso).split(' ').slice(1).join(' ');
 
-  /** Le pourcentage sert la barre et la légende : une seule source, un seul arrondi. */
+  /**
+   * Deux formes du même arrondi : `part()` pour la largeur de la barre, `pct()`
+   * pour le texte. Écrire « 66,7 % » dans une largeur CSS ne donne rien, et
+   * écrire « 66.7 » dans une phrase française non plus.
+   */
+  readonly part = (part: number, total: number): number =>
+    total <= 0 ? 0 : Math.round((part * 1000) / total) / 10;
+
   readonly pct = (part: number, total: number): string =>
-    total <= 0 ? '0 %' : `${Math.round((part * 1000) / total) / 10}`.replace('.', ',') + ' %';
+    `${this.part(part, total)}`.replace('.', ',') + ' %';
 
   constructor() {
     effect(() => { const id = this.structureId(); if (id) void this.charger(id); });

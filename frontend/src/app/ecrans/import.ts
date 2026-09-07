@@ -26,180 +26,200 @@ interface LigneHistorique {
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    .depot {
-      border: 1.5px dashed var(--bordure-controle); border-radius: 14px; padding: 30px 20px;
-      text-align: center; color: var(--encre-3);
-    }
-    .depot i { font-size: 26px; display: block; margin-bottom: 10px; color: var(--accent); }
-    table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
-    th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--separateur); white-space: nowrap; }
-    th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--libelle-section); }
-    tr.entete-fichier td { background: var(--pastille-neutre); font-weight: 600; }
-    .corr { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .compteurs { display: flex; gap: 26px; flex-wrap: wrap; margin: 4px 0 14px; }
-    .compteurs .valeur { font-family: var(--titre); font-size: 22px; font-weight: 500; }
-    .compteurs .quoi { font-size: 11.5px; color: var(--encre-3); }
+    /* La zone de dépôt en tirets, et la ligne d'intitulés du fichier mise en
+       relief : ni l'une ni l'autre n'a d'utilitaire Bootstrap. */
+    .depot { border-style: dashed !important; cursor: pointer; }
+    .depot:hover { border-color: var(--bs-primary) !important; }
+    tr.entete-fichier td { background: var(--bs-tertiary-bg); font-weight: 600; }
   `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Import du planning</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Import du planning</h1>
+        <p class="text-body-secondary mb-0">
           Reprenez le calendrier existant : un fichier Excel (.xlsx) ou un export CSV. Rien n'est
           écrit avant que vous ayez vu le rapport.
         </p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (!analyse()) {
-        <section class="carte">
-          <label class="depot" style="display:block;cursor:pointer">
-            <i class="bi bi-filetype-xlsx" aria-hidden="true"></i>
-            <strong>Choisir le fichier du planning</strong>
-            <div class="meta" style="margin-top:6px">
-              .xlsx, .csv, ou un .xls exporté depuis un tableur. Le format est reconnu automatiquement.
-            </div>
-            <input type="file" accept=".xlsx,.xls,.csv,.txt,text/csv" (change)="analyser($event)" style="display:none">
-          </label>
+        <section class="card">
+          <div class="card-body">
+            <label class="depot d-block border rounded-3 text-center text-body-secondary p-5">
+              <i class="bi bi-filetype-xlsx d-block fs-2 mb-2 text-primary" aria-hidden="true"></i>
+              <strong>Choisir le fichier du planning</strong>
+              <span class="d-block small mt-2">
+                .xlsx, .csv, ou un .xls exporté depuis un tableur. Le format est reconnu automatiquement.
+              </span>
+              <input type="file" accept=".xlsx,.xls,.csv,.txt,text/csv" (change)="analyser($event)" hidden>
+            </label>
+          </div>
         </section>
       } @else {
-        <section class="carte">
-          <div class="entre">
-            <div>
-              <h2>{{ analyse()!.nom }}</h2>
-              <p class="meta" style="margin:4px 0 0">
-                {{ analyse()!.format }}{{ analyse()!.encodage ? ' · ' + analyse()!.encodage : '' }} ·
-                {{ analyse()!.lignes.length }} lignes lues
-              </p>
-            </div>
-            <button class="btn" (click)="recommencer()">Choisir un autre fichier</button>
-          </div>
-
-          <h3 style="margin-top:18px">1. À quoi correspond chaque colonne ?</h3>
-          <p class="secondaire" style="margin:4px 0 12px">
-            La proposition vient des intitulés de votre fichier. Corrigez ce qui ne va pas.
-          </p>
-          <div class="corr">
-            @for (c of analyse()!.champs; track c.champ) {
-              <div class="champ" style="margin:0">
-                <label [attr.for]="'c-' + c.champ">
-                  {{ c.libelle }}@if (c.obligatoire) { <span style="color:var(--accent)"> *</span> }
-                </label>
-                <select [attr.id]="'c-' + c.champ" [(ngModel)]="correspondance[c.champ]" [name]="'c-' + c.champ"
-                        (ngModelChange)="simuler()">
-                  <option [ngValue]="-1">Aucune colonne</option>
-                  @for (e of analyse()!.entetes; track $index) {
-                    <option [ngValue]="$index">{{ e || 'colonne ' + ($index + 1) }}</option>
-                  }
-                </select>
+        <section class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+              <div>
+                <h2 class="h5 card-title mb-1">{{ analyse()!.nom }}</h2>
+                <p class="text-body-secondary small mb-0">
+                  {{ analyse()!.format }}{{ analyse()!.encodage ? ' · ' + analyse()!.encodage : '' }} ·
+                  {{ analyse()!.lignes.length }} lignes lues
+                </p>
               </div>
-            }
-            <div class="champ" style="margin:0">
-              <label for="c-bien">Bien par défaut</label>
-              <select id="c-bien" name="bienParDefaut" [(ngModel)]="bienParDefaut" (ngModelChange)="simuler()">
-                @for (b of analyse()!.biens; track b.id) { <option [ngValue]="b.id">{{ b.nom }}</option> }
-              </select>
-              <p class="meta" style="margin-top:4px">Utilisé pour les lignes sans colonne « bien ».</p>
+              <button class="btn btn-sm btn-outline-secondary" (click)="recommencer()">
+                Choisir un autre fichier
+              </button>
             </div>
-            <div class="champ" style="margin:0">
-              <label for="c-entete">Ligne des intitulés</label>
-              <input id="c-entete" name="ligneEntete" type="number" min="1"
-                     [ngModel]="ligneEntete() + 1" (ngModelChange)="changerEntete($event)">
-            </div>
-          </div>
 
-          <h3 style="margin-top:18px">2. Ce que le fichier contient</h3>
-          <div class="defile-x" style="margin-top:8px">
-            <table>
-              <tbody>
-                @for (l of apercu(); track $index) {
-                  <tr [class.entete-fichier]="$index === ligneEntete()">
-                    <td class="meta chiffres">{{ $index + 1 }}</td>
-                    @for (c of l; track $index) { <td>{{ c }}</td> }
-                  </tr>
-                }
-              </tbody>
-            </table>
+            <h3 class="h6 mt-4">1. À quoi correspond chaque colonne ?</h3>
+            <p class="text-body-secondary small">
+              La proposition vient des intitulés de votre fichier. Corrigez ce qui ne va pas.
+            </p>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+              @for (c of analyse()!.champs; track c.champ) {
+                <div class="col">
+                  <label class="form-label small text-body-secondary" [attr.for]="'c-' + c.champ">
+                    {{ c.libelle }}@if (c.obligatoire) { <span class="text-primary"> *</span> }
+                  </label>
+                  <select class="form-select" [attr.id]="'c-' + c.champ" [(ngModel)]="correspondance[c.champ]"
+                          [name]="'c-' + c.champ" (ngModelChange)="simuler()">
+                    <option [ngValue]="-1">Aucune colonne</option>
+                    @for (e of analyse()!.entetes; track $index) {
+                      <option [ngValue]="$index">{{ e || 'colonne ' + ($index + 1) }}</option>
+                    }
+                  </select>
+                </div>
+              }
+              <div class="col">
+                <label class="form-label small text-body-secondary" for="c-bien">Bien par défaut</label>
+                <select class="form-select" id="c-bien" name="bienParDefaut" [(ngModel)]="bienParDefaut"
+                        (ngModelChange)="simuler()">
+                  @for (b of analyse()!.biens; track b.id) { <option [ngValue]="b.id">{{ b.nom }}</option> }
+                </select>
+                <div class="form-text">Utilisé pour les lignes sans colonne « bien ».</div>
+              </div>
+              <div class="col">
+                <label class="form-label small text-body-secondary" for="c-entete">Ligne des intitulés</label>
+                <input class="form-control" id="c-entete" name="ligneEntete" type="number" min="1"
+                       [ngModel]="ligneEntete() + 1" (ngModelChange)="changerEntete($event)">
+              </div>
+            </div>
+
+            <h3 class="h6 mt-4">2. Ce que le fichier contient</h3>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0" style="white-space:nowrap">
+                <tbody>
+                  @for (l of apercu(); track $index) {
+                    <tr [class.entete-fichier]="$index === ligneEntete()">
+                      <td class="text-body-secondary tnum" style="font-size:.72rem">{{ $index + 1 }}</td>
+                      @for (c of l; track $index) { <td class="small">{{ c }}</td> }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
         @if (rapport(); as r) {
-          <section class="carte">
-            <h2>3. Ce qui va se passer</h2>
-            <div class="compteurs">
-              <div><div class="valeur chiffres">{{ r.aCreer.length }}</div><div class="quoi">à créer</div></div>
-              <div><div class="valeur chiffres">{{ r.doublons.length }}</div><div class="quoi">déjà présents</div></div>
-              <div><div class="valeur chiffres">{{ r.refusees.length }}</div><div class="quoi">refusés</div></div>
-            </div>
-
-            @if (r.refusees.length) {
-              <div class="encart">
-                <strong>Ces lignes ne seront pas importées.</strong> Corrigez-les dans votre tableur et
-                relancez l'import : les lignes déjà créées ne seront pas dupliquées.
-                <div style="margin-top:8px">
-                  @for (x of r.refusees; track x.numero) {
-                    <div>Ligne {{ x.numero }} : {{ x.raison }}</div>
-                  }
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">3. Ce qui va se passer</h2>
+              <div class="d-flex gap-4 flex-wrap mb-3">
+                <div>
+                  <div class="fs-4 fw-medium tnum card-title mb-0">{{ r.aCreer.length }}</div>
+                  <div class="text-body-secondary small">à créer</div>
+                </div>
+                <div>
+                  <div class="fs-4 fw-medium tnum card-title mb-0">{{ r.doublons.length }}</div>
+                  <div class="text-body-secondary small">déjà présents</div>
+                </div>
+                <div>
+                  <div class="fs-4 fw-medium tnum card-title mb-0">{{ r.refusees.length }}</div>
+                  <div class="text-body-secondary small">refusés</div>
                 </div>
               </div>
-            }
 
-            @if (r.aCreer.length) {
-              <div class="defile-x" style="margin-top:14px">
-                <table>
-                  <thead><tr><th>Ligne</th><th>Dates</th><th>Qui</th><th>Personnes</th><th>Nature</th><th>Statut</th></tr></thead>
-                  <tbody>
-                    @for (l of r.aCreer; track l.numero) {
-                      <tr>
-                        <td class="meta chiffres">{{ l.numero }}</td>
-                        <td class="chiffres">{{ plage(l.arrivee, l.depart) }}</td>
-                        <td>{{ l.titre }}</td>
-                        <td class="chiffres">{{ l.occupants }}</td>
-                        <td>{{ natureLisible(l.nature) }}</td>
-                        <td>{{ l.statut === 'valide' ? 'Validé' : 'En attente' }}</td>
-                      </tr>
+              @if (r.refusees.length) {
+                <div class="alert alert-primary small">
+                  <strong>Ces lignes ne seront pas importées.</strong> Corrigez-les dans votre tableur et
+                  relancez l'import : les lignes déjà créées ne seront pas dupliquées.
+                  <div class="mt-2">
+                    @for (x of r.refusees; track x.numero) {
+                      <div>Ligne {{ x.numero }} : {{ x.raison }}</div>
                     }
-                  </tbody>
-                </table>
-              </div>
-            }
+                  </div>
+                </div>
+              }
 
-            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-              <button class="btn btn-primaire" (click)="executer()" [disabled]="occupe() || !r.aCreer.length">
-                Importer {{ r.aCreer.length }} séjour(s)
-              </button>
-              <button class="btn" (click)="recommencer()">Annuler</button>
+              @if (r.aCreer.length) {
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0" style="white-space:nowrap">
+                    <thead>
+                      <tr class="eyebrow">
+                        <th scope="col">Ligne</th><th scope="col">Dates</th><th scope="col">Qui</th>
+                        <th scope="col">Personnes</th><th scope="col">Nature</th><th scope="col">Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (l of r.aCreer; track l.numero) {
+                        <tr>
+                          <td class="text-body-secondary tnum" style="font-size:.72rem">{{ l.numero }}</td>
+                          <td class="small tnum">{{ plage(l.arrivee, l.depart) }}</td>
+                          <td class="small fw-medium">{{ l.titre }}</td>
+                          <td class="small tnum">{{ l.occupants }}</td>
+                          <td class="small text-body-secondary">{{ natureLisible(l.nature) }}</td>
+                          <td class="small text-body-secondary">
+                            {{ l.statut === 'valide' ? 'Validé' : 'En attente' }}
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+
+              <div class="d-flex gap-2 flex-wrap mt-3">
+                <button class="btn btn-primary" (click)="executer()" [disabled]="occupe() || !r.aCreer.length">
+                  Importer {{ r.aCreer.length }} séjour(s)
+                </button>
+                <button class="btn btn-outline-secondary" (click)="recommencer()">Annuler</button>
+              </div>
             </div>
           </section>
         }
       }
 
       @if (historique().length) {
-        <section class="carte">
-          <h2>Imports précédents</h2>
-          <div style="margin-top:8px">
-            @for (h of historique(); track h.id) {
-              <div class="ligne">
-                <span style="flex:1;min-width:0">
-                  <span style="display:block">{{ h.sourceNom }}</span>
-                  <span class="meta">
-                    {{ horodatageLisible(h.importeLe) }}{{ h.importePar ? ' par ' + h.importePar : '' }} ·
-                    {{ h.creees }} créés, {{ h.ignorees }} déjà présents, {{ h.refusees }} refusés
+        <section class="card">
+          <div class="card-body">
+            <div class="eyebrow mb-2">Imports précédents</div>
+            <ul class="list-group list-group-flush">
+              @for (h of historique(); track h.id) {
+                <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                  <span class="flex-grow-1" style="min-width:0">
+                    <span class="d-block small fw-medium">{{ h.sourceNom }}</span>
+                    <span class="d-block text-body-secondary" style="font-size:.72rem">
+                      {{ horodatageLisible(h.importeLe) }}{{ h.importePar ? ' par ' + h.importePar : '' }} ·
+                      {{ h.creees }} créés, {{ h.ignorees }} déjà présents, {{ h.refusees }} refusés
+                    </span>
                   </span>
-                </span>
-                @if (h.annuleLe) {
-                  <span class="pastille">annulé</span>
-                } @else {
-                  <button class="btn-lien" (click)="annuler(h)">Annuler cet import</button>
-                }
-              </div>
-            }
+                  @if (h.annuleLe) {
+                    <span class="badge rounded-pill text-bg-light border">annulé</span>
+                  } @else {
+                    <button class="btn btn-sm btn-link text-body-secondary p-0"
+                            (click)="annuler(h)">Annuler cet import</button>
+                  }
+                </li>
+              }
+            </ul>
+            <p class="text-body-secondary small mt-3 mb-0">
+              Annuler archive les séjours importés : ils sortent du calendrier, rien n'est effacé.
+            </p>
           </div>
-          <p class="meta" style="margin-top:12px">
-            Annuler archive les séjours importés : ils sortent du calendrier, rien n'est effacé.
-          </p>
         </section>
       }
     </div>

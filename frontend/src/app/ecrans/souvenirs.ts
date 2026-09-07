@@ -47,182 +47,184 @@ interface Vue { albums: Album[]; mots: Mot[] }
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    /* auto-fill et non auto-fit : avec un seul album, auto-fit étirait sa carte
-       sur toute la largeur de l'écran, ce qui n'a aucun sens pour une vignette.
-       Les colonnes vides gardent la grille en place. */
-    .albums { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-    /* Un bouton reste en ligne par défaut : sans display block, la légende
-       passait sous le bord arrondi de la carte et se retrouvait coupée. */
-    .album { display: block; text-align: left; padding: 0; overflow: hidden; }
-    .couverture { display: flex; width: 100%; height: 122px; background: var(--pastille-neutre);
-                  align-items: center; justify-content: center; color: var(--encre-3); }
-    .couverture img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    /* Un span reste en ligne, et sa marge verticale ne pousse rien : sans
-       display block, la légende dépassait du bas de la carte. */
-    .album .dessous { display: block; padding: 12px 14px; }
-    .album .titre { font: 500 15px 'Bricolage Grotesque', sans-serif; }
-    .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
-    .vignette { position: relative; border-radius: 12px; overflow: hidden; background: var(--pastille-neutre);
-                aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; }
-    .vignette img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .vignette .legende { position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 9px;
-                         font-size: 12px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.62)); }
-    .vignette .retirer { position: absolute; top: 7px; right: 7px; border: none; border-radius: 8px;
-                         background: rgba(255,255,255,.9); color: var(--encre-2); cursor: pointer;
-                         width: 26px; height: 26px; font-size: 13px; }
-    .vignette .retirer:hover { color: var(--accent); }
-    .depot { border: 1px dashed var(--bordure); border-radius: 12px; aspect-ratio: 4 / 3;
-             display: flex; flex-direction: column; align-items: center; justify-content: center;
-             gap: 6px; cursor: pointer; color: var(--encre-3); font-size: 13px; }
-    .depot:hover { border-color: var(--accent); color: var(--accent); }
-    .mot { padding: 12px 0; border-top: 1px solid var(--separateur); }
-    .mot:first-of-type { border-top: none; }
-    .mot .texte { white-space: pre-wrap; }
-    .saisie { display: grid; grid-template-columns: 1fr 200px; gap: 10px; align-items: end; }
-    @media (max-width: 700px) { .saisie { grid-template-columns: 1fr; } }
+    /* Ce que Bootstrap ne porte pas : le remplissage d'une image dans son
+       cadre, la légende posée sur la photo, et la zone de dépôt en tirets. */
+    .vignette img, .couverture img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .legende {
+      position: absolute; left: 0; right: 0; bottom: 0; padding: 7px 9px;
+      font-size: .72rem; color: #fff; background: linear-gradient(transparent, rgba(0, 0, 0, .62));
+    }
+    .depot { border-style: dashed; cursor: pointer; }
+    .depot:hover { border-color: var(--bs-primary); color: var(--bs-primary); }
   `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Souvenirs</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Souvenirs</h1>
+        <p class="text-body-secondary mb-0">
           Un album par séjour, alimenté par la famille. Rien ne sort de cette instance.
         </p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (vue(); as v) {
         @if (ouvert(); as a) {
-          <section class="carte">
-            <div class="entre">
-              <div>
-                <button class="btn-lien" type="button" (click)="fermer()">‹ Tous les albums</button>
-                <h2 style="margin:4px 0 2px">{{ a.titre }}</h2>
-                <div class="secondaire" style="font-size:12.5px">{{ metaAlbum() }}</div>
-              </div>
-            </div>
+          <section class="card">
+            <div class="card-body">
+              <button class="btn btn-sm btn-link text-body-secondary p-0" type="button" (click)="fermer()">
+                <i class="bi bi-chevron-left me-1" aria-hidden="true"></i>Tous les albums
+              </button>
+              <h2 class="h5 card-title mt-2 mb-1">{{ a.titre }}</h2>
+              <div class="text-body-secondary small">{{ metaAlbum() }}</div>
 
-            <div class="grille" style="margin-top:14px">
-              <label class="depot">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                {{ occupe() ? 'Envoi en cours...' : 'Déposer une photo' }}
-                <input type="file" accept="image/*" multiple (change)="deposer($event)"
-                       [disabled]="occupe()" style="display:none">
-              </label>
-              @for (p of photos(); track p.id) {
-                <figure class="vignette" style="margin:0">
-                  @if (fichiers.image(p.vignetteId ?? p.fichierId)(); as src) {
-                    <img [src]="src" [alt]="p.legende || 'Photo déposée par ' + (p.deposeParNom ?? 'la famille')">
-                  } @else {
-                    <i class="bi bi-image" aria-hidden="true"></i>
-                  }
-                  @if (p.legende) { <figcaption class="legende">{{ p.legende }}</figcaption> }
-                  @if (peutRetirer(p)) {
-                    <button class="retirer" type="button" [disabled]="occupe()"
-                            [attr.aria-label]="'Retirer la photo de ' + (p.deposeParNom ?? 'la famille')"
-                            (click)="retirer(p)">
-                      <i class="bi bi-x-lg" aria-hidden="true"></i>
-                    </button>
-                  }
-                </figure>
+              <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mt-1">
+                <div class="col">
+                  <label class="ratio ratio-4x3 rounded-3 border depot d-block">
+                    <span class="d-flex flex-column align-items-center justify-content-center gap-2
+                                 text-body-secondary small">
+                      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                      {{ occupe() ? 'Envoi en cours...' : 'Déposer une photo' }}
+                    </span>
+                    <input type="file" accept="image/*" multiple (change)="deposer($event)"
+                           [disabled]="occupe()" hidden>
+                  </label>
+                </div>
+                @for (p of photos(); track p.id) {
+                  <div class="col">
+                    <figure class="ratio ratio-4x3 rounded-3 overflow-hidden bg-body-tertiary vignette mb-0">
+                      @if (fichiers.image(p.vignetteId ?? p.fichierId)(); as src) {
+                        <img [src]="src" [alt]="p.legende || 'Photo déposée par ' + (p.deposeParNom ?? 'la famille')">
+                      } @else {
+                        <span class="d-flex align-items-center justify-content-center text-body-secondary">
+                          <i class="bi bi-image" aria-hidden="true"></i>
+                        </span>
+                      }
+                      @if (p.legende) { <figcaption class="legende">{{ p.legende }}</figcaption> }
+                      @if (peutRetirer(p)) {
+                        <span class="d-flex align-items-start justify-content-end p-2" style="pointer-events:none">
+                          <button class="btn btn-sm btn-light border" type="button" [disabled]="occupe()"
+                                  style="pointer-events:auto"
+                                  [attr.aria-label]="'Retirer la photo de ' + (p.deposeParNom ?? 'la famille')"
+                                  (click)="retirer(p)">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                          </button>
+                        </span>
+                      }
+                    </figure>
+                  </div>
+                }
+              </div>
+              @if (!photos().length) {
+                <p class="text-body-secondary small mt-3 mb-0">
+                  Cet album est vide. Les photos déposées ici restent sur votre serveur.
+                </p>
               }
             </div>
-            @if (!photos().length) {
-              <p class="secondaire" style="margin:12px 0 0">
-                Cet album est vide. Les photos déposées ici restent sur votre serveur.
-              </p>
-            }
           </section>
         } @else {
-          <section class="carte">
-            <div class="entre">
-              <h2>Albums</h2>
-              <button class="btn" type="button" (click)="creation.set(!creation())">
-                {{ creation() ? 'Fermer' : 'Nouvel album' }}
-              </button>
-            </div>
-
-            @if (creation()) {
-              <form class="saisie" style="margin:14px 0 4px" (ngSubmit)="creer()">
-                <div>
-                  <label for="a-titre">Titre</label>
-                  <input id="a-titre" name="atitre" [(ngModel)]="fTitre" placeholder="Été à la maison">
-                </div>
-                <div>
-                  <label for="a-annee">Année</label>
-                  <input id="a-annee" name="aannee" type="number" min="1900" max="2200" [(ngModel)]="fAnnee">
-                </div>
-                <div style="grid-column:1/-1">
-                  <button class="btn btn-primaire" type="submit" [disabled]="occupe() || !fTitre.trim()">
-                    Créer l'album
-                  </button>
-                </div>
-              </form>
-            }
-
-            <div class="albums" style="margin-top:14px">
-              @for (a of v.albums; track a.id) {
-                <button class="carte carte-cliquable album" type="button" (click)="ouvrirAlbum(a)">
-                  <span class="couverture">
-                    @if (fichiers.image(a.couvertureId)(); as src) {
-                      <img [src]="src" alt="">
-                    } @else {
-                      <i class="bi bi-images" aria-hidden="true"></i>
-                    }
-                  </span>
-                  <span class="dessous">
-                    <span class="titre">{{ a.titre }}</span><br>
-                    <span class="secondaire" style="font-size:12.5px">
-                      {{ a.annee }} · {{ a.photos }} photo{{ a.photos > 1 ? 's' : '' }}
-                    </span>
-                  </span>
+          <section class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <div class="eyebrow">Albums</div>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="creation.set(!creation())">
+                  {{ creation() ? 'Fermer' : 'Nouvel album' }}
                 </button>
+              </div>
+
+              @if (creation()) {
+                <form class="row g-3 mt-0" (ngSubmit)="creer()">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label small text-body-secondary" for="a-titre">Titre</label>
+                    <input class="form-control" id="a-titre" name="atitre" [(ngModel)]="fTitre"
+                           placeholder="Été à la maison">
+                  </div>
+                  <div class="col-12 col-md-3">
+                    <label class="form-label small text-body-secondary" for="a-annee">Année</label>
+                    <input class="form-control" id="a-annee" name="aannee" type="number" min="1900" max="2200"
+                           [(ngModel)]="fAnnee">
+                  </div>
+                  <div class="col-12">
+                    <button class="btn btn-primary" type="submit" [disabled]="occupe() || !fTitre.trim()">
+                      Créer l'album
+                    </button>
+                  </div>
+                </form>
+              }
+
+              @if (v.albums.length) {
+                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mt-1">
+                  @for (a of v.albums; track a.id) {
+                    <div class="col">
+                      <button class="card h-100 w-100 overflow-hidden text-start p-0 border" type="button"
+                              (click)="ouvrirAlbum(a)">
+                        <span class="ratio ratio-4x3 bg-body-tertiary couverture d-block">
+                          @if (fichiers.image(a.couvertureId)(); as src) {
+                            <img [src]="src" alt="">
+                          } @else {
+                            <span class="d-flex align-items-center justify-content-center text-body-secondary fs-4">
+                              <i class="bi bi-images" aria-hidden="true"></i>
+                            </span>
+                          }
+                        </span>
+                        <span class="card-body">
+                          <span class="d-block small fw-medium card-title">{{ a.titre }}</span>
+                          <span class="d-block text-body-secondary" style="font-size:.72rem">
+                            {{ a.annee }} · {{ a.photos }} photo{{ a.photos > 1 ? 's' : '' }}
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="text-body-secondary small mt-3 mb-0">
+                  Aucun album pour l'instant. Un album se crée tout seul à la fin de chaque séjour,
+                  et vous pouvez en ouvrir un dès maintenant.
+                </p>
               }
             </div>
-            @if (!v.albums.length) {
-              <p class="secondaire" style="margin:12px 0 0">
-                Aucun album pour l'instant. Un album se crée tout seul à la fin de chaque séjour,
-                et vous pouvez en ouvrir un dès maintenant.
-              </p>
-            }
           </section>
         }
 
-        <section class="carte">
-          <h2>Livre d'or</h2>
-          <p class="secondaire" style="margin:6px 0 0">
-            Les mots laissés à chaque fin de séjour, du plus récent au plus ancien.
-          </p>
-          <form class="saisie" style="margin:14px 0 6px" (ngSubmit)="ecrire()">
-            <div style="grid-column:1/-1">
-              <label for="m-texte">Votre mot</label>
-              <textarea id="m-texte" name="mtexte" rows="3" [(ngModel)]="fTexte"
-                        placeholder="Une semaine de pluie et de cartes, et personne n'a voulu repartir."></textarea>
-            </div>
-            <div>
-              <label for="m-sign">Signature</label>
-              <input id="m-sign" name="msign" [(ngModel)]="fSignature" placeholder="Les Berger, août 2026">
-            </div>
-            <div>
-              <button class="btn btn-primaire" type="submit" [disabled]="occupe() || !fTexte.trim()">
-                Laisser un mot
-              </button>
-            </div>
-          </form>
-
-          <div style="margin-top:8px">
-            @for (m of v.mots; track m.id) {
-              <div class="mot">
-                <div class="texte">{{ m.texte }}</div>
-                <div class="secondaire" style="font-size:12.5px;margin-top:5px">
-                  {{ m.signature || m.ecritParNom }} · {{ horodatageLisible(m.ecritLe) }}
-                </div>
+        <section class="card">
+          <div class="card-body">
+            <div class="eyebrow mb-2"><i class="bi bi-journal-text me-2" aria-hidden="true"></i>Livre d'or</div>
+            <p class="text-body-secondary small">
+              Les mots laissés à chaque fin de séjour, du plus récent au plus ancien.
+            </p>
+            <form class="row g-3" (ngSubmit)="ecrire()">
+              <div class="col-12">
+                <label class="form-label small text-body-secondary" for="m-texte">Votre mot</label>
+                <textarea class="form-control" id="m-texte" name="mtexte" rows="3" [(ngModel)]="fTexte"
+                          placeholder="Une semaine de pluie et de cartes, et personne n'a voulu repartir."></textarea>
               </div>
-            }
-            @if (!v.mots.length) {
-              <p class="secondaire" style="margin:6px 0 0">Le livre d'or est encore vierge.</p>
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="m-sign">Signature</label>
+                <input class="form-control" id="m-sign" name="msign" [(ngModel)]="fSignature"
+                       placeholder="Les Berger, août 2026">
+              </div>
+              <div class="col-12 col-md-6 d-flex align-items-end">
+                <button class="btn btn-primary" type="submit" [disabled]="occupe() || !fTexte.trim()">
+                  Laisser un mot
+                </button>
+              </div>
+            </form>
+
+            @if (v.mots.length) {
+              <ul class="list-group list-group-flush mt-3">
+                @for (m of v.mots; track m.id) {
+                  <li class="list-group-item px-0">
+                    <div class="small" style="white-space:pre-wrap">{{ m.texte }}</div>
+                    <div class="text-body-secondary mt-1" style="font-size:.72rem">
+                      {{ m.signature || m.ecritParNom }} · {{ horodatageLisible(m.ecritLe) }}
+                    </div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-body-secondary small mt-3 mb-0">Le livre d'or est encore vierge.</p>
             }
           </div>
         </section>

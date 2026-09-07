@@ -20,189 +20,238 @@ import type { Etat as EtatModele, Maj, StatutMaj } from '../core/modeles';
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    .apercu-maj { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--separateur); }
-    .kv { display: flex; justify-content: space-between; gap: 14px; padding: 9px 0; border-top: 1px solid var(--separateur); }
-    .kv:first-child { border-top: none; }
-    .kv .cle { color: var(--encre-3); font-size: 12.5px; }
+    /* Les blocs de commande gardent leur fond et défilent seuls : un chemin
+       long ne doit pas élargir la page. */
     pre {
-      background: var(--pastille-neutre); border-radius: 10px; padding: 12px 14px;
-      font-size: 12.5px; overflow-x: auto; margin: 8px 0 0;
+      background: var(--bs-tertiary-bg); border-radius: var(--bs-border-radius);
+      padding: 12px 14px; font-size: .78rem; overflow-x: auto; margin: .5rem 0 0;
     }
   `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>État du service</h1>
-        <p class="secondaire" style="margin:6px 0 0">Ce qu'il faut regarder quand quelque chose ne va pas.</p>
+        <h1 class="h2 mb-2">État du service</h1>
+        <p class="text-body-secondary mb-0">Ce qu'il faut regarder quand quelque chose ne va pas.</p>
       </div>
 
       @if (etat(); as e) {
-        <div class="grille" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
-          <section class="carte">
-            <h2>Courriel</h2>
-            <div style="margin-top:10px">
-              <div class="kv">
-                <span class="cle">Relais SMTP</span>
-                <span>{{ e.courriel.relais || 'aucun' }}</span>
-              </div>
-              <div class="kv"><span class="cle">Expéditeur</span><span>{{ e.courriel.adresseExpediteur || 'Non renseigné' }}</span></div>
-              <div class="kv"><span class="cle">Adresse publique</span><span>{{ e.courriel.adressePublique || 'Non renseignée' }}</span></div>
-              <div class="kv"><span class="cle">En attente</span><span class="chiffres">{{ e.courriel.file.enAttente }}</span></div>
-              <div class="kv"><span class="cle">Abandonnées</span><span class="chiffres">{{ e.courriel.file.abandonnees }}</span></div>
-              <div class="kv"><span class="cle">Envoyées (24 h)</span><span class="chiffres">{{ e.courriel.file.envoyees24h }}</span></div>
-            </div>
+        <div class="row row-cols-1 row-cols-xl-2 g-3">
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Courriel</div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Relais SMTP</span>
+                    <span class="fw-medium text-end">{{ e.courriel.relais || 'aucun' }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Expéditeur</span>
+                    <span class="fw-medium text-end">{{ e.courriel.adresseExpediteur || 'Non renseigné' }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Adresse publique</span>
+                    <span class="fw-medium text-end">{{ e.courriel.adressePublique || 'Non renseignée' }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">En attente</span>
+                    <span class="fw-medium tnum">{{ e.courriel.file.enAttente }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Abandonnées</span>
+                    <span class="fw-medium tnum">{{ e.courriel.file.abandonnees }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Envoyées (24 h)</span>
+                    <span class="fw-medium tnum">{{ e.courriel.file.envoyees24h }}</span>
+                  </li>
+                </ul>
 
-            @if (!e.courriel.relais) {
-              <div class="encart" style="margin-top:12px">
-                Aucun relais n'est configuré : les notifications s'accumulent sans partir. Définissez
-                <code>MDF_SMTP_HOST</code>, <code>MDF_SMTP_FROM</code> et <code>MDF_PUBLIC_URL</code>,
-                puis redémarrez le service.
-              </div>
-            }
-            @if (e.courriel.file.dernieresErreurs.length) {
-              <h3 style="margin-top:16px">Dernières erreurs du relais</h3>
-              @for (x of e.courriel.file.dernieresErreurs; track x.cree) {
-                <pre>{{ x.type }} · {{ horodatageLisible(x.cree) }}
+                @if (!e.courriel.relais) {
+                  <div class="alert alert-primary mt-3 small">
+                    Aucun relais n'est configuré : les notifications s'accumulent sans partir. Définissez
+                    <code>MDF_SMTP_HOST</code>, <code>MDF_SMTP_FROM</code> et <code>MDF_PUBLIC_URL</code>,
+                    puis redémarrez le service.
+                  </div>
+                }
+                @if (e.courriel.file.dernieresErreurs.length) {
+                  <h3 class="h6 mt-4">Dernières erreurs du relais</h3>
+                  @for (x of e.courriel.file.dernieresErreurs; track x.cree) {
+                    <pre>{{ x.type }} · {{ horodatageLisible(x.cree) }}
 {{ x.erreur }}</pre>
-              }
-            }
-          </section>
-
-          <section class="carte">
-            <h2>Base de données</h2>
-            <div style="margin-top:10px">
-              <div class="kv"><span class="cle">Version du service</span><span>{{ e.version }}</span></div>
-              <div class="kv">
-                <span class="cle">Schéma</span>
-                <span class="chiffres">{{ e.schema.applique }} / {{ e.schema.cible }}</span>
+                  }
+                }
               </div>
-              <div class="kv"><span class="cle">Répertoire de données</span><span>{{ e.donnees.repertoire }}</span></div>
-              <div class="kv"><span class="cle">Personnes</span><span class="chiffres">{{ e.donnees.personnes }}</span></div>
-              <div class="kv"><span class="cle">Biens</span><span class="chiffres">{{ e.donnees.biens }}</span></div>
-              <div class="kv"><span class="cle">Séjours</span><span class="chiffres">{{ e.donnees.sejours }}</span></div>
-              <div class="kv"><span class="cle">Fichiers</span><span class="chiffres">{{ e.donnees.fichiers }}</span></div>
-              @if (e.donnees.orphelins.nombre) {
-                <div class="kv">
-                  <span class="cle">Fichiers orphelins</span>
-                  <span class="chiffres">{{ e.donnees.orphelins.nombre }} ({{ ko(e.donnees.orphelins.octets) }})</span>
-                </div>
-              }
-            </div>
-          </section>
+            </section>
+          </div>
+
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Base de données</div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Version du service</span>
+                    <span class="fw-medium">{{ e.version }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Schéma</span>
+                    <span class="fw-medium tnum">{{ e.schema.applique }} / {{ e.schema.cible }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Répertoire de données</span>
+                    <span class="fw-medium text-end">{{ e.donnees.repertoire }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Personnes</span>
+                    <span class="fw-medium tnum">{{ e.donnees.personnes }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Biens</span>
+                    <span class="fw-medium tnum">{{ e.donnees.biens }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Séjours</span>
+                    <span class="fw-medium tnum">{{ e.donnees.sejours }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Fichiers</span>
+                    <span class="fw-medium tnum">{{ e.donnees.fichiers }}</span>
+                  </li>
+                  @if (e.donnees.orphelins.nombre) {
+                    <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                      <span class="text-body-secondary">Fichiers orphelins</span>
+                      <span class="fw-medium tnum">
+                        {{ e.donnees.orphelins.nombre }} ({{ ko(e.donnees.orphelins.octets) }})
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </section>
+          </div>
         </div>
 
         <!-- Les mises à jour. La carte se place juste sous la version
              installée, parce que c'est là qu'on se pose la question. -->
-        <section class="carte">
-          <h2>Mises à jour</h2>
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">Mises à jour</h2>
 
-          @if (majEnCours()) {
-            <div class="encart">
-              <strong>Mise à jour en cours.</strong>
-              {{ statutMaj()?.message || 'Veuillez patienter.' }}
-              Le service va redémarrer tout seul ; cette page se remettra à jour.
-              Ne l'actualisez pas en boucle, et surtout n'éteignez pas le serveur.
-            </div>
-          } @else {
-            <p class="secondaire" style="margin:6px 0 12px">
-              Version installée : <strong>{{ e.version }}</strong> · dépôt {{ e.maj.depot }}
-            </p>
-
-            @if (statutMaj(); as st) {
-              @if (st.etat === 'echec') { <div class="encart">{{ st.message }}</div> }
-              @if (st.etat === 'termine') { <div class="encart-positif">{{ st.message }}</div> }
-            }
-            @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-
-            @if (!e.maj.verificationAutorisee) {
-              <p class="secondaire" style="max-width:640px">
-                La vérification des versions est désactivée. Le réglage
-                « Vérifier les nouvelles versions sur GitHub », dans Réglages, section
-                Exploitation, l'autorise. C'est un appel réseau sortant : ce serveur doit avoir
-                le droit de sortir sur Internet.
-              </p>
+            @if (majEnCours()) {
+              <div class="alert alert-primary mb-0">
+                <strong>Mise à jour en cours.</strong>
+                {{ statutMaj()?.message || 'Veuillez patienter.' }}
+                Le service va redémarrer tout seul ; cette page se remettra à jour.
+                Ne l'actualisez pas en boucle, et surtout n'éteignez pas le serveur.
+              </div>
             } @else {
-              @if (maj(); as m) {
-                @if (m.misAJourDisponible) {
-                  <div class="encart">
-                    <strong>Version {{ m.tag }} disponible.</strong>
-                    @if (m.nom && m.nom !== m.tag) { {{ m.nom }} }
-                    <a [href]="m.url" target="_blank" rel="noopener noreferrer">Voir les notes de version</a>
-                  </div>
-                  @if (m.notes) { <pre style="max-height:220px;overflow:auto">{{ m.notes }}</pre> }
-                  @if (!m.installationPossible) {
-                    <p class="secondaire" style="max-width:640px">
-                      L'installation depuis l'interface n'est pas en place sur ce serveur. Mettez à
-                      jour à la main, ou relancez l'installateur avec <code>MAJ_AUTO=true</code>.
-                    </p>
-                  }
-                } @else {
-                  <p class="secondaire">Vous êtes à jour ({{ m.installee }}).</p>
-                }
-              }
+              <p class="text-body-secondary small">
+                Version installée : <strong>{{ e.version }}</strong> · dépôt {{ e.maj.depot }}
+              </p>
 
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-                <button class="btn" (click)="verifier()" [disabled]="occupe()">
+              @if (statutMaj(); as st) {
+                @if (st.etat === 'echec') { <div class="alert alert-primary">{{ st.message }}</div> }
+                @if (st.etat === 'termine') { <div class="alert alert-success">{{ st.message }}</div> }
+              }
+              @if (erreur()) { <div class="alert alert-primary">{{ erreur() }}</div> }
+
+              @if (!e.maj.verificationAutorisee) {
+                <p class="text-body-secondary small" style="max-width:640px">
+                  La vérification des versions est désactivée. Le réglage
+                  « Vérifier les nouvelles versions sur GitHub », dans Réglages, section
+                  Exploitation, l'autorise. C'est un appel réseau sortant : ce serveur doit avoir
+                  le droit de sortir sur Internet.
+                </p>
+              } @else {
+                @if (maj(); as m) {
+                  @if (m.misAJourDisponible) {
+                    <div class="alert alert-primary">
+                      <strong>Version {{ m.tag }} disponible.</strong>
+                      @if (m.nom && m.nom !== m.tag) { {{ m.nom }} }
+                      <a [href]="m.url" target="_blank" rel="noopener noreferrer">Voir les notes de version</a>
+                    </div>
+                    @if (m.notes) { <pre style="max-height:220px;overflow:auto">{{ m.notes }}</pre> }
+                    @if (!m.installationPossible) {
+                      <p class="text-body-secondary small" style="max-width:640px">
+                        L'installation depuis l'interface n'est pas en place sur ce serveur. Mettez à
+                        jour à la main, ou relancez l'installateur avec <code>MAJ_AUTO=true</code>.
+                      </p>
+                    }
+                  } @else {
+                    <p class="text-body-secondary small">Vous êtes à jour ({{ m.installee }}).</p>
+                  }
+                }
+
+                <button class="btn btn-outline-secondary mt-2" (click)="verifier()" [disabled]="occupe()">
                   {{ occupe() ? 'Vérification...' : 'Vérifier les mises à jour' }}
                 </button>
-              </div>
 
-              <!-- La confirmation par mot de passe, en page et non dans une
-                   invite du navigateur : elle doit dire ce qu'elle engage, et
-                   une invite native ne met rien en forme. -->
-              @if (maj()?.misAJourDisponible && maj()!.installationPossible) {
-                <div class="apercu-maj">
-                  <h3 style="margin:0">Installer la version {{ maj()!.tag }}</h3>
-                  <p class="secondaire" style="margin:6px 0 0;max-width:640px">
-                    Le serveur va télécharger cette version, la recompiler et redémarrer. Comptez
-                    une à deux minutes pendant lesquelles l'application ne répondra pas. Une
-                    sauvegarde de la base est prise automatiquement avant toute migration.
-                  </p>
-                  <p class="secondaire" style="margin:8px 0 0;max-width:640px">
-                    <strong>Cette opération installe et exécute du code sur votre serveur.</strong>
-                    Elle se confirme par votre mot de passe, comme une connexion.
-                  </p>
-                  <form (ngSubmit)="installer()" style="margin-top:12px">
-                    <div class="champ" style="max-width:340px">
-                      <label for="maj-mdp">Votre mot de passe</label>
-                      <input id="maj-mdp" name="motDePasse" type="password" autocomplete="current-password"
-                             [(ngModel)]="motDePasse" required>
-                    </div>
-                    <button class="btn btn-primaire" type="submit" [disabled]="occupe() || !motDePasse">
-                      Installer maintenant
-                    </button>
-                  </form>
-                </div>
+                <!-- La confirmation par mot de passe, en page et non dans une
+                     invite du navigateur : elle doit dire ce qu'elle engage, et
+                     une invite native ne met rien en forme. -->
+                @if (maj()?.misAJourDisponible && maj()!.installationPossible) {
+                  <div class="border-top mt-4 pt-3">
+                    <h3 class="h6">Installer la version {{ maj()!.tag }}</h3>
+                    <p class="text-body-secondary small" style="max-width:640px">
+                      Le serveur va télécharger cette version, la recompiler et redémarrer. Comptez
+                      une à deux minutes pendant lesquelles l'application ne répondra pas. Une
+                      sauvegarde de la base est prise automatiquement avant toute migration.
+                    </p>
+                    <p class="text-body-secondary small" style="max-width:640px">
+                      <strong>Cette opération installe et exécute du code sur votre serveur.</strong>
+                      Elle se confirme par votre mot de passe, comme une connexion.
+                    </p>
+                    <form (ngSubmit)="installer()">
+                      <div class="mb-3" style="max-width:340px">
+                        <label class="form-label small text-body-secondary" for="maj-mdp">Votre mot de passe</label>
+                        <input class="form-control" id="maj-mdp" name="motDePasse" type="password"
+                               autocomplete="current-password" [(ngModel)]="motDePasse" required>
+                      </div>
+                      <button class="btn btn-primary" type="submit" [disabled]="occupe() || !motDePasse">
+                        Installer maintenant
+                      </button>
+                    </form>
+                  </div>
+                }
               }
-            }
-          }
-        </section>
-
-        <section class="carte">
-          <h2>Migrations appliquées</h2>
-          <div style="margin-top:10px">
-            @for (m of e.schema.migrations; track m.version) {
-              <div class="kv">
-                <span class="cle chiffres">{{ m.version }} · {{ m.libelle }}</span>
-                <span class="meta">{{ horodatageLisible(m.appliqueLe) }} ({{ m.dureeMs }} ms)</span>
-              </div>
             }
           </div>
         </section>
 
-        <section class="carte">
-          <h2>Sur le serveur</h2>
-          <p class="secondaire" style="margin:6px 0 0">Les commandes utiles, pour ne pas avoir à s'en souvenir.</p>
-          <h3 style="margin-top:14px">Suivre le journal</h3>
-          <pre>journalctl -f -u maison-de-famille        # LXC
+        <section class="card">
+          <div class="card-body">
+            <div class="eyebrow mb-2">Migrations appliquées</div>
+            <ul class="list-group list-group-flush">
+              @for (m of e.schema.migrations; track m.version) {
+                <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                  <span class="tnum">{{ m.version }} · {{ m.libelle }}</span>
+                  <span class="text-body-secondary text-end" style="font-size:.72rem">
+                    {{ horodatageLisible(m.appliqueLe) }} ({{ m.dureeMs }} ms)
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-body">
+            <div class="eyebrow mb-2">Sur le serveur</div>
+            <p class="text-body-secondary small">Les commandes utiles, pour ne pas avoir à s'en souvenir.</p>
+            <h3 class="h6 mt-3">Suivre le journal</h3>
+            <pre>journalctl -f -u maison-de-famille        # LXC
 docker compose logs -f                     # Docker</pre>
-          <h3 style="margin-top:14px">Sauvegarder</h3>
-          <pre>bash /opt/maison-de-famille/deploy/lxc/sauvegarde.sh</pre>
-          <h3 style="margin-top:14px">Redémarrer</h3>
-          <pre>systemctl restart maison-de-famille</pre>
+            <h3 class="h6 mt-3">Sauvegarder</h3>
+            <pre>bash /opt/maison-de-famille/deploy/lxc/sauvegarde.sh</pre>
+            <h3 class="h6 mt-3">Redémarrer</h3>
+            <pre>systemctl restart maison-de-famille</pre>
+          </div>
         </section>
       } @else {
-        <div class="carte"><p class="vide">Chargement...</p></div>
+        <div class="card"><div class="card-body">
+          <p class="text-body-secondary small mb-0">Chargement...</p>
+        </div></div>
       }
     </div>
   `,

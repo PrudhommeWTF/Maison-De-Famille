@@ -1,0 +1,187 @@
+// Le thème du projet, compilé depuis les sources Sass de Bootstrap 5.3.
+//
+// **Pourquoi compiler plutôt que surcharger.** Bootstrap déclare une partie de
+// ses couleurs en valeur littérale à l'intérieur des règles de composants
+// (`.btn-primary { --bs-btn-bg: #0d6efd }`). Une propriété posée sur l'élément
+// l'emporte toujours sur celle héritée de `:root` : surcharger `--bs-primary`
+// ne changerait donc ni les boutons ni les pilules actives. Le prototype de la
+// maquette contourne le problème en réécrivant une trentaine de variables de
+// composants ; son propre paquet de transmission dit de ne pas reproduire ce
+// contournement en production. En compilant, les variantes dérivées
+// (`-subtle`, `-emphasis`, survol, actif, anneau de focus) sont recalculées et
+// restent cohérentes entre elles.
+//
+// **Les polices et les icônes sont embarquées**, jamais chargées depuis un CDN :
+// l'application ne fait aucun appel réseau sortant depuis le navigateur, et
+// c'est ce qui permet une politique de sécurité de contenu stricte. Elles sont
+// déclarées dans `angular.json`, avant ce fichier.
+
+// 1. Les fonctions d'abord : les surcharges s'en servent.
+@import 'bootstrap/scss/functions';
+
+// 2. La palette du paquet de transmission. Chaque valeur porte son rôle en nom
+//    dans le tableau du handoff : on la reprend, on ne la réinvente pas.
+$primary: #b0603f;
+// Deux couleurs sont assombries par rapport au prototype, et c'est délibéré.
+// Sur l'olive (#7a8b5c) et l'ambre (#a5813f) d'origine, *aucune* couleur de
+// libellé n'atteignait 4,5:1 : le blanc de la maquette donnait 3,64 et 3,56, et
+// l'encre 4,37 et 4,48. Les boutons « Pour » d'un vote et les alertes étaient
+// donc sous le seuil quoi qu'on écrive dessus.
+//
+// L'olive prend la teinte de survol que le handoff nomme déjà (#68784c, 4,72:1)
+// plutôt qu'une couleur inventée ; l'ambre est assombri de 14 % (4,62:1). Les
+// deux restent la palette du projet, et le blanc de la maquette est conservé
+// partout : c'est Bootstrap qui le choisit maintenant tout seul, par son propre
+// calcul de contraste, sans qu'on ait à forcer quoi que ce soit.
+$success: #68784c;
+$info: #4a6572;
+$warning: #8e6f36;
+
+$body-bg: #f2ede5;
+$body-color: #24201b;
+$body-secondary-color: #6b6157;
+$body-tertiary-bg: #eae3d8;
+$body-secondary-bg: #e6ded1;
+$border-color: #e4dcd1;
+
+$border-radius: .625rem;
+$border-radius-sm: .5rem;
+$border-radius-lg: 1rem;
+$border-radius-xl: 1.125rem;
+
+$font-family-sans-serif: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+$headings-font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+$font-size-base: .9375rem;
+$headings-font-weight: 500;
+
+// La barre de contexte et la navigation latérale portent la pilule active en
+// encre, pas en accent : c'est ce qui distingue « où je suis » de « ce sur quoi
+// je peux cliquer ».
+$nav-pills-link-active-bg: $body-color;
+
+// Un lien de navigation n'est pas un lien de texte : il porte l'encre, et ne
+// prend l'accent qu'au survol. Sans cela, les onze entrées de la latérale
+// s'affichent en orange et l'écran n'a plus de hiérarchie.
+$nav-link-color: #4a443c;
+$nav-link-hover-color: $primary;
+
+// Les encres du handoff. Sans elles, Bootstrap dérive `-text-emphasis` par un
+// assombrissement de 60 %, qui donne un brun presque noir (#46261a) là où la
+// maquette veut un brun chaud (#8d4a2e). Les deux passent le contraste ; seul
+// le second est le design demandé.
+$primary-text-emphasis: #8d4a2e;
+$success-text-emphasis: #414b2e;
+$info-text-emphasis: #33454f;
+$warning-text-emphasis: #5f4a24;
+$secondary-text-emphasis: #4a443c;
+
+// Ce que Bootstrap pose sur un fond coloré : l'encre et le papier du projet,
+// jamais le noir et le blanc purs.
+$color-contrast-light: #fffdf9;
+$color-contrast-dark: #24201b;
+
+
+// La palette n'a pas de rouge, et n'en veut pas : une erreur de saisie se dit
+// dans le brun d'accent, comme les alertes. Sans cela, `is-invalid` posait le
+// rouge par défaut de Bootstrap au milieu d'un écran chaud.
+$danger: #8d4a2e;
+
+// Une semaine fait sept jours : la grille du calendrier a besoin de
+// `row-cols-7`, que Bootstrap n'engendre pas au-delà de six.
+$grid-row-columns: 7;
+
+// Le gris de Bootstrap est froid (#6c757d) et jure avec la palette : le second
+// rôle prend le gris chaud du handoff. Il porte les boutons secondaires, qui
+// sont les plus nombreux de l'application.
+$secondary: #6b6157;
+
+// Les surfaces que le handoff distingue du fond : une carte est plus claire que
+// la page, et les séparateurs de liste sont plus doux que les bordures. Elles
+// se posent **avant** l'import des variables : plusieurs valeurs de Bootstrap
+// en dérivent au moment de cet import (le fond d'une liste déroulante vient de
+// celui d'un champ), et les poser après laissait des composants sur l'ancienne
+// valeur.
+$card-bg: #fffdf9;
+$card-cap-bg: transparent;
+$list-group-bg: transparent;
+$list-group-border-color: #efe8de;
+$list-group-action-hover-bg: #f5efe6;
+$table-bg: transparent;
+$table-border-color: #efe8de;
+$table-hover-bg: #f5efe6;
+$input-bg: #fffdf9;
+$input-border-color: #d9cfc2;
+$btn-border-radius: $border-radius;
+
+
+// 3. Le reste de Bootstrap, qui recalcule tout à partir de ce qui précède.
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+@import 'bootstrap/scss/bootstrap';
+
+// ---------------------------------------------------------------------------
+// Les seules classes maison, et chacune se justifie.
+// ---------------------------------------------------------------------------
+
+// Le libellé de section en petites capitales, répété une trentaine de fois dans
+// la maquette. Aucun utilitaire Bootstrap ne compose cette combinaison.
+.eyebrow {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #5f564c;
+}
+
+// Les chiffres à chasse fixe, pour que les montants et les dates s'alignent en
+// colonne. `font-variant-numeric` n'a pas d'utilitaire Bootstrap.
+.tnum { font-variant-numeric: tabular-nums; }
+
+// La cellule de calendrier : une hauteur minimale, et la bordure tiretée d'une
+// demande en attente. Ni l'une ni l'autre n'existe en utilitaire.
+.cal-cell { min-height: 76px; }
+.cal-dashed { border-style: dashed !important; }
+
+// Les initiales d'une personne dans un rond. Bootstrap n'a pas de composant
+// d'avatar, et la combinaison (taille fixe, rond, centrage, ne rétrécit pas)
+// revient sur quatre écrans.
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 50%;
+  background: var(--#{$prefix}secondary-bg);
+  color: var(--#{$prefix}secondary-color);
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+// La navigation latérale marque l'entrée courante autrement que la barre de
+// contexte : celle-ci dit « quel bien », en encre pleine, tandis que celle-là
+// dit « quel écran », en fond doux. Le même `.active` de Bootstrap ne peut pas
+// porter les deux sens, d'où cette variante, qui est celle de la maquette.
+.nav-pills .nav-link.side-link.active {
+  background: var(--#{$prefix}secondary-bg);
+  color: var(--#{$prefix}body-color);
+}
+
+// Les deux barres collantes s'empilent : la hauteur de l'une est le décalage de
+// l'autre. Les valeurs vivent ici pour que le cadre n'en pose aucune en dur.
+:root { --mdf-entete: 57px; --mdf-contexte: 48px; }
+
+// Les titres suivent la famille d'affichage, y compris ceux des cartes, que
+// Bootstrap ne compte pas parmi les `h1`-`h6`.
+.card-title,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  font-family: $headings-font-family;
+  letter-spacing: -.015em;
+}
+
+h1, h2, h3, h4, h5, h6 { letter-spacing: -.015em; }

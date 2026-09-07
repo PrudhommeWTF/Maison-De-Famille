@@ -78,8 +78,8 @@ test('un séjour validé l\'emporte sur une demande pour la couleur de la case',
   ]);
   const c = caseDe(g, '2026-08-10');
   assert.equal(c.occupations.length, 2);
-  assert.equal(c.teinte.tirets, false, 'une case en tirets laisserait croire que la date est libre');
-  assert.equal(c.teinte.fond, '#f0e0d5');
+  assert.ok(!c.teinte.classes.includes('cal-dashed'), 'une case en tirets laisserait croire que la date est libre');
+  assert.ok(c.teinte.classes.includes('bg-primary-subtle'));
 });
 
 test('les nuits en conflit viennent du serveur et se marquent sur la grille', () => {
@@ -90,10 +90,10 @@ test('les nuits en conflit viennent du serveur et se marquent sur la grille', ()
 });
 
 test('une demande se distingue visuellement de ce qui est acquis', () => {
-  assert.equal(teinteDe('famille', 'demande').tirets, true);
-  assert.equal(teinteDe('famille', 'valide').tirets, false);
-  assert.equal(teinteDe('location', 'valide').fond, '#e4e9dc');
-  assert.equal(teinteDe('entretien', 'valide').fond, '#e5e8ea');
+  assert.ok(teinteDe('famille', 'demande').classes.includes('cal-dashed'));
+  assert.ok(!teinteDe('famille', 'valide').classes.includes('cal-dashed'));
+  assert.ok(teinteDe('location', 'valide').classes.includes('bg-success-subtle'));
+  assert.ok(teinteDe('entretien', 'valide').classes.includes('bg-info-subtle'));
 });
 
 test('la liste sous la grille reprend ce qui touche le mois, dans l\'ordre', () => {

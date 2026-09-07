@@ -39,230 +39,255 @@ const LIBELLES: Record<string, string> = {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .personne { display: grid; align-items: center; gap: 10px 14px; padding: 14px 0;
-                border-bottom: 1px solid var(--separateur);
-                grid-template-columns: 34px minmax(170px, 1.3fr) minmax(140px, 1fr) minmax(120px, 0.9fr) auto; }
-    .personne:last-child { border-bottom: none; }
-    .personne .nom { font-size: 14px; display: block; }
-    .personne .actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-    .personne .actions select { width: auto; min-width: 150px; }
-    .roles-de { display: flex; gap: 6px; flex-wrap: wrap; }
-    .saisie { display: grid; grid-template-columns: 1fr 1fr 160px auto; gap: 10px; align-items: end; }
-    .acces { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 11px 0;
-             border-bottom: 1px solid var(--separateur); }
-    .acces:last-of-type { border-bottom: none; }
-    .acces .quoi { flex: 1; min-width: 170px; }
-    .pastille.expire, .pastille.revoque { background: var(--pastille-neutre); color: var(--encre-3); }
-    .lien-repli { background: var(--fond-2); border: 1px solid var(--separateur); border-radius: var(--rayon-2);
-                  padding: 12px; margin-top: 10px; }
-    .lien-repli code { display: block; word-break: break-all; font-size: 12px; margin: 8px 0;
-                       background: var(--fond); padding: 9px; border-radius: var(--rayon-3); }
-    @media (max-width: 900px) {
-      .saisie { grid-template-columns: 1fr; }
-      /* Au doigt, une ligne en colonnes devient illisible : on empile, et les
-         actions passent en pleine largeur pour rester atteignables au pouce. */
-      .personne { grid-template-columns: 34px 1fr; }
-      .personne .ident, .roles-de, .personne .actions { grid-column: 2; }
-      .personne .actions { justify-content: flex-start; }
-      .personne .actions select { width: 100%; }
-    }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Personnes et rôles</h1>
-        <p class="secondaire" style="margin:6px 0 0">
-          Qui a un accès, à quel titre, et sur quelle structure.
-        </p>
+        <h1 class="h2 mb-2">Personnes et rôles</h1>
+        <p class="text-body-secondary mb-0">Qui a un accès, à quel titre, et sur quelle structure.</p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
-      <section class="carte">
-        <h2>Inviter quelqu'un</h2>
-        <p class="secondaire" style="margin:4px 0 12px">
-          La personne choisit elle-même son mot de passe : vous ne le connaissez jamais.
-          Sans adresse de courriel, elle existe comme nom pour les quotes-parts, sans compte.
-        </p>
-        <form class="saisie" (ngSubmit)="creer()">
-          <div>
-            <label for="p-nom">Nom</label>
-            <input id="p-nom" name="nom" [(ngModel)]="fNom" placeholder="Paul Prudhomme" required>
-          </div>
-          <div>
-            <label for="p-email">Adresse de courriel (facultative)</label>
-            <input id="p-email" name="email" type="email" [(ngModel)]="fEmail" placeholder="paul.exemple.fr">
-          </div>
-          <div>
-            <label for="p-foyer">Foyer</label>
-            <select id="p-foyer" name="foyerId" [(ngModel)]="fFoyerId">
-              <option [ngValue]="0">Sans foyer</option>
-              @for (f of foyers(); track f.id) { <option [ngValue]="f.id">{{ f.nom }}</option> }
-            </select>
-          </div>
-          <button class="btn btn-primaire" type="submit" [disabled]="occupe() || !fNom.trim()">
-            Créer et inviter
-          </button>
-        </form>
-
-        <details style="margin-top:12px">
-          <summary class="secondaire" style="cursor:pointer;font-size:13px">Créer un foyer</summary>
-          <form class="saisie" style="margin-top:10px;grid-template-columns:1fr auto" (ngSubmit)="creerFoyer()">
-            <div>
-              <label for="f-nom">Nom du foyer</label>
-              <input id="f-nom" name="foyerNom" [(ngModel)]="fFoyerNom" placeholder="Famille de Paul">
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Inviter quelqu'un</h2>
+          <p class="text-body-secondary small">
+            La personne choisit elle-même son mot de passe : vous ne le connaissez jamais.
+            Sans adresse de courriel, elle existe comme nom pour les quotes-parts, sans compte.
+          </p>
+          <form class="row g-3 align-items-end" (ngSubmit)="creer()">
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-body-secondary" for="p-nom">Nom</label>
+              <input class="form-control" id="p-nom" name="nom" [(ngModel)]="fNom" placeholder="Paul Prudhomme" required>
             </div>
-            <button class="btn" type="submit" [disabled]="occupe() || !fFoyerNom.trim()">Ajouter</button>
+            <div class="col-12 col-md-4">
+              <label class="form-label small text-body-secondary" for="p-email">Adresse de courriel (facultative)</label>
+              <input class="form-control" id="p-email" name="email" type="email" [(ngModel)]="fEmail"
+                     placeholder="paul.exemple.fr">
+            </div>
+            <div class="col-12 col-md-2">
+              <label class="form-label small text-body-secondary" for="p-foyer">Foyer</label>
+              <select class="form-select" id="p-foyer" name="foyerId" [(ngModel)]="fFoyerId">
+                <option [ngValue]="0">Sans foyer</option>
+                @for (f of foyers(); track f.id) { <option [ngValue]="f.id">{{ f.nom }}</option> }
+              </select>
+            </div>
+            <div class="col-12 col-md-2">
+              <button class="btn btn-primary w-100" type="submit" [disabled]="occupe() || !fNom.trim()">
+                Créer et inviter
+              </button>
+            </div>
           </form>
-        </details>
+
+          <details class="mt-3">
+            <summary class="text-body-secondary small" style="cursor:pointer">Créer un foyer</summary>
+            <form class="row g-3 align-items-end mt-0" (ngSubmit)="creerFoyer()">
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-body-secondary" for="f-nom">Nom du foyer</label>
+                <input class="form-control" id="f-nom" name="foyerNom" [(ngModel)]="fFoyerNom" placeholder="Famille de Paul">
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-outline-secondary" type="submit"
+                        [disabled]="occupe() || !fFoyerNom.trim()">Ajouter</button>
+              </div>
+            </form>
+          </details>
+        </div>
       </section>
 
       @if (invitation(); as inv) {
-        <section class="carte">
-          <h2>Lien d'invitation de {{ invitePour() }}</h2>
-          @if (inv.lien) {
-            <div class="lien-repli">
-              <p style="margin:0;font-size:13px">
-                Transmettez ce lien à la personne, par message ou de vive voix. Il vaut pour choisir
-                son mot de passe : ne le laissez pas traîner, et sachez que son affichage est
-                enregistré dans le journal avec votre nom.
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">Lien d'invitation de {{ invitePour() }}</h2>
+            @if (inv.lien) {
+              <div class="bg-body-tertiary border rounded p-3">
+                <p class="small">
+                  Transmettez ce lien à la personne, par message ou de vive voix. Il vaut pour choisir
+                  son mot de passe : ne le laissez pas traîner, et sachez que son affichage est
+                  enregistré dans le journal avec votre nom.
+                </p>
+                <code class="d-block bg-body p-2 rounded my-2" style="word-break:break-all">{{ inv.lien }}</code>
+                <p class="text-body-secondary small mb-0">
+                  Valable jusqu'au {{ dateLongue(inv.expireLe!.slice(0, 10)) }}.
+                  Redemander un lien annule celui-ci.
+                </p>
+              </div>
+            } @else {
+              <p class="text-body-secondary small mb-0">
+                Courriel d'invitation mis en file. S'il n'arrive pas, l'écran « État du service »
+                montre la file et l'erreur exacte du relais.
               </p>
-              <code>{{ inv.lien }}</code>
-              <p class="secondaire" style="margin:0;font-size:12.5px">
-                Valable jusqu'au {{ dateLongue(inv.expireLe!.slice(0, 10)) }}.
-                Redemander un lien annule celui-ci.
-              </p>
-            </div>
-          } @else {
-            <p class="secondaire" style="margin:0">
-              Courriel d'invitation mis en file. S'il n'arrive pas, l'écran « État du service »
-              montre la file et l'erreur exacte du relais.
-            </p>
-          }
-          <button class="btn" type="button" style="margin-top:10px" (click)="invitation.set(null)">Fermer</button>
+            }
+            <button class="btn btn-sm btn-outline-secondary mt-3" type="button"
+                    (click)="invitation.set(null)">Fermer</button>
+          </div>
         </section>
       }
 
       @if (bienOuvert()) {
-        <section class="carte">
-          <div class="entre">
-            <h2><i class="bi bi-hourglass-split" aria-hidden="true"></i> Accès temporaires</h2>
-            <button class="btn" type="button" (click)="saisieAcces.set(!saisieAcces())">
-              {{ saisieAcces() ? 'Fermer' : 'Ouvrir un accès' }}
-            </button>
+        <section class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+              <h2 class="h5 card-title mb-0">
+                <i class="bi bi-hourglass-split me-2" aria-hidden="true"></i>Accès temporaires
+              </h2>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="saisieAcces.set(!saisieAcces())">
+                <i class="bi bi-person-plus me-1"></i>{{ saisieAcces() ? 'Fermer' : 'Ouvrir un accès' }}
+              </button>
+            </div>
+            <p class="text-body-secondary small mt-2">
+              Un invité ou un locataire entre par un lien, sans compte ni mot de passe, pour la durée
+              que vous fixez. Il ne voit que le calendrier du bien et ce que le coffre-fort lui ouvre
+              pendant son séjour. Vous pouvez révoquer à tout moment, et l'accès se coupe aussitôt.
+            </p>
+
+            @if (saisieAcces()) {
+              <form class="row g-3 align-items-end mb-3" (ngSubmit)="ouvrirAcces()">
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="t-lib">Pour qui</label>
+                  <input class="form-control" id="t-lib" name="tlib" [(ngModel)]="fAccesLibelle"
+                         placeholder="Famille Berger, locataires">
+                </div>
+                <div class="col-12 col-md-3">
+                  <label class="form-label small text-body-secondary" for="t-mail">Courriel (facultatif)</label>
+                  <input class="form-control" id="t-mail" name="tmail" type="email" [(ngModel)]="fAccesEmail">
+                </div>
+                <div class="col-12 col-md-3">
+                  <label class="form-label small text-body-secondary" for="t-fin">Valable jusqu'au</label>
+                  <input class="form-control" id="t-fin" name="tfin" type="date" [(ngModel)]="fAccesExpire" [min]="demain()">
+                </div>
+                <div class="col-12 col-md-2">
+                  <button class="btn btn-primary w-100" type="submit"
+                          [disabled]="occupe() || !fAccesLibelle.trim() || !fAccesExpire">Créer le lien</button>
+                </div>
+              </form>
+            }
+
+            @if (lienAcces(); as la) {
+              <div class="bg-body-tertiary border rounded p-3 mb-3">
+                <p class="small">
+                  Transmettez ce lien. Il vaut jusqu'au {{ dateLongue(la.expireLe) }}, et personne
+                  n'aura besoin de mot de passe pour s'en servir : ne le publiez nulle part.
+                </p>
+                <code class="d-block bg-body p-2 rounded my-2" style="word-break:break-all">{{ la.lien }}</code>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="lienAcces.set(null)">Fermer</button>
+              </div>
+            }
+
+            @if (acces().length) {
+              <ul class="list-group list-group-flush">
+                @for (a of acces(); track a.id) {
+                  <li class="list-group-item d-flex gap-3 align-items-center flex-wrap px-0">
+                    <span class="flex-grow-1" style="min-width:170px">
+                      <span class="d-block small fw-medium">{{ a.libelle }}</span>
+                      <span class="d-block text-body-secondary" style="font-size:.72rem">
+                        Jusqu'au {{ dateLongue(a.expireLe) }}
+                        @if (a.utilisations) { · utilisé {{ a.utilisations }} fois }
+                        @else { · jamais utilisé }
+                      </span>
+                    </span>
+                    <span class="badge rounded-pill"
+                          [class]="a.etat === 'actif'
+                            ? 'text-success-emphasis bg-success-subtle border border-success-subtle'
+                            : 'text-bg-light border'">{{ etatAcces(a.etat) }}</span>
+                    @if (a.etat === 'actif') {
+                      <button class="btn btn-sm btn-outline-secondary" type="button"
+                              [disabled]="occupe()" (click)="revoquer(a)">Révoquer</button>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-body-secondary small mb-0">Aucun accès temporaire ouvert.</p>
+            }
           </div>
-          <p class="secondaire" style="margin:4px 0 10px">
-            Un invité ou un locataire entre par un lien, sans compte ni mot de passe, pour la durée
-            que vous fixez. Il ne voit que le calendrier du bien et ce que le coffre-fort lui ouvre
-            pendant son séjour. Vous pouvez révoquer à tout moment, et l'accès se coupe aussitôt.
-          </p>
-
-          @if (saisieAcces()) {
-            <form class="saisie" style="grid-template-columns:1.4fr 1fr 150px auto;margin-bottom:12px"
-                  (ngSubmit)="ouvrirAcces()">
-              <div>
-                <label for="t-lib">Pour qui</label>
-                <input id="t-lib" name="tlib" [(ngModel)]="fAccesLibelle"
-                       placeholder="Famille Berger, locataires">
-              </div>
-              <div>
-                <label for="t-mail">Courriel (facultatif)</label>
-                <input id="t-mail" name="tmail" type="email" [(ngModel)]="fAccesEmail">
-              </div>
-              <div>
-                <label for="t-fin">Valable jusqu'au</label>
-                <input id="t-fin" name="tfin" type="date" [(ngModel)]="fAccesExpire" [min]="demain()">
-              </div>
-              <button class="btn btn-primaire" type="submit"
-                      [disabled]="occupe() || !fAccesLibelle.trim() || !fAccesExpire">Créer le lien</button>
-            </form>
-          }
-
-          @if (lienAcces(); as la) {
-            <div class="lien-repli">
-              <p style="margin:0;font-size:13px">
-                Transmettez ce lien. Il vaut jusqu'au {{ dateLongue(la.expireLe) }}, et personne
-                n'aura besoin de mot de passe pour s'en servir : ne le publiez nulle part.
-              </p>
-              <code>{{ la.lien }}</code>
-              <button class="btn" type="button" (click)="lienAcces.set(null)">Fermer</button>
-            </div>
-          }
-
-          @for (a of acces(); track a.id) {
-            <div class="acces">
-              <span class="quoi">
-                <span style="display:block;font-size:14px">{{ a.libelle }}</span>
-                <span class="meta">
-                  Jusqu'au {{ dateLongue(a.expireLe) }}
-                  @if (a.utilisations) { · utilisé {{ a.utilisations }} fois }
-                  @else { · jamais utilisé }
-                </span>
-              </span>
-              <span class="pastille" [class]="'pastille ' + a.etat">{{ etatAcces(a.etat) }}</span>
-              @if (a.etat === 'actif') {
-                <button class="btn" type="button" [disabled]="occupe()" (click)="revoquer(a)">Révoquer</button>
-              }
-            </div>
-          }
-          @if (!acces().length) {
-            <p class="secondaire" style="margin:0">Aucun accès temporaire ouvert.</p>
-          }
         </section>
       }
 
-      <section class="carte">
-        <div class="entre">
-          <h2>{{ personnes().length }} personne{{ personnes().length > 1 ? 's' : '' }}</h2>
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">{{ personnes().length }} personne{{ personnes().length > 1 ? 's' : '' }}</h2>
+          @if (personnes().length) {
+            <div class="table-responsive mt-3">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                  <tr class="eyebrow">
+                    <th scope="col">Personne</th>
+                    <th scope="col">Foyer et compte</th>
+                    <th scope="col">Rôles sur ce bien</th>
+                    <th class="text-end" scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of personnes(); track p.id) {
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center gap-3">
+                          <span class="avatar">{{ initiales(p.nom) }}</span>
+                          <span>
+                            <span class="d-block small fw-medium">{{ p.nom }}</span>
+                            <span class="d-block text-body-secondary" style="font-size:.72rem">
+                              {{ p.email || 'Sans adresse de courriel' }}
+                            </span>
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="d-block text-body-secondary" style="font-size:.72rem">{{ p.foyerNom || 'Sans foyer' }}</span>
+                        <span class="badge rounded-pill mt-1"
+                              [class]="p.aUnCompte
+                                ? 'text-success-emphasis bg-success-subtle border border-success-subtle'
+                                : 'text-bg-light border'">{{ etatCompte(p) }}</span>
+                      </td>
+                      <td>
+                        <span class="d-flex gap-1 flex-wrap">
+                          @for (r of rolesIci(p); track r.role) {
+                            <span class="badge rounded-pill"
+                                  [class]="r.role === 'gerant'
+                                    ? 'text-primary-emphasis bg-primary-subtle border border-primary-subtle'
+                                    : 'text-bg-light border'">{{ libelle(r.role) }}</span>
+                          }
+                          @if (!rolesIci(p).length) {
+                            <span class="text-body-secondary" style="font-size:.72rem">Aucun rôle explicite</span>
+                          }
+                        </span>
+                      </td>
+                      <td>
+                        <span class="d-flex gap-2 flex-wrap justify-content-end align-items-center">
+                          <select class="form-select form-select-sm w-auto"
+                                  [attr.aria-label]="'Donner un rôle à ' + p.nom"
+                                  (change)="donnerRole(p, $any($event.target))">
+                            <option value="">Donner un rôle...</option>
+                            @for (r of ROLES; track r) {
+                              @if (!aLeRole(p, r)) { <option [value]="r">{{ libelle(r) }}</option> }
+                            }
+                          </select>
+                          @for (r of rolesIci(p); track r.role) {
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    [disabled]="occupe()" (click)="retirer(p, r.role)">
+                              Retirer {{ libelle(r.role).toLowerCase() }}
+                            </button>
+                          }
+                          @if (p.email) {
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    [disabled]="occupe()" (click)="reinviter(p, false)">
+                              {{ p.aUnCompte ? 'Renvoyer un lien' : 'Renvoyer l\\'invitation' }}
+                            </button>
+                          }
+                          <button class="btn btn-sm btn-outline-secondary" type="button"
+                                  [disabled]="occupe()" (click)="reinviter(p, true)">Afficher le lien</button>
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="text-body-secondary small mb-0">Personne pour le moment.</p>
+          }
         </div>
-        @if (!personnes().length) {
-          <p class="secondaire" style="margin:8px 0 0">Personne pour le moment.</p>
-        }
-        @for (p of personnes(); track p.id) {
-          <div class="personne">
-            <span class="avatar">{{ initiales(p.nom) }}</span>
-            <span class="ident">
-              <span class="nom">{{ p.nom }}</span>
-              <span class="meta">{{ p.email || 'Sans adresse de courriel' }}</span>
-            </span>
-            <span class="ident">
-              <span class="meta" style="display:block">{{ p.foyerNom || 'Sans foyer' }}</span>
-              <span class="pastille" [class.pastille-accent]="p.aUnCompte">
-                {{ etatCompte(p) }}
-              </span>
-            </span>
-            <span class="roles-de">
-              @for (r of rolesIci(p); track r.role) {
-                <span class="pastille" [class.pastille-accent]="r.role === 'gerant'">{{ libelle(r.role) }}</span>
-              }
-              @if (!rolesIci(p).length) { <span class="meta">Aucun rôle explicite</span> }
-            </span>
-            <span class="actions">
-              <select [attr.aria-label]="'Donner un rôle à ' + p.nom"
-                      (change)="donnerRole(p, $any($event.target))">
-                <option value="">Donner un rôle...</option>
-                @for (r of ROLES; track r) {
-                  @if (!aLeRole(p, r)) { <option [value]="r">{{ libelle(r) }}</option> }
-                }
-              </select>
-              @for (r of rolesIci(p); track r.role) {
-                <button class="btn" type="button" [disabled]="occupe()" (click)="retirer(p, r.role)">
-                  Retirer {{ libelle(r.role).toLowerCase() }}
-                </button>
-              }
-              @if (p.email) {
-                <button class="btn" type="button" [disabled]="occupe()" (click)="reinviter(p, false)">
-                  {{ p.aUnCompte ? 'Renvoyer un lien' : 'Renvoyer l\\'invitation' }}
-                </button>
-              }
-              <button class="btn" type="button" [disabled]="occupe()" (click)="reinviter(p, true)">
-                Afficher le lien
-              </button>
-            </span>
-          </div>
-        }
       </section>
     </div>
   `,

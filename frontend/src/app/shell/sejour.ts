@@ -18,29 +18,27 @@ import { Etat } from '../core/etat';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    :host { display: block; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px 60px; }
-    .boite { width: 100%; max-width: 420px; }
-    .marque {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      font-family: var(--titre); font-size: 21px; font-weight: 500; margin-bottom: 18px;
-    }
-    .marque i { color: var(--accent); }
-    .carte { padding: 24px; }
-    h1 { font-size: 20px; margin-bottom: 4px; }
+    /* La page d'entrée n'a pas de cadre : elle centre sa boîte, et rien
+       d'autre. Bootstrap n'a pas d'utilitaire pour « au milieu de la fenêtre ». */
+    :host { display: grid; place-items: center; min-height: 100vh; }
   `],
   template: `
-    <div class="boite">
-      <div class="marque"><i class="bi bi-houses" aria-hidden="true"></i> Maison de Famille</div>
-      <div class="carte">
-        @if (erreur()) {
-          <h1>Ce lien n'est plus valable</h1>
-          <p class="secondaire" style="margin:10px 0 0">{{ erreur() }}</p>
-        } @else {
-          <h1>Bienvenue</h1>
-          <p class="secondaire" style="margin:10px 0 0">
-            Ouverture de votre accès{{ libelle() ? ', ' + libelle() : '' }}...
-          </p>
-        }
+    <div class="w-100 p-3 pb-5" style="max-width:420px">
+      <div class="d-flex align-items-center justify-content-center gap-2 h4 mb-4">
+        <i class="bi bi-houses text-primary" aria-hidden="true"></i>Maison de Famille
+      </div>
+      <div class="card">
+        <div class="card-body p-4">
+          @if (erreur()) {
+            <h1 class="h5 card-title">Ce lien n'est plus valable</h1>
+            <p class="text-body-secondary small mb-0">{{ erreur() }}</p>
+          } @else {
+            <h1 class="h5 card-title">Bienvenue</h1>
+            <p class="text-body-secondary small mb-0">
+              Ouverture de votre accès{{ libelle() ? ', ' + libelle() : '' }}...
+            </p>
+          }
+        </div>
       </div>
     </div>
   `,
