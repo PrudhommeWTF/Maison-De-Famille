@@ -6,31 +6,33 @@
 //   └─ Barre de contexte du bien  ← PIVOT
 //      └─ Grille : navigation latérale 236 px | contenu
 //
-// Sur mobile, la navigation latérale disparaît au profit d'une barre d'onglets
-// basse à trois entrées. Ce n'est pas une variante : c'est le même écran, la
-// même route et les mêmes données, avec une mise en page qui tient au pouce.
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+// Sur mobile, la navigation latérale devient un tiroir, ouvert depuis la barre
+// basse. Ce n'est pas une variante : c'est le même écran, la même route, les
+// mêmes données et **la même liste d'entrées** (`app-navigation`), avec une mise
+// en page qui tient au pouce.
+//
+// Le tiroir est piloté par un signal, pas par les attributs `data-bs-*` : le
+// paquet de transmission le dit lui-même, le data-api de Bootstrap manipule le
+// DOM directement et le rendu du composant l'écrase. Poser la classe `show`
+// nous-mêmes évite d'embarquer le JavaScript de Bootstrap pour un seul
+// composant.
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Etat, TOUS } from '../core/etat';
 import { initiales } from '../core/format';
+import { Navigation } from './navigation';
 
 interface Entree { chemin: string; libelle: string; icone: string; badge?: boolean }
-
-/**
- * Un groupe d'entrées dans la navigation d'un bien.
- *
- * La maquette range les onze écrans d'un bien en quatre groupes : Séjours,
- * Argent, Maison, Famille. Ce n'est pas de la décoration. Onze liens à plat
- * forment une liste qu'on relit à chaque fois ; quatre groupes de trois forment
- * une carte mentale qu'on retient. Un groupe dont toutes les entrées sont
- * masquées par les règles de rôle ne s'affiche pas du tout, titre compris.
- */
-interface Groupe { titre: string; entrees: Entree[] }
 
 @Component({
   selector: 'app-cadre',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Navigation],
+  host: {
+    '(document:keydown.escape)': 'menuOuvert.set(false)',
+    '(window:resize)': 'ajusterAuFormat()',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     /* Presque rien : la mise en page vient entièrement de Bootstrap. Ne restent
@@ -119,51 +121,7 @@ interface Groupe { titre: string; entrees: Entree[] }
       <div class="row g-0">
         <div class="col-12 col-sm-auto d-none d-md-block">
           <nav class="position-sticky p-3 laterale overflow-auto" aria-label="Navigation principale">
-            <div class="eyebrow px-2 pb-2">Portefeuille</div>
-            <ul class="nav nav-pills flex-column gap-1 mb-4">
-              @for (e of entreesPortefeuille(); track e.chemin) {
-                <li class="nav-item">
-                  <a class="nav-link side-link text-start w-100 d-flex align-items-center gap-2"
-                     [routerLink]="e.chemin" routerLinkActive="active"
-                     [routerLinkActiveOptions]="{ exact: e.chemin === '/' }">
-                    <i class="bi text-body-secondary" [class]="e.icone" aria-hidden="true"></i>{{ e.libelle }}
-                  </a>
-                </li>
-              }
-            </ul>
-
-            @if (etat.bien(); as b) {
-              <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-3 px-3 py-2 mb-1">
-                <i class="bi bi-house-door text-secondary-emphasis" aria-hidden="true"></i>
-                <span class="fw-medium text-truncate">{{ b.nom }}</span>
-              </div>
-              <div class="small text-body-secondary px-3 mb-3">{{ b.commune }} · {{ b.structureNom }}</div>
-
-              @for (g of groupesBien(); track g.titre) {
-                <div class="eyebrow px-2 pb-2">{{ g.titre }}</div>
-                <ul class="nav nav-pills flex-column gap-1 mb-4">
-                  @for (e of g.entrees; track e.chemin) {
-                    <li class="nav-item">
-                      <a class="nav-link side-link text-start w-100 d-flex align-items-center gap-2"
-                         [routerLink]="e.chemin" routerLinkActive="active">
-                        <i class="bi text-body-secondary" [class]="e.icone" aria-hidden="true"></i>
-                        <span class="flex-grow-1">{{ e.libelle }}</span>
-                        @if (e.badge && etat.demandesEnAttente() > 0) {
-                          <span class="badge rounded-pill text-bg-primary">{{ etat.demandesEnAttente() }}</span>
-                        }
-                      </a>
-                    </li>
-                  }
-                </ul>
-              }
-            }
-
-            <!-- La maquette met aussi « Dernière sauvegarde : hier 03:00 ». Le
-                 serveur n'expose pas encore cette date : l'écrire en dur serait
-                 une promesse que rien ne tient. La ligne viendra avec le champ. -->
-            <div class="small text-body-secondary border-top pt-3 mt-4 px-2 lh-sm">
-              Auto-hébergé · vos données ne sortent pas d'ici
-            </div>
+            <app-navigation />
           </nav>
         </div>
 
@@ -177,7 +135,7 @@ interface Groupe { titre: string; entrees: Entree[] }
       @for (e of onglets(); track e.chemin) {
         <a class="nav-link d-flex flex-column align-items-center gap-1 py-2 small position-relative"
            [routerLink]="e.chemin" routerLinkActive="active"
-           [routerLinkActiveOptions]="{ exact: e.chemin === '/' }">
+           [routerLinkActiveOptions]="{ exact: e.chemin === '/' }" (click)="menuOuvert.set(false)">
           <i class="bi fs-5" [class]="e.icone" aria-hidden="true"></i>
           <span style="font-size:.7rem">{{ e.libelle }}</span>
           @if (e.badge && etat.demandesEnAttente() > 0) {
@@ -186,7 +144,38 @@ interface Groupe { titre: string; entrees: Entree[] }
           }
         </a>
       }
+      <!-- Le reste de la navigation. Sans cette entrée, dix écrans sur quinze
+           n'avaient aucun chemin au doigt : ils existaient sans exister. -->
+      <button class="nav-link d-flex flex-column align-items-center gap-1 py-2 small border-0 bg-transparent"
+              type="button" [class.active]="menuOuvert()" [attr.aria-expanded]="menuOuvert()"
+              aria-controls="menu-mobile" (click)="menuOuvert.set(!menuOuvert())">
+        <i class="bi bi-list fs-5" aria-hidden="true"></i>
+        <span style="font-size:.7rem">Menu</span>
+      </button>
     </nav>
+
+    <!-- Le tiroir de navigation, et son voile. Tous deux sont posés par l'état,
+         jamais par le data-api de Bootstrap. -->
+    @if (menuOuvert()) {
+      <div class="offcanvas-backdrop fade show d-md-none" (click)="menuOuvert.set(false)"></div>
+    }
+    <div class="offcanvas offcanvas-end d-md-none" [class.show]="menuOuvert()" id="menu-mobile"
+         tabindex="-1" aria-label="Navigation">
+      <div class="offcanvas-header border-bottom">
+        <div>
+          <div class="fw-medium">{{ etat.moi()?.personne?.nom }}</div>
+          <div class="text-body-secondary" style="font-size:.72rem">{{ sousTitre() }}</div>
+        </div>
+        <button class="btn-close" type="button" aria-label="Fermer le menu"
+                (click)="menuOuvert.set(false)"></button>
+      </div>
+      <div class="offcanvas-body">
+        <app-navigation (naviguer)="menuOuvert.set(false)" />
+        <a class="btn btn-outline-secondary w-100 mt-3" routerLink="/compte" (click)="menuOuvert.set(false)">
+          <i class="bi bi-person me-1" aria-hidden="true"></i>Mon compte
+        </a>
+      </div>
+    </div>
   `,
 })
 export class Cadre {
@@ -203,84 +192,6 @@ export class Cadre {
       + `${structures} structure${structures > 1 ? 's' : ''}`;
   });
 
-  readonly entreesPortefeuille = computed<Entree[]>(() => {
-    const e: Entree[] = [{ chemin: '/', libelle: 'Tableau de bord', icone: 'bi-house-heart' }];
-    if (this.etat.estGerant()) {
-      e.push({ chemin: '/biens', libelle: 'Biens gérés', icone: 'bi-houses' });
-      e.push({ chemin: '/personnes', libelle: 'Personnes et rôles', icone: 'bi-people' });
-      e.push({ chemin: '/import', libelle: 'Import du planning', icone: 'bi-box-arrow-in-right' });
-      e.push({ chemin: '/reglages', libelle: 'Réglages', icone: 'bi-sliders' });
-      e.push({ chemin: '/etat', libelle: 'État du service', icone: 'bi-activity' });
-    }
-    return e;
-  });
-
-  /**
-   * Les entrées d'un bien, groupées comme la maquette.
-   *
-   * Les règles de rôle sont inchangées : ce qui n'est pas accessible n'est pas
-   * affiché, parce qu'une entrée de navigation qui mène à un refus ou à un
-   * écran vide est un mensonge. Un groupe vidé par ces règles disparaît avec
-   * son titre, plutôt que de laisser un intertitre sans rien dessous.
-   */
-  readonly groupesBien = computed<Groupe[]>(() => {
-    const membre = this.etat.roleIci() !== 'invite';
-    const parts = this.etat.vocabulaire().parts;
-
-    const groupes: Groupe[] = [
-      {
-        titre: 'Séjours',
-        entrees: [
-          { chemin: '/bien/calendrier', libelle: "Calendrier d'occupation", icone: 'bi-calendar3' },
-          // Un invité ne dépose pas de demande : il en a un, c'est la raison de
-          // son accès. L'entrée le menait à un écran où il n'y avait rien à
-          // faire et rien à lire qui le concerne.
-          ...(membre ? [
-            { chemin: '/bien/demandes', libelle: 'Demandes de séjour', icone: 'bi-envelope-paper', badge: true },
-          ] : []),
-        ],
-      },
-      {
-        titre: 'Argent',
-        entrees: [
-          // L'argent n'est visible que de qui a le droit de le voir.
-          ...(this.etat.voitLArgent() ? [
-            { chemin: '/bien/depenses', libelle: 'Dépenses & répartition', icone: 'bi-receipt' },
-            { chemin: '/bien/soldes', libelle: 'Soldes & remboursements', icone: 'bi-arrow-left-right' },
-          ] : []),
-          // « La location est activable par bien » : sur un bien qui n'est pas
-          // loué, l'entrée n'existe pas.
-          ...(this.etat.bien()?.locationActivee && this.etat.voitLArgent() ? [
-            { chemin: '/bien/location', libelle: 'Location saisonnière', icone: 'bi-key' },
-          ] : []),
-        ],
-      },
-      {
-        titre: 'Maison',
-        entrees: [
-          // Savoir que la chaudière est contrôlée intéresse tout le monde, mais
-          // pas un invité de passage.
-          ...(membre ? [
-            { chemin: '/bien/entretien', libelle: "Carnet d'entretien", icone: 'bi-tools' },
-          ] : []),
-          { chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-journal-bookmark' },
-          // Le coffre-fort s'affiche pour tous : son contenu est filtré par
-          // portée, et un invité en séjour y trouve le code du portail.
-          { chemin: '/bien/coffre', libelle: 'Coffre-fort', icone: 'bi-shield-lock' },
-        ],
-      },
-      {
-        titre: 'Famille',
-        entrees: membre ? [
-          { chemin: '/bien/decisions', libelle: 'Décisions & votes', icone: 'bi-hand-thumbs-up' },
-          { chemin: '/bien/souvenirs', libelle: 'Souvenirs', icone: 'bi-images' },
-          { chemin: '/bien/membres', libelle: `Membres & ${parts}`, icone: 'bi-people' },
-        ] : [],
-      },
-    ];
-    return groupes.filter((g) => g.entrees.length > 0);
-  });
-
   readonly onglets = computed<Entree[]>(() => this.etat.bien()
     ? [
       { chemin: '/', libelle: 'Accueil', icone: 'bi-house-heart' },
@@ -288,20 +199,49 @@ export class Cadre {
       ...(this.etat.roleIci() !== 'invite' ? [
         { chemin: '/bien/demandes', libelle: 'Demandes', icone: 'bi-envelope-paper', badge: true },
       ] : [{ chemin: '/bien/coffre', libelle: 'Coffre', icone: 'bi-shield-lock' }]),
-      { chemin: '/compte', libelle: 'Compte', icone: 'bi-person' },
     ]
     : [
       { chemin: '/', libelle: 'Accueil', icone: 'bi-house-heart' },
       { chemin: '/biens', libelle: 'Biens', icone: 'bi-houses' },
-      { chemin: '/compte', libelle: 'Compte', icone: 'bi-person' },
     ]);
+
+  /**
+   * Le tiroir de navigation du doigt.
+   *
+   * Fermé à chaque changement de bien : la barre de contexte ramène au tableau
+   * de bord, et laisser le tiroir ouvert par-dessus donnerait l'impression que
+   * le clic n'a rien fait.
+   */
+  readonly menuOuvert = signal(false);
+
+  private readonly document = inject(DOCUMENT);
+
+  constructor() {
+    // Le corps ne défile pas derrière un tiroir ouvert. Bootstrap le fait
+    // d'ordinaire depuis son JavaScript, qu'on n'embarque pas : trois lignes
+    // ici valent mieux qu'une dépendance de plus.
+    effect(() => {
+      this.document.body.style.overflow = this.menuOuvert() ? 'hidden' : '';
+    });
+  }
 
   icoBien(type: string): string {
     return type === 'montagne' ? 'bi-triangle' : type === 'ville' ? 'bi-building' : type === 'campagne' ? 'bi-tree' : 'bi-water';
   }
 
+  /**
+   * Le tiroir n'existe qu'au format étroit. En passant au format large il est
+   * masqué par la feuille de style, et le laisser « ouvert » verrouillerait le
+   * défilement de la page sans que rien ne l'explique : c'est ce qui arrive en
+   * tournant une tablette.
+   */
+  ajusterAuFormat(): void {
+    if (this.menuOuvert() && window.innerWidth >= 768) this.menuOuvert.set(false);
+  }
+
   /** Changer de bien réinitialise sur le tableau de bord, comme dans la maquette. */
   choisir(c: number | typeof TOUS): void {
+    this.menuOuvert.set(false);
     this.etat.poserContexte(c);
     void this.router.navigate(['/']);
   }
