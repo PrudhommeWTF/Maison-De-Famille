@@ -468,6 +468,13 @@ chacune dit ce qu'elle contient :
 le courriel » : elle montre combien de messages attendent et, mot pour mot, ce
 que le serveur de courriel a répondu.
 
+![La section Courriel](images/gerant-administration-courriel.png)
+
+Le relais lui-même ne se règle pas depuis l'application : ses réglages
+contiennent un mot de passe, qui n'a rien à faire dans une base ni dans un
+écran. Ils vivent dans le fichier de configuration du serveur, et la section
+vous dit lesquels et où.
+
 ### Mettre l'application à jour
 
 ![Une version disponible, et la confirmation par mot de passe](images/gerant-maj-disponible.png)

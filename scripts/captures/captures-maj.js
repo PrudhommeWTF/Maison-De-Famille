@@ -21,7 +21,10 @@ const MAJ = {
     + '- Correction : le calendrier ne servait plus de page blanche après une mise à jour',
   url: 'https://github.com/PrudhommeWTF/Maison-De-Famille/releases/tag/v0.1.0',
   publieeLe: '2026-09-01T10:00:00Z',
-  misAJourDisponible: true, installationPossible: true,
+  // `versionConnue` fait partie de la réponse du serveur : l'omettre ferait
+  // afficher « version installée inconnue » sur une instance qui la connaît
+  // très bien, et la capture mentirait sur le comportement réel.
+  misAJourDisponible: true, versionConnue: true, installationPossible: true,
 };
 
 (async () => {
