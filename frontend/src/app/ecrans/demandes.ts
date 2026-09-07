@@ -25,202 +25,239 @@ interface Arbitrage {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .onglets { display: inline-flex; gap: 3px; padding: 3px; background: #e9e2d7; border-radius: 20px; }
-    .onglets button {
-      border: none; background: transparent; border-radius: 20px; padding: 7px 15px; min-height: 36px;
-      font-family: inherit; font-size: 13px; color: var(--encre-2); cursor: pointer;
-    }
-    .onglets button[aria-selected="true"] { background: var(--surface); box-shadow: 0 1px 2px rgba(36,32,27,.08); }
-    .demande { display: flex; gap: 20px; justify-content: space-between; flex-wrap: wrap; }
-    .demande .infos { flex: 1; min-width: 240px; }
-    .demande .actions { display: flex; flex-direction: column; gap: 8px; min-width: 190px; }
-    .tableau { display: grid; gap: 6px; }
-    .tableau .entete, .tableau .ligne-t {
-      display: grid; grid-template-columns: minmax(140px, 1.1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(90px, .7fr);
-      gap: 10px; align-items: center;
-    }
-    .tableau .entete { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--libelle-section); }
-    .tableau .ligne-t { padding: 9px 0; border-top: 1px solid var(--separateur); font-size: 13px; }
-    @media (max-width: 700px) {
-      .demande .actions { min-width: 0; width: 100%; }
-      .tableau .entete { display: none; }
-      .tableau .ligne-t { grid-template-columns: 1fr; gap: 3px; }
-    }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Demandes de séjour</h1>
-        <p class="secondaire" style="margin:6px 0 0">
+        <h1 class="h2 mb-2">Demandes de séjour</h1>
+        <p class="text-body-secondary mb-0">
           {{ etat.bien()?.nom }} ·
           @if (file().length) { {{ file().length }} à traiter } @else { rien à traiter }
         </p>
       </div>
 
-      <div class="onglets" role="tablist">
-        <button role="tab" [attr.aria-selected]="onglet() === 'file'" (click)="onglet.set('file')">File d'attente</button>
-        <button role="tab" [attr.aria-selected]="onglet() === 'tour'" (click)="onglet.set('tour')">Tour de choix</button>
-      </div>
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link" role="tab" [class.active]="onglet() === 'file'"
+                  [attr.aria-selected]="onglet() === 'file'" (click)="onglet.set('file')">File d'attente</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" role="tab" [class.active]="onglet() === 'tour'"
+                  [attr.aria-selected]="onglet() === 'tour'" (click)="onglet.set('tour')">Tour de choix</button>
+        </li>
+      </ul>
 
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
 
       @if (onglet() === 'file') {
         @if (!etat.estGeranteIci()) {
-          <div class="carte"><p class="vide">Seule la gérante arbitre les demandes. Les vôtres apparaissent dans le calendrier.</p></div>
+          <div class="card"><div class="card-body">
+            <p class="text-body-secondary small mb-0">
+              Seule la gérante arbitre les demandes. Les vôtres apparaissent dans le calendrier.
+            </p>
+          </div></div>
         } @else if (file().length) {
-          @for (d of file(); track d.id) {
-            <section class="carte demande">
-              <div class="infos">
-                <h2>{{ d.titre }}</h2>
-                <p class="secondaire" style="margin:4px 0 0">
-                  {{ d.bienNom }} · {{ plage(d.arrivee, d.depart) }} ·
-                  {{ nuitsLisible(d.nuits) }} · {{ personnesLisible(d.occupants) }}
-                </p>
-                <p class="meta" style="margin:2px 0 0">Demandé le {{ horodatageLisible(d.creeLe) }}</p>
-                @if (d.note) { <p class="secondaire" style="margin:10px 0 0;font-style:italic">« {{ d.note }} »</p> }
-                @if (d.conflits.length) {
-                  <div class="encart" style="margin-top:12px">
-                    @for (c of d.conflits; track c.message) { <div>{{ c.message }}</div> }
+          <div class="d-flex flex-column gap-3">
+            @for (d of file(); track d.id) {
+              <section class="card">
+                <div class="card-body d-flex flex-wrap gap-4 align-items-start">
+                  <div class="flex-grow-1" style="min-width:240px">
+                    <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                      <h2 class="h5 card-title mb-0">{{ d.titre }}</h2>
+                      <span class="small text-body-secondary">{{ d.bienNom }}</span>
+                    </div>
+                    <p class="small tnum mt-2 mb-1">
+                      {{ plage(d.arrivee, d.depart) }} · {{ nuitsLisible(d.nuits) }} ·
+                      {{ personnesLisible(d.occupants) }}
+                    </p>
+                    <p class="text-body-secondary mb-0" style="font-size:.72rem">
+                      Demandé le {{ horodatageLisible(d.creeLe) }}
+                    </p>
+                    @if (d.note) {
+                      <p class="small text-secondary-emphasis fst-italic mt-2 mb-0" style="max-width:52ch">
+                        « {{ d.note }} »
+                      </p>
+                    }
+                    @if (d.conflits.length) {
+                      <div class="alert alert-primary d-inline-flex align-items-start gap-2 py-2 px-3 mt-3 mb-0 small">
+                        <i class="bi bi-exclamation-triangle mt-1" aria-hidden="true"></i>
+                        <span>@for (c of d.conflits; track c.message) { <span class="d-block">{{ c.message }}</span> }</span>
+                      </div>
+                    }
                   </div>
-                }
-              </div>
-              <div class="actions">
-                <button class="btn btn-primaire" (click)="decider(d, 'valide')" [disabled]="occupe()">Valider le séjour</button>
-                <button class="btn" (click)="ouvrirRenvoi(d)" [disabled]="occupe()">Proposer d'autres dates</button>
-                @if (renvoi() === d.id) {
-                  <div class="champ" style="margin:0">
-                    <label [attr.for]="'note-' + d.id">Message pour {{ d.titre }}</label>
-                    <textarea [attr.id]="'note-' + d.id" name="note" [(ngModel)]="noteRenvoi"
-                              placeholder="Peux-tu décaler au 9 ? Les locataires partent dans la journée."></textarea>
-                    <button class="btn" style="margin-top:8px" (click)="decider(d, 'a_revoir')" [disabled]="occupe()">
-                      Renvoyer la demande
+                  <div class="d-flex flex-column gap-2" style="min-width:200px">
+                    <button class="btn btn-primary" (click)="decider(d, 'valide')" [disabled]="occupe()">
+                      <i class="bi bi-check2 me-1"></i>Valider le séjour
                     </button>
+                    <button class="btn btn-outline-secondary" (click)="ouvrirRenvoi(d)" [disabled]="occupe()">
+                      Proposer d'autres dates
+                    </button>
+                    @if (renvoi() === d.id) {
+                      <div>
+                        <label class="form-label small text-body-secondary" [attr.for]="'note-' + d.id">
+                          Message pour {{ d.titre }}
+                        </label>
+                        <textarea class="form-control" [attr.id]="'note-' + d.id" name="note" rows="3"
+                                  [(ngModel)]="noteRenvoi"
+                                  placeholder="Peux-tu décaler au 9 ? Les locataires partent dans la journée."></textarea>
+                        <button class="btn btn-sm btn-outline-secondary mt-2 w-100"
+                                (click)="decider(d, 'a_revoir')" [disabled]="occupe()">Renvoyer la demande</button>
+                      </div>
+                    }
                   </div>
-                }
-              </div>
-            </section>
-          }
+                </div>
+              </section>
+            }
+          </div>
         } @else {
-          <div class="carte"><p class="vide">Aucune demande en attente sur ce bien.</p></div>
+          <div class="card"><div class="card-body">
+            <p class="text-body-secondary small mb-0">Aucune demande en attente sur ce bien.</p>
+          </div></div>
         }
       }
 
       @if (onglet() === 'tour') {
         @if (saisons().length) {
-          @for (s of saisons(); track s.saison.id) {
-            <section class="carte">
-              <div class="entre">
-                <div>
-                  <h2>{{ s.saison.libelle }}</h2>
-                  <p class="meta" style="margin:4px 0 0">
-                    Du {{ dateLongue(s.saison.debut) }} au {{ dateLongue(s.saison.fin) }} ·
-                    {{ s.saison.statut === 'ouverte' ? 'voeux ouverts' : s.saison.statut === 'arbitree' ? 'arbitrée' : 'close' }}
-                  </p>
-                </div>
-                @if (etat.estGeranteIci() && s.saison.statut === 'ouverte') {
-                  <button class="btn btn-primaire" (click)="arbitrer(s)" [disabled]="occupe() || !s.voeux.length">
-                    Lancer l'arbitrage
-                  </button>
-                }
-              </div>
-
-              <div class="tableau" style="margin-top:16px">
-                <div class="entete">
-                  <span>Foyer</span><span>1er choix</span><span>2e choix</span><span>Quota</span>
-                </div>
-                @for (f of foyersDe(s); track f.foyerId) {
-                  <div class="ligne-t">
-                    <span>{{ f.foyerNom }}</span>
-                    <span class="chiffres">{{ f.choix1 || 'Aucun voeu' }}</span>
-                    <span class="chiffres">{{ f.choix2 || 'Aucun voeu' }}</span>
-                    <span class="chiffres">{{ f.quota === null ? 'Sans quota' : nuitsLisible(f.quota) }}</span>
-                  </div>
-                }
-                @if (!s.voeux.length) { <p class="vide">Aucun voeu déposé pour l'instant.</p> }
-              </div>
-
-              @if (voeuxOuverts(s)) {
-                <div class="separateur" style="margin:16px 0 14px"></div>
-                <h3>Déposer votre voeu</h3>
-                <form (ngSubmit)="deposerVoeu(s)" style="margin-top:10px">
-                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
-                    <div class="champ">
-                      <label [attr.for]="'v-rang-' + s.saison.id">Choix</label>
-                      <select [attr.id]="'v-rang-' + s.saison.id" name="rang" [(ngModel)]="voeu.rang">
-                        <option [value]="1">Premier choix</option>
-                        <option [value]="2">Second choix</option>
-                      </select>
+          <div class="d-flex flex-column gap-3">
+            @for (s of saisons(); track s.saison.id) {
+              <section class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <div>
+                      <h2 class="h5 card-title mb-1">{{ s.saison.libelle }}</h2>
+                      <p class="text-body-secondary small mb-0">
+                        Du {{ dateLongue(s.saison.debut) }} au {{ dateLongue(s.saison.fin) }} ·
+                        {{ s.saison.statut === 'ouverte' ? 'voeux ouverts' : s.saison.statut === 'arbitree' ? 'arbitrée' : 'close' }}
+                      </p>
                     </div>
-                    <div class="champ">
-                      <label [attr.for]="'v-du-' + s.saison.id">Du</label>
-                      <input [attr.id]="'v-du-' + s.saison.id" name="du" type="date" [(ngModel)]="voeu.du" required>
-                    </div>
-                    <div class="champ">
-                      <label [attr.for]="'v-au-' + s.saison.id">Au</label>
-                      <input [attr.id]="'v-au-' + s.saison.id" name="au" type="date" [(ngModel)]="voeu.au" required>
-                    </div>
-                    <div class="champ">
-                      <label [attr.for]="'v-occ-' + s.saison.id">Personnes</label>
-                      <input [attr.id]="'v-occ-' + s.saison.id" name="occupants" type="number" min="1" max="60" [(ngModel)]="voeu.occupants">
-                    </div>
-                  </div>
-                  <button class="btn" type="submit" [disabled]="occupe()">Enregistrer mon voeu</button>
-                </form>
-              }
-
-              @if (resultat() && resultat()!.saisonId === s.saison.id) {
-                <div class="separateur" style="margin:16px 0 14px"></div>
-                <h3>Résultat proposé</h3>
-                <p class="secondaire" style="margin:6px 0 12px">
-                  Ces séjours sont créés <strong>en attente</strong> : validez-les un par un dans la file,
-                  et modifiez ce qui doit l'être. La décision finale reste la vôtre.
-                </p>
-                @for (b of resultat()!.arbitrage.bilan; track b.foyerId) {
-                  <div class="ligne">
-                    <span style="flex:1">{{ b.foyerNom }}</span>
-                    <span class="chiffres">{{ nuitsLisible(b.nuits) }}</span>
-                    @if (b.depassement > 0) {
-                      <span class="pastille pastille-accent">quota dépassé de {{ b.depassement }}</span>
+                    @if (etat.estGeranteIci() && s.saison.statut === 'ouverte') {
+                      <button class="btn btn-primary" (click)="arbitrer(s)" [disabled]="occupe() || !s.voeux.length">
+                        Lancer l'arbitrage
+                      </button>
                     }
                   </div>
-                }
-                @for (r of resultat()!.arbitrage.refus; track r.voeuId) {
-                  <div class="encart" style="margin-top:10px">{{ r.raison }}</div>
-                }
-              }
-            </section>
-          }
-        } @else {
-          <section class="carte">
-            <h2>Tour de choix</h2>
-            <p class="secondaire" style="margin:8px 0 14px">
-              Le tour de choix sert à documenter l'équité de la haute saison : chacun dépose ses voeux,
-              l'ordre de priorité tourne d'une année sur l'autre, et la gérante arbitre. Aucun algorithme
-              ne décide à sa place.
-            </p>
-            @if (etat.estGeranteIci()) {
-              <form (ngSubmit)="creerSaison()">
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
-                  <div class="champ">
-                    <label for="s-lib">Libellé</label>
-                    <input id="s-lib" name="libelle" [(ngModel)]="saison.libelle" placeholder="Été 2026" required>
-                  </div>
-                  <div class="champ">
-                    <label for="s-debut">Début</label>
-                    <input id="s-debut" name="debut" type="date" [(ngModel)]="saison.debut" required>
-                  </div>
-                  <div class="champ">
-                    <label for="s-fin">Fin</label>
-                    <input id="s-fin" name="fin" type="date" [(ngModel)]="saison.fin" required>
-                  </div>
+
+                  @if (s.voeux.length) {
+                    <div class="table-responsive mt-3">
+                      <table class="table align-middle mb-0">
+                        <thead>
+                          <tr class="eyebrow">
+                            <th scope="col">Foyer</th>
+                            <th scope="col">1<sup>er</sup> choix</th>
+                            <th scope="col">2<sup>e</sup> choix</th>
+                            <th scope="col">Quota</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (f of foyersDe(s); track f.foyerId) {
+                            <tr>
+                              <td class="small fw-medium">{{ f.foyerNom }}</td>
+                              <td class="small tnum">{{ f.choix1 || 'Aucun voeu' }}</td>
+                              <td class="small tnum text-body-secondary">{{ f.choix2 || 'Aucun voeu' }}</td>
+                              <td class="small tnum">{{ f.quota === null ? 'Sans quota' : nuitsLisible(f.quota) }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <p class="text-body-secondary small mt-3 mb-0">Aucun voeu déposé pour l'instant.</p>
+                  }
+
+                  @if (voeuxOuverts(s)) {
+                    <hr>
+                    <h3 class="h6">Déposer votre voeu</h3>
+                    <form class="row g-3 mt-0" (ngSubmit)="deposerVoeu(s)">
+                      <div class="col-12 col-md-3">
+                        <label class="form-label small text-body-secondary" [attr.for]="'v-rang-' + s.saison.id">Choix</label>
+                        <select class="form-select" [attr.id]="'v-rang-' + s.saison.id" name="rang" [(ngModel)]="voeu.rang">
+                          <option [value]="1">Premier choix</option>
+                          <option [value]="2">Second choix</option>
+                        </select>
+                      </div>
+                      <div class="col-12 col-md-3">
+                        <label class="form-label small text-body-secondary" [attr.for]="'v-du-' + s.saison.id">Du</label>
+                        <input class="form-control" [attr.id]="'v-du-' + s.saison.id" name="du" type="date"
+                               [(ngModel)]="voeu.du" required>
+                      </div>
+                      <div class="col-12 col-md-3">
+                        <label class="form-label small text-body-secondary" [attr.for]="'v-au-' + s.saison.id">Au</label>
+                        <input class="form-control" [attr.id]="'v-au-' + s.saison.id" name="au" type="date"
+                               [(ngModel)]="voeu.au" required>
+                      </div>
+                      <div class="col-12 col-md-3">
+                        <label class="form-label small text-body-secondary" [attr.for]="'v-occ-' + s.saison.id">Personnes</label>
+                        <input class="form-control" [attr.id]="'v-occ-' + s.saison.id" name="occupants" type="number"
+                               min="1" max="60" [(ngModel)]="voeu.occupants">
+                      </div>
+                      <div class="col-12">
+                        <button class="btn btn-outline-secondary" type="submit" [disabled]="occupe()">
+                          Enregistrer mon voeu
+                        </button>
+                      </div>
+                    </form>
+                  }
+
+                  @if (resultat() && resultat()!.saisonId === s.saison.id) {
+                    <hr>
+                    <h3 class="h6">Résultat proposé</h3>
+                    <p class="text-body-secondary small">
+                      Ces séjours sont créés <strong>en attente</strong> : validez-les un par un dans la file,
+                      et modifiez ce qui doit l'être. La décision finale reste la vôtre.
+                    </p>
+                    <ul class="list-group list-group-flush">
+                      @for (b of resultat()!.arbitrage.bilan; track b.foyerId) {
+                        <li class="list-group-item d-flex gap-3 align-items-center px-0">
+                          <span class="small flex-grow-1">{{ b.foyerNom }}</span>
+                          <span class="small tnum">{{ nuitsLisible(b.nuits) }}</span>
+                          @if (b.depassement > 0) {
+                            <span class="badge rounded-pill text-primary-emphasis bg-primary-subtle border border-primary-subtle">
+                              quota dépassé de {{ b.depassement }}
+                            </span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                    @for (r of resultat()!.arbitrage.refus; track r.voeuId) {
+                      <div class="alert alert-primary mt-3 mb-0 small">{{ r.raison }}</div>
+                    }
+                  }
                 </div>
-                <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Ouvrir une saison</button>
-              </form>
-            } @else {
-              <p class="vide">Aucune saison ouverte pour l'instant.</p>
+              </section>
             }
+          </div>
+        } @else {
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">Tour de choix</h2>
+              <p class="text-body-secondary small">
+                Le tour de choix sert à documenter l'équité de la haute saison : chacun dépose ses voeux,
+                l'ordre de priorité tourne d'une année sur l'autre, et la gérante arbitre. Aucun algorithme
+                ne décide à sa place.
+              </p>
+              @if (etat.estGeranteIci()) {
+                <form class="row g-3" (ngSubmit)="creerSaison()">
+                  <div class="col-12 col-md-4">
+                    <label class="form-label small text-body-secondary" for="s-lib">Libellé</label>
+                    <input class="form-control" id="s-lib" name="libelle" [(ngModel)]="saison.libelle"
+                           placeholder="Été 2026" required>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label small text-body-secondary" for="s-debut">Début</label>
+                    <input class="form-control" id="s-debut" name="debut" type="date" [(ngModel)]="saison.debut" required>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label small text-body-secondary" for="s-fin">Fin</label>
+                    <input class="form-control" id="s-fin" name="fin" type="date" [(ngModel)]="saison.fin" required>
+                  </div>
+                  <div class="col-12">
+                    <button class="btn btn-primary" type="submit" [disabled]="occupe()">Ouvrir une saison</button>
+                  </div>
+                </form>
+              } @else {
+                <p class="text-body-secondary small mb-0">Aucune saison ouverte pour l'instant.</p>
+              }
+            </div>
           </section>
         }
       }

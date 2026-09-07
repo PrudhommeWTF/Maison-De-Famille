@@ -81,6 +81,10 @@ $color-contrast-light: #fffdf9;
 $color-contrast-dark: #24201b;
 
 
+// Une semaine fait sept jours : la grille du calendrier a besoin de
+// `row-cols-7`, que Bootstrap n'engendre pas au-delà de six.
+$grid-row-columns: 7;
+
 // Le gris de Bootstrap est froid (#6c757d) et jure avec la palette : le second
 // rôle prend le gris chaud du handoff. Il porte les boutons secondaires, qui
 // sont les plus nombreux de l'application.
