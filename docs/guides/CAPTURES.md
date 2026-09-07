@@ -97,6 +97,20 @@ Un moyen simple de repérer ce genre d'accident : comparer les tailles des
 fichiers dans la liste finale. Plusieurs images qui pèsent exactement pareil sont
 la même image.
 
+## Deux images faites avec une réponse simulée
+
+`gerant-maj-disponible.png` et `gerant-maj-en-cours.png` sont la seule exception
+à la règle « tout vient de l'application réelle », et il faut le savoir.
+
+Montrer une version disponible suppose qu'il en existe une plus récente que
+celle qui tourne, ce qui n'arrive pas sur une instance de démonstration fraîche.
+La réponse de GitHub a donc été simulée **au niveau du navigateur**, avec
+`page.route()`, pendant que tout le reste restait réel : le composant, la route
+du serveur, la vérification du mot de passe et le dépôt du fichier déclencheur.
+
+Ce qui est visible sur ces deux images est donc bien ce que l'application
+affiche ; seul le numéro de version annoncé est inventé.
+
 ## Ce qu'il ne faut pas mettre dans les captures
 
 L'instance de démonstration n'existe que pour ces images. Elle porte des noms

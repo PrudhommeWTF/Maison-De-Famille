@@ -26,6 +26,9 @@ PORT="${PORT:-8099}"
 ENV_FILE="/etc/maison-de-famille/mdf.env"
 SERVICE_USER="maison"
 UNITE="maison-de-famille"
+# Mise à jour depuis l'interface. Éteinte par défaut : elle installe un
+# assistant root, et cela se décide, ça ne se subit pas.
+MAJ_AUTO="${MAJ_AUTO:-false}"
 
 export NG_CLI_ANALYTICS=false
 
@@ -137,6 +140,7 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 
 NODE_ENV=production
 PORT=${PORT}
+MDF_MAJ_AUTO=${MAJ_AUTO}
 
 # Interface d'écoute. « 0.0.0.0 » (toutes) pour que le premier démarrage soit
 # atteignable depuis un navigateur du réseau local. Une fois un reverse-proxy
@@ -223,6 +227,50 @@ SystemCallArchitectures=native
 WantedBy=multi-user.target
 EOF
 
+# --- Mise à jour depuis l'interface (assistant root, déclenché par systemd) ---
+#
+# Le service tourne sans privilège et ne peut ni remplacer son code ni se
+# redémarrer. Il dépose un fichier dans son répertoire de données ; l'unité
+# `path` ci-dessous le voit apparaître et lance l'assistant, qui est en root.
+# Le service ne gagne aucun droit : c'est tout l'intérêt du détour.
+if [[ "${MAJ_AUTO}" =~ ^(1|true|yes|on)$ ]]; then
+  log "Activation de la mise à jour depuis l'interface (assistant root)"
+  install -m 0755 -o root -g root "${SCRIPT_DIR}/maj.sh" /usr/local/sbin/maison-de-famille-maj.sh
+  cat > "/etc/systemd/system/${UNITE}-maj.service" <<EOF
+[Unit]
+Description=Maison de Famille, mise à jour
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=${ENV_FILE}
+Environment=APP_DIR=${APP_DIR}
+Environment=ENV_FILE=${ENV_FILE}
+ExecStart=/usr/local/sbin/maison-de-famille-maj.sh
+EOF
+  cat > "/etc/systemd/system/${UNITE}-maj.path" <<EOF
+[Unit]
+Description=Maison de Famille, surveille le déclencheur de mise à jour
+
+[Path]
+PathExists=${DATA_DIR}/.maj-declencheur
+Unit=${UNITE}-maj.service
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  systemctl daemon-reload
+  systemctl enable --now "${UNITE}-maj.path" >/dev/null 2>&1 || true
+else
+  # Éteinte : on retire l'assistant et les unités s'ils traînent d'une
+  # installation précédente. Laisser un assistant root inutilisé serait une
+  # surface d'attaque gratuite.
+  systemctl disable --now "${UNITE}-maj.path" >/dev/null 2>&1 || true
+  rm -f "/etc/systemd/system/${UNITE}-maj.path" "/etc/systemd/system/${UNITE}-maj.service" \
+        /usr/local/sbin/maison-de-famille-maj.sh
+fi
+
 systemctl daemon-reload
 systemctl enable "${UNITE}" >/dev/null
 systemctl restart "${UNITE}"
@@ -243,6 +291,15 @@ if systemctl is-active --quiet "${UNITE}"; then
   echo "           d'accès ne se relisent pas après une restauration"
   echo "    2. systemctl restart ${UNITE}"
   echo "    3. ouvrir l'application et créer le premier compte"
+  if [[ "${MAJ_AUTO}" =~ ^(1|true|yes|on)$ ]]; then
+    echo
+    echo "  Mise à jour depuis l'interface : activée. Reste à autoriser la"
+    echo "  vérification dans Réglages, section Exploitation."
+  else
+    echo
+    echo "  Mise à jour depuis l'interface : désactivée. Pour l'activer,"
+    echo "  relancez cet installateur avec MAJ_AUTO=true."
+  fi
   echo
 else
   err "Le service n'a pas démarré. Les vingt dernières lignes du journal :"

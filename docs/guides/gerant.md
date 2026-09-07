@@ -458,6 +458,37 @@ abandonnés avec l'erreur exacte du relais, dernières migrations appliquées.
 C'est l'écran à regarder quand quelqu'un vous dit « je n'ai pas reçu le
 courriel ».
 
+### Mettre l'application à jour
+
+![Une version disponible, et la confirmation par mot de passe](images/gerant-maj-disponible.png)
+
+La carte **Mises à jour** dit la version installée et va demander à GitHub s'il
+en existe une plus récente. Le même résumé apparaît dans **Réglages**, avec un
+lien vers cet écran pour l'installation.
+
+Deux réglages commandent cette carte, et l'écran vous dit lequel manque :
+
+- la **vérification** est un appel réseau sortant, autorisée par un réglage dans
+  Réglages, section Exploitation ;
+- l'**installation** demande un assistant installé sur le serveur. S'il n'y est
+  pas, la carte le dit et vous met à jour à la main.
+
+Quand une version est disponible, vous voyez ses notes, puis un formulaire qui
+**redemande votre mot de passe**. Ce n'est pas de la formalité : ce bouton fait
+exécuter du code sur votre serveur, et un téléphone déverrouillé oublié quelque
+part ne doit pas suffire à le déclencher.
+
+Comptez une à deux minutes pendant lesquelles l'application ne répond pas. Une
+sauvegarde de la base est prise automatiquement avant toute migration, et le
+service est relancé même si la mise à jour échoue.
+
+![La mise à jour en cours](images/gerant-maj-en-cours.png)
+
+Si quelque chose s'interrompt, l'écran **rend la main tout seul** au bout d'un
+quart d'heure sans progression, et vous donne le chemin du journal à lire. Vous
+n'aurez jamais à aller supprimer un fichier sur le serveur pour retrouver un
+bouton.
+
 ## Ce que vous ne pouvez pas faire
 
 - **Voir un bien que vous ne gérez pas.** Le gérant d'une maison n'a aucun accès

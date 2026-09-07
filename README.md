@@ -97,10 +97,16 @@ Aucun service supplémentaire, aucune base externe, et **aucun appel réseau
 sortant** en dehors du relais SMTP que vous configurez : les polices et les
 icônes sont dans le dépôt.
 
-Une seule exception, **éteinte par défaut** : le réglage « Télécharger le
-calendrier scolaire » ajoute un bouton qui va chercher les dates de vacances sur
-data.education.gouv.fr, pour éviter de déposer le fichier à la main une fois par
-an. Tant que personne ne l'allume, l'application ne parle qu'à votre relais de
+Deux exceptions, **éteintes par défaut**, allumées par un réglage chacune :
+
+- « Télécharger le calendrier scolaire » va chercher les dates de vacances sur
+  data.education.gouv.fr, pour éviter de déposer le fichier à la main une fois
+  par an ;
+- « Vérifier les nouvelles versions sur GitHub » demande à api.github.com s'il
+  existe une version plus récente, et permet de l'installer depuis l'écran
+  « État du service », après confirmation par mot de passe.
+
+Tant que personne ne les allume, l'application ne parle qu'à votre relais de
 courriel.
 
 ## Documentation

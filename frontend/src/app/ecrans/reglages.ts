@@ -7,18 +7,19 @@
 // registre, et c'est ce que la CI vérifie.
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api, ErreurAppel } from '../core/api';
 import { Etat } from '../core/etat';
 import { SECTIONS } from '../core/parametres/registre';
 import { COULEURS_ZONE, anneeScolaireDe } from '../core/calendrier';
 import type { AnneeVacances, ApercuVacances, ZoneVacances } from '../core/calendrier';
 import { aujourdhui, plage } from '../core/format';
-import type { ParametreExpose } from '../core/modeles';
+import type { Etat as EtatService, Maj, ParametreExpose } from '../core/modeles';
 
 @Component({
   selector: 'app-reglages',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .reglage { padding: 16px 0; border-top: 1px solid var(--separateur); }
@@ -237,6 +238,39 @@ import type { ParametreExpose } from '../core/modeles';
         }
       </section>
 
+      <!-- Les mises à jour se voient ici aussi, parce que c'est l'écran où
+           l'on passe. L'installation, elle, reste au seul endroit où le mot de
+           passe est demandé : deux formulaires de confirmation pour la même
+           opération, c'est un de trop. -->
+      <section class="carte">
+        <h2>Mises à jour</h2>
+        <p class="secondaire" style="margin:6px 0 12px">
+          Version installée : <strong>{{ versionInstallee() }}</strong>.
+          @if (!verificationAutorisee()) {
+            La vérification est désactivée. Le réglage « Vérifier les nouvelles versions sur
+            GitHub », dans la section Exploitation ci-dessus, l'autorise.
+          }
+        </p>
+
+        @if (verificationAutorisee()) {
+          @if (maj(); as m) {
+            @if (m.misAJourDisponible) {
+              <div class="encart">
+                <strong>Version {{ m.tag }} disponible.</strong>
+                @if (m.nom && m.nom !== m.tag) { {{ m.nom }} }
+                <a routerLink="/etat">Installer depuis l'État du service</a>
+              </div>
+            } @else {
+              <p class="secondaire">Vous êtes à jour.</p>
+            }
+          }
+          <button class="btn" (click)="verifierMaj()" [disabled]="occupe()">
+            <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+            {{ occupe() ? 'Vérification...' : 'Vérifier les mises à jour' }}
+          </button>
+        }
+      </section>
+
       <section class="carte">
         <h2>Export</h2>
         <p class="secondaire" style="margin:6px 0 14px">
@@ -265,6 +299,10 @@ export class Reglages {
   readonly annees = signal<AnneeVacances[]>([]);
   readonly apercu = signal<ApercuVacances | null>(null);
   private nomFichier = '';
+  readonly maj = signal<Maj | null>(null);
+  readonly versionInstallee = signal('');
+  readonly verificationAutorisee = computed(() =>
+    this.instance().find((p) => p.cle === 'majVerification')?.valeur === true);
   readonly erreur = signal('');
   readonly message = signal('');
 
@@ -274,6 +312,9 @@ export class Reglages {
   constructor() {
     effect(() => { const b = this.etat.bien(); void this.charger(b?.id ?? null); });
     void this.chargerVacances();
+    void this.api.get<EtatService>('/etat')
+      .then((e) => this.versionInstallee.set(e.version))
+      .catch(() => this.versionInstallee.set('inconnue'));
   }
 
   private async charger(bienId: number | null): Promise<void> {
@@ -360,6 +401,20 @@ export class Reglages {
   /** Le réglage qui commande l'existence même du bouton de téléchargement. */
   readonly telechargementAutorise = computed(() =>
     this.instance().find((p) => p.cle === 'vacancesTelechargement')?.valeur === true);
+
+  async verifierMaj(): Promise<void> {
+    if (this.occupe()) return;
+    this.occupe.set(true);
+    this.erreur.set('');
+    this.message.set('');
+    try {
+      this.maj.set(await this.api.post<Maj>('/systeme/maj/verification', {}));
+    } catch (e) {
+      this.erreur.set(e instanceof ErreurAppel ? e.message : 'La vérification a échoué.');
+    } finally {
+      this.occupe.set(false);
+    }
+  }
 
   async telechargerCalendrier(): Promise<void> {
     if (this.occupe()) return;

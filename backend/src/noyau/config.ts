@@ -53,6 +53,15 @@ export interface Config {
   publicUrl: string | null;
   smtp: { host: string; port: number; user: string; pass: string; from: string } | null;
   version: string;
+  /**
+   * La mise à jour depuis l'interface est-elle possible sur cette machine ?
+   *
+   * Le service ne met jamais à jour lui-même : il dépose un fichier
+   * déclencheur, et une unité systemd **appartenant à root** fait le travail.
+   * Ce drapeau dit seulement que cet assistant a été installé. Sans lui, le
+   * bouton n'existe pas, parce qu'il ne mènerait à rien.
+   */
+  majAuto: boolean;
 }
 
 const REQUIS_JWT = 32;
@@ -123,6 +132,7 @@ export function construire(env: NodeJS.ProcessEnv = process.env): Config {
     publicUrl: (env.MDF_PUBLIC_URL || '').trim().replace(/\/+$/, '') || null,
     smtp: smtp(),
     version: version(),
+    majAuto: /^(1|true|yes|on)$/i.test(env.MDF_MAJ_AUTO || ''),
   };
   if (cfg.smtp && !cfg.publicUrl) {
     throw new ErreurDeConfig(
