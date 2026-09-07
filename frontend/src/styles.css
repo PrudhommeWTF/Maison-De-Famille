@@ -170,14 +170,17 @@ button { font-family: inherit; font-size: 13.5px; }
 }
 
 /* ---- Champs ---- */
-label { display: block; font-size: 12.5px; color: var(--encre-2); margin-bottom: 5px; }
-input, select, textarea {
+label:not([class]) { display: block; font-size: 12.5px; color: var(--encre-2); margin-bottom: 5px; }
+/* Pendant la transition, l'ancienne mise en forme ne vaut que pour les champs
+ * sans classe : `min-height` et `width` survivaient à `.form-control`, qui ne
+ * les redéclare pas, et faisaient des cases à cocher de 42 px de haut. */
+input:not([class]), select:not([class]), textarea:not([class]) {
   width: 100%; font-family: inherit; font-size: 14px; color: var(--encre);
   background: var(--surface); border: 1px solid var(--bordure-controle);
   border-radius: 10px; padding: 10px 12px; min-height: 42px;
 }
-input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-textarea { min-height: 84px; resize: vertical; }
+input:not([class]):focus, select:not([class]):focus, textarea:not([class]):focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+textarea:not([class]) { min-height: 84px; resize: vertical; }
 .champ { margin-bottom: 14px; }
 .champ-erreur input, .champ-erreur select, .champ-erreur textarea { border-color: var(--accent); }
 .message-erreur { color: var(--accent-doux-encre); font-size: 12px; margin-top: 4px; }

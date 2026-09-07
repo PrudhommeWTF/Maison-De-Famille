@@ -38,176 +38,184 @@ interface Coffre {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
-    .ligne { display: flex; gap: 12px; align-items: center; padding: 12px 0;
-             border-bottom: 1px solid var(--separateur); }
-    .ligne:last-of-type { border-bottom: none; }
-    .ext { width: 38px; height: 38px; flex: none; border-radius: 9px; display: grid; place-items: center;
-           background: var(--pastille-neutre); font-size: 10px; font-weight: 600; color: var(--encre-3); }
-    .ligne .quoi { flex: 1; min-width: 130px; }
-    .ligne .nom { font-size: 14px; display: block; }
-    .ligne .meta { font-size: 12px; color: var(--encre-3); }
-    .valeur { font-family: var(--chiffres, inherit); font-size: 15px; letter-spacing: .12em; }
-    .lien { border: none; background: none; padding: 0; font: inherit; font-size: 12.5px;
-            color: var(--encre-3); text-decoration: underline; cursor: pointer; }
-    .lien:hover { color: var(--accent); }
-    .saisie { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
-    .journal { font-size: 12.5px; color: var(--encre-3); }
-    .journal div { padding: 5px 0; border-top: 1px solid var(--separateur); }
-    @media (max-width: 900px) { .deux, .saisie { grid-template-columns: 1fr; } }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       <div>
-        <h1>Coffre-fort</h1>
-        <p class="secondaire" style="margin:6px 0 0">{{ sousTitre() }}</p>
+        <h1 class="h2 mb-2">Coffre-fort</h1>
+        <p class="text-body-secondary mb-0">{{ sousTitre() }}</p>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (coffre(); as c) {
-        <div class="deux">
-          <section class="carte">
-            <div class="entre">
-              <h2><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Documents</h2>
-              @if (c.peutDeposer) {
-                <label class="btn">
-                  <i class="bi bi-upload" aria-hidden="true"></i> Déposer
-                  <input type="file" accept="image/*,application/pdf" style="display:none"
-                         (change)="choisirDocument($event)">
-                </label>
-              }
-            </div>
-
-            @if (depot()) {
-              <form class="saisie" style="margin:12px 0" (ngSubmit)="deposerDocument()">
-                <div>
-                  <label for="d-nom">Nom du document</label>
-                  <input id="d-nom" name="dnom" [(ngModel)]="fNom" placeholder="Convention d'indivision">
-                </div>
-                <div>
-                  <label for="d-por">Qui peut le voir</label>
-                  <select id="d-por" name="dpor" [(ngModel)]="fPortee">
-                    @for (p of c.portees; track p.cle) { <option [value]="p.cle">{{ p.libelle }}</option> }
-                  </select>
-                </div>
-                <div style="grid-column:1/-1;display:flex;gap:10px;align-items:center">
-                  <span class="secondaire" style="flex:1">{{ fFichierNom }}</span>
-                  <button class="btn" type="button" (click)="annulerDepot()">Annuler</button>
-                  <button class="btn btn-primaire" type="submit" [disabled]="occupe() || !fNom.trim()">
-                    Déposer
-                  </button>
-                </div>
-              </form>
-            }
-
-            @for (d of c.documents; track d.id) {
-              <div class="ligne">
-                <span class="ext">{{ extension(d) }}</span>
-                <span class="quoi">
-                  <span class="nom">{{ d.nom }}</span>
-                  <span class="meta">
-                    @if (d.deposeLe) {
-                      Version {{ d.version }} · déposée le {{ horodatageLisible(d.deposeLe) }}
-                      @if (d.deposeParNom) { par {{ d.deposeParNom }} }
-                    } @else { Aucun fichier }
-                  </span>
-                </span>
-                <span style="display:flex;gap:8px;align-items:center">
-                  <span class="pastille">{{ libellePortee(d.portee) }}</span>
-                  @if (d.fichierId) {
-                    <button class="btn" type="button" (click)="ouvrir(d)">Ouvrir</button>
+        <div class="row row-cols-1 row-cols-xl-2 g-3">
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                  <div class="eyebrow"><i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>Documents</div>
+                  @if (c.peutDeposer) {
+                    <label class="btn btn-sm btn-outline-secondary mb-0">
+                      <i class="bi bi-upload me-1" aria-hidden="true"></i>Déposer
+                      <input type="file" accept="image/*,application/pdf" hidden
+                             (change)="choisirDocument($event)">
+                    </label>
                   }
-                </span>
-              </div>
-            }
-            @if (!c.documents.length) {
-              <p class="secondaire" style="margin:10px 0 0">Aucun document visible pour vous.</p>
-            }
-          </section>
-
-          <section class="carte">
-            <div class="entre">
-              <h2><i class="bi bi-key" aria-hidden="true"></i> Codes et accès</h2>
-              @if (c.peutDeposer && c.coffreDisponible) {
-                <button class="btn" type="button" (click)="saisieCode.set(!saisieCode())">
-                  {{ saisieCode() ? 'Fermer' : 'Ajouter' }}
-                </button>
-              }
-            </div>
-
-            @if (!c.coffreDisponible) {
-              <div class="encart" style="margin-top:10px">
-                Le coffre-fort des codes est verrouillé : la clé MDF_CLE_COFFRE n'est pas configurée
-                sur le serveur. Les documents restent accessibles.
-              </div>
-            }
-
-            @if (saisieCode()) {
-              <form class="saisie" style="margin:12px 0" (ngSubmit)="ajouterCode()">
-                <div>
-                  <label for="c-lib">Intitulé</label>
-                  <input id="c-lib" name="clib" [(ngModel)]="fCodeLibelle" placeholder="Portail résidence">
                 </div>
-                <div>
-                  <label for="c-val">Code</label>
-                  <input id="c-val" name="cval" [(ngModel)]="fCodeValeur" placeholder="1840B">
-                </div>
-                <div>
-                  <label for="c-por">Qui peut le voir</label>
-                  <select id="c-por" name="cpor" [(ngModel)]="fCodePortee">
-                    @for (p of c.portees; track p.cle) { <option [value]="p.cle">{{ p.libelle }}</option> }
-                  </select>
-                </div>
-                <button class="btn btn-primaire" type="submit"
-                        [disabled]="occupe() || !fCodeLibelle.trim() || !fCodeValeur.trim()">
-                  Enregistrer
-                </button>
-              </form>
-            }
 
-            @for (k of c.codes; track k.id) {
-              <div class="ligne">
-                <span class="quoi">
-                  <span class="nom">{{ k.libelle }}</span>
-                  <span class="meta">
-                    {{ libellePortee(k.portee) }}
-                    @if (k.dernierAffichage) { · vu le {{ horodatageLisible(k.dernierAffichage) }} }
-                  </span>
-                </span>
-                @if (revele()[k.id]) {
-                  <span class="valeur">{{ revele()[k.id] }}</span>
-                  <button class="lien" type="button" (click)="masquer(k)">Masquer</button>
+                @if (depot()) {
+                  <form class="row g-2 mb-3" (ngSubmit)="deposerDocument()">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small text-body-secondary" for="d-nom">Nom du document</label>
+                      <input class="form-control" id="d-nom" name="dnom" [(ngModel)]="fNom"
+                             placeholder="Convention d'indivision">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small text-body-secondary" for="d-por">Qui peut le voir</label>
+                      <select class="form-select" id="d-por" name="dpor" [(ngModel)]="fPortee">
+                        @for (p of c.portees; track p.cle) { <option [value]="p.cle">{{ p.libelle }}</option> }
+                      </select>
+                    </div>
+                    <div class="col-12 d-flex gap-2 align-items-center">
+                      <span class="text-body-secondary small flex-grow-1">{{ fFichierNom }}</span>
+                      <button class="btn btn-sm btn-outline-secondary" type="button" (click)="annulerDepot()">Annuler</button>
+                      <button class="btn btn-sm btn-primary" type="submit" [disabled]="occupe() || !fNom.trim()">
+                        Déposer
+                      </button>
+                    </div>
+                  </form>
+                }
+
+                @if (c.documents.length) {
+                  <ul class="list-group list-group-flush">
+                    @for (d of c.documents; track d.id) {
+                      <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                        <span class="d-flex align-items-center justify-content-center bg-secondary-subtle border rounded-1
+                                     text-body-secondary flex-shrink-0 fw-semibold"
+                              style="width:32px;height:36px;font-size:.6rem">{{ extension(d) }}</span>
+                        <span class="flex-grow-1" style="min-width:130px">
+                          <span class="d-block small fw-medium">{{ d.nom }}</span>
+                          <span class="d-block text-body-secondary" style="font-size:.72rem">
+                            @if (d.deposeLe) {
+                              Version {{ d.version }} · déposée le {{ horodatageLisible(d.deposeLe) }}
+                              @if (d.deposeParNom) { par {{ d.deposeParNom }} }
+                            } @else { Aucun fichier }
+                          </span>
+                        </span>
+                        <span class="badge rounded-pill text-bg-light border fw-normal flex-shrink-0">
+                          {{ libellePortee(d.portee) }}
+                        </span>
+                        @if (d.fichierId) {
+                          <button class="btn btn-sm btn-outline-secondary flex-shrink-0" type="button"
+                                  (click)="ouvrir(d)">Ouvrir</button>
+                        }
+                      </li>
+                    }
+                  </ul>
                 } @else {
-                  <span class="valeur" aria-hidden="true">• • • •</span>
-                  <button class="btn" type="button" [disabled]="occupe()" (click)="afficher(k)">Afficher</button>
-                }
-                @if (c.peutDeposer) {
-                  <button class="lien" type="button" (click)="voirJournal(k)">Journal</button>
+                  <p class="text-body-secondary small mb-0">Aucun document visible pour vous.</p>
                 }
               </div>
+            </section>
+          </div>
 
-              @if (journalDe() === k.id) {
-                <div class="journal">
-                  <p style="margin:6px 0">Qui a affiché ce code, et quand :</p>
-                  @for (a of journal(); track $index) {
-                    <div>{{ horodatageLisible(a.afficheLe) }} · {{ a.personneNom }}</div>
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                  <div class="eyebrow"><i class="bi bi-key me-2" aria-hidden="true"></i>Codes et accès</div>
+                  @if (c.peutDeposer && c.coffreDisponible) {
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            (click)="saisieCode.set(!saisieCode())">
+                      {{ saisieCode() ? 'Fermer' : 'Ajouter' }}
+                    </button>
                   }
-                  @if (!journal().length) { <div>Personne ne l'a encore affiché.</div> }
                 </div>
-              }
-            }
-            @if (!c.codes.length && c.coffreDisponible) {
-              <p class="secondaire" style="margin:10px 0 0">Aucun code visible pour vous.</p>
-            }
 
-            <p class="secondaire" style="margin-top:14px;font-size:12.5px">
-              Chiffré côté serveur. Chaque affichage est enregistré avec le nom de qui regarde et
-              l'heure. Un code de portée « pendant le séjour » se ferme le lendemain du départ.
-            </p>
-          </section>
+                @if (!c.coffreDisponible) {
+                  <div class="alert alert-primary small">
+                    Le coffre-fort des codes est verrouillé : la clé MDF_CLE_COFFRE n'est pas configurée
+                    sur le serveur. Les documents restent accessibles.
+                  </div>
+                }
+
+                @if (saisieCode()) {
+                  <form class="row g-2 mb-3" (ngSubmit)="ajouterCode()">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small text-body-secondary" for="c-lib">Intitulé</label>
+                      <input class="form-control" id="c-lib" name="clib" [(ngModel)]="fCodeLibelle"
+                             placeholder="Portail résidence">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small text-body-secondary" for="c-val">Code</label>
+                      <input class="form-control" id="c-val" name="cval" [(ngModel)]="fCodeValeur" placeholder="1840B">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label small text-body-secondary" for="c-por">Qui peut le voir</label>
+                      <select class="form-select" id="c-por" name="cpor" [(ngModel)]="fCodePortee">
+                        @for (p of c.portees; track p.cle) { <option [value]="p.cle">{{ p.libelle }}</option> }
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                      <button class="btn btn-primary w-100" type="submit"
+                              [disabled]="occupe() || !fCodeLibelle.trim() || !fCodeValeur.trim()">
+                        Enregistrer
+                      </button>
+                    </div>
+                  </form>
+                }
+
+                @if (c.codes.length) {
+                  <ul class="list-group list-group-flush">
+                    @for (k of c.codes; track k.id) {
+                      <li class="list-group-item px-0">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                          <span class="flex-grow-1" style="min-width:130px">
+                            <span class="d-block small fw-medium">{{ k.libelle }}</span>
+                            <span class="d-block text-body-secondary" style="font-size:.72rem">
+                              {{ libellePortee(k.portee) }}
+                              @if (k.dernierAffichage) { · vu le {{ horodatageLisible(k.dernierAffichage) }} }
+                            </span>
+                          </span>
+                          @if (revele()[k.id]) {
+                            <span class="font-monospace fw-medium">{{ revele()[k.id] }}</span>
+                            <button class="btn btn-sm btn-link text-body-secondary p-0" type="button"
+                                    (click)="masquer(k)">Masquer</button>
+                          } @else {
+                            <span class="font-monospace fw-medium" aria-hidden="true">• • • •</span>
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    [disabled]="occupe()" (click)="afficher(k)">Afficher</button>
+                          }
+                          @if (c.peutDeposer) {
+                            <button class="btn btn-sm btn-link text-body-secondary p-0" type="button"
+                                    (click)="voirJournal(k)">Journal</button>
+                          }
+                        </div>
+
+                        @if (journalDe() === k.id) {
+                          <div class="text-body-secondary small mt-2">
+                            <p class="mb-1">Qui a affiché ce code, et quand :</p>
+                            @for (a of journal(); track $index) {
+                              <div class="border-top py-1">{{ horodatageLisible(a.afficheLe) }} · {{ a.personneNom }}</div>
+                            }
+                            @if (!journal().length) { <div class="border-top py-1">Personne ne l'a encore affiché.</div> }
+                          </div>
+                        }
+                      </li>
+                    }
+                  </ul>
+                } @else if (c.coffreDisponible) {
+                  <p class="text-body-secondary small mb-0">Aucun code visible pour vous.</p>
+                }
+
+                <p class="text-body-secondary small mt-3 mb-0">
+                  Chiffré côté serveur. Chaque affichage est enregistré avec le nom de qui regarde et
+                  l'heure. Un code de portée « pendant le séjour » se ferme le lendemain du départ.
+                </p>
+              </div>
+            </section>
+          </div>
         </div>
       }
     </div>

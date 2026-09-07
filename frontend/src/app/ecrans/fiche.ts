@@ -22,253 +22,330 @@ interface Contact {
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    .contact { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-               padding: 11px 0; border-bottom: 1px solid var(--separateur); }
-    .contact:last-of-type { border-bottom: none; }
-    .contact .meta { font-size: 12.5px; color: var(--encre-3); }
-    .ajout { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 12px; }
-    .ajout-contact { display: grid; grid-template-columns: 1.2fr 130px 140px 1.2fr auto; gap: 8px; margin-top: 14px; }
-    .lien { border: none; background: none; padding: 0 0 0 8px; font: inherit; font-size: 12.5px;
-            color: var(--encre-3); text-decoration: underline; cursor: pointer; }
-    .lien:hover { color: var(--accent); }
-    @media (max-width: 860px) {
-      .ajout, .ajout-contact { grid-template-columns: 1fr; }
-    }
-    .photo {
-      height: 250px; border-radius: 18px; background: var(--actif);
-      display: grid; place-items: center; color: var(--encre-3); overflow: hidden; position: relative;
-    }
+    /* La photo remplit son cadre : Bootstrap pose la proportion, pas le
+       recadrage. */
     .photo img { width: 100%; height: 100%; object-fit: cover; }
-    .photo i { font-size: 30px; }
-    .depot { position: absolute; right: 14px; bottom: 14px; }
-    .lignes .kv { display: flex; justify-content: space-between; gap: 14px; padding: 9px 0; border-top: 1px solid var(--separateur); }
-    .lignes .kv:first-child { border-top: none; }
-    .kv .cle { color: var(--encre-3); font-size: 12.5px; }
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 560px) { .deux { grid-template-columns: 1fr; } .photo { height: 170px; } }
   `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       @if (fiche(); as f) {
-        <div class="photo">
+        <div class="ratio rounded-4 overflow-hidden border bg-body-tertiary photo position-relative"
+             style="--bs-aspect-ratio:26%">
           @if (f.bien.photoFichierId) {
             <img [src]="fichiers.image(f.bien.photoFichierId)()" [alt]="'Photo de ' + f.bien.nom">
           } @else {
-            <i class="bi bi-image" aria-hidden="true"></i>
+            <div class="d-flex align-items-center justify-content-center text-body-secondary fs-2">
+              <i class="bi bi-image" aria-hidden="true"></i>
+            </div>
           }
           @if (etat.estGeranteIci()) {
-            <label class="btn depot">
-              <i class="bi bi-upload" aria-hidden="true"></i> Photo
-              <input type="file" accept="image/*" (change)="televerser($event)" style="display:none">
-            </label>
+            <div class="d-flex align-items-end justify-content-end p-3" style="pointer-events:none">
+              <label class="btn btn-sm btn-outline-secondary bg-body" style="pointer-events:auto">
+                <i class="bi bi-upload me-1" aria-hidden="true"></i>Photo
+                <input type="file" accept="image/*" (change)="televerser($event)" hidden>
+              </label>
+            </div>
           }
         </div>
 
-        <div class="entre">
+        <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap">
           <div>
-            <h1>{{ f.bien.nom }}</h1>
-            <p class="secondaire" style="margin:6px 0 0">
+            <h1 class="h2 mb-2">{{ f.bien.nom }}</h1>
+            <p class="text-body-secondary mb-0">
               {{ f.bien.adresse || f.bien.commune }}{{ f.bien.codePostal ? ', ' + f.bien.codePostal : '' }}
               · détenu par {{ f.structure.nom }}
             </p>
           </div>
           @if (etat.estGeranteIci()) {
-            <button class="btn" (click)="edition.set(!edition())">
+            <button class="btn btn-outline-secondary" (click)="edition.set(!edition())">
+              <i class="bi bi-pencil me-1" aria-hidden="true"></i>
               {{ edition() ? 'Fermer' : 'Modifier la fiche' }}
             </button>
           }
         </div>
 
-        @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-        @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+        @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+        @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
         @if (edition()) {
-          <section class="carte">
-            <h2>Modifier la fiche</h2>
-            <form (ngSubmit)="enregistrer()" style="margin-top:12px">
-              <div class="champ">
-                <label for="f-nom">Nom</label>
-                <input id="f-nom" name="nom" [(ngModel)]="e.nom" required>
-              </div>
-              <div class="deux">
-                <div class="champ">
-                  <label for="f-commune">Commune</label>
-                  <input id="f-commune" name="commune" [(ngModel)]="e.commune" required>
+          <section class="card">
+            <div class="card-body">
+              <h2 class="h5 card-title">Modifier la fiche</h2>
+              <form class="row g-3" (ngSubmit)="enregistrer()">
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="f-nom">Nom</label>
+                  <input class="form-control" id="f-nom" name="nom" [(ngModel)]="e.nom" required>
                 </div>
-                <div class="champ">
-                  <label for="f-cp">Code postal</label>
-                  <input id="f-cp" name="codePostal" [(ngModel)]="e.codePostal" maxlength="10">
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="f-commune">Commune</label>
+                  <input class="form-control" id="f-commune" name="commune" [(ngModel)]="e.commune" required>
                 </div>
-              </div>
-              <div class="champ">
-                <label for="f-adresse">Adresse</label>
-                <input id="f-adresse" name="adresse" [(ngModel)]="e.adresse" maxlength="240">
-              </div>
-              <div class="deux">
-                <div class="champ">
-                  <label for="f-couchages">Couchages</label>
-                  <input id="f-couchages" name="couchages" type="number" min="1" max="100" [(ngModel)]="e.couchages" required>
-                  <p class="meta" style="margin-top:4px">Sert à la détection de dépassement de capacité.</p>
+                <div class="col-12 col-md-2">
+                  <label class="form-label small text-body-secondary" for="f-cp">Code postal</label>
+                  <input class="form-control" id="f-cp" name="codePostal" [(ngModel)]="e.codePostal" maxlength="10">
                 </div>
-                <div class="champ">
-                  <label for="f-type">Type</label>
-                  <select id="f-type" name="type" [(ngModel)]="e.type">
+                <div class="col-12">
+                  <label class="form-label small text-body-secondary" for="f-adresse">Adresse</label>
+                  <input class="form-control" id="f-adresse" name="adresse" [(ngModel)]="e.adresse" maxlength="240">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="f-couchages">Couchages</label>
+                  <input class="form-control" id="f-couchages" name="couchages" type="number" min="1" max="100"
+                         [(ngModel)]="e.couchages" required>
+                  <div class="form-text">Sert à la détection de dépassement de capacité.</div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="f-type">Type</label>
+                  <select class="form-select" id="f-type" name="type" [(ngModel)]="e.type">
                     <option value="mer">Bord de mer</option>
                     <option value="montagne">Montagne</option>
                     <option value="campagne">Campagne</option>
                     <option value="ville">Ville</option>
                   </select>
                 </div>
-              </div>
-              <div class="champ">
-                <label for="f-loc">Location saisonnière</label>
-                <select id="f-loc" name="locationActivee" [(ngModel)]="e.locationActivee">
-                  <option [ngValue]="false">Non activée</option>
-                  <option [ngValue]="true">Activée</option>
-                </select>
-                <p class="meta" style="margin-top:4px">
-                  Ouvre l'écran Location saisonnière sur ce bien : réservations, loyers encaissés
-                  et net à répartir. Sans cela, le module n'existe nulle part sur ce bien.
-                </p>
-              </div>
-              <div class="champ">
-                <label for="f-notes">Notes</label>
-                <textarea id="f-notes" name="notes" [(ngModel)]="e.notes" maxlength="1000"></textarea>
-              </div>
-              <button class="btn btn-primaire" type="submit" [disabled]="occupe()">Enregistrer</button>
-            </form>
+                <div class="col-12 col-md-4">
+                  <label class="form-label small text-body-secondary" for="f-loc">Location saisonnière</label>
+                  <select class="form-select" id="f-loc" name="locationActivee" [(ngModel)]="e.locationActivee">
+                    <option [ngValue]="false">Non activée</option>
+                    <option [ngValue]="true">Activée</option>
+                  </select>
+                  <div class="form-text">
+                    Ouvre l'écran Location saisonnière sur ce bien : réservations, loyers encaissés
+                    et net à répartir. Sans cela, le module n'existe nulle part sur ce bien.
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small text-body-secondary" for="f-notes">Notes</label>
+                  <textarea class="form-control" id="f-notes" name="notes" rows="3"
+                            [(ngModel)]="e.notes" maxlength="1000"></textarea>
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-primary" type="submit" [disabled]="occupe()">Enregistrer</button>
+                </div>
+              </form>
+            </div>
           </section>
         }
 
-        <div class="grille" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
-          <section class="carte">
-            <h2>Caractéristiques</h2>
-            <div class="lignes" style="margin-top:10px">
-              <div class="kv"><span class="cle">Commune</span><span>{{ f.bien.commune }}</span></div>
-              <div class="kv"><span class="cle">Couchages</span><span class="chiffres">{{ f.bien.couchages }}</span></div>
-              <div class="kv"><span class="cle">Type</span><span>{{ typeLisible(f.bien.type) }}</span></div>
-              <div class="kv"><span class="cle">Location saisonnière</span><span>{{ f.bien.locationActivee ? 'activée' : 'non activée' }}</span></div>
-            </div>
-          </section>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Caractéristiques</div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Commune</span><span class="fw-medium">{{ f.bien.commune }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Couchages</span>
+                    <span class="fw-medium tnum">{{ f.bien.couchages }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Type</span>
+                    <span class="fw-medium">{{ typeLisible(f.bien.type) }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Location saisonnière</span>
+                    <span class="fw-medium">{{ f.bien.locationActivee ? 'activée' : 'non activée' }}</span>
+                  </li>
+                </ul>
+              </div>
+            </section>
+          </div>
 
-          <section class="carte">
-            <h2>Détention</h2>
-            <div class="lignes" style="margin-top:10px">
-              <div class="kv"><span class="cle">Structure</span><span>{{ f.structure.nom }}</span></div>
-              <div class="kv"><span class="cle">Mode</span><span>{{ modeLisible(f.structure.mode) }}</span></div>
-              <div class="kv"><span class="cle">Règle de décision</span><span>{{ f.regleMajorite }}</span></div>
-              <div class="kv"><span class="cle">Votre rôle</span><span>{{ roleLisible(f.role) }}</span></div>
-            </div>
-            @if (f.structure.notes) { <p class="secondaire" style="margin-top:12px">{{ f.structure.notes }}</p> }
-          </section>
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Détention</div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Structure</span><span class="fw-medium">{{ f.structure.nom }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Mode</span>
+                    <span class="fw-medium">{{ modeLisible(f.structure.mode) }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Règle de décision</span>
+                    <span class="fw-medium text-end">{{ f.regleMajorite }}</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">Votre rôle</span>
+                    <span class="fw-medium">{{ roleLisible(f.role) }}</span>
+                  </li>
+                </ul>
+                @if (f.structure.notes) {
+                  <p class="text-body-secondary small mt-3 mb-0">{{ f.structure.notes }}</p>
+                }
+              </div>
+            </section>
+          </div>
+
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body d-flex flex-column">
+                <div class="eyebrow mb-2">Inventaire</div>
+                @if (inventaire().length) {
+                  <ul class="list-group list-group-flush flex-grow-1">
+                    @for (i of inventaire(); track i.id) {
+                      <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                        <span>{{ i.libelle }}</span>
+                        <span class="text-body-secondary">{{ i.etat || 'Bon' }}</span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="text-body-secondary small flex-grow-1">Aucune ligne d'inventaire.</p>
+                }
+                <button class="btn btn-sm btn-outline-secondary w-100 mt-3" type="button"
+                        (click)="casse.set(!casse())">
+                  {{ casse() ? 'Fermer' : 'Signaler une casse' }}
+                </button>
+                @if (casse()) {
+                  <form class="row g-2 mt-1" (ngSubmit)="signalerCasse()">
+                    <div class="col-12">
+                      <input class="form-control" name="klib" [(ngModel)]="fCasseLibelle" aria-label="Ce qui est cassé"
+                             placeholder="le matelas de la chambre nord">
+                    </div>
+                    <div class="col-12">
+                      <input class="form-control" name="kdet" [(ngModel)]="fCasseDetail" aria-label="Détail"
+                             placeholder="affaissé au milieu">
+                    </div>
+                    <div class="col-12">
+                      <button class="btn btn-primary w-100" type="submit"
+                              [disabled]="occupe() || !fCasseLibelle.trim()">Signaler</button>
+                    </div>
+                  </form>
+                  <p class="text-body-secondary small mt-2 mb-0">
+                    Le signalement crée une tâche dans le carnet d'entretien et marque la ligne
+                    d'inventaire à remplacer.
+                  </p>
+                }
+              </div>
+            </section>
+          </div>
         </div>
 
-        <div class="deux">
-          <section class="carte">
-            <h2><i class="bi bi-signpost-split" aria-hidden="true"></i> Guide d'arrivée</h2>
-            <p class="secondaire" style="margin:4px 0 10px">
+        <section class="card">
+          <div class="card-body">
+            <div class="eyebrow mb-2">
+              <i class="bi bi-signpost-split me-2" aria-hidden="true"></i>Guide d'arrivée
+            </div>
+            <p class="text-body-secondary small">
               Ce qu'il faut savoir en arrivant. Visible de tous ceux qui séjournent, sans les codes,
               qui vivent au coffre-fort avec leur propre portée.
             </p>
-            @for (g of guide(); track g.id) {
-              <div class="kv">
-                <span class="cle">{{ g.cle }}</span>
-                <span style="text-align:right">
-                  {{ g.valeur }}
-                  @if (peutModifierFiche()) {
-                    <button class="lien" type="button" (click)="retirerLigneFiche(g.id)">retirer</button>
-                  }
-                </span>
-              </div>
-            }
-            @if (!guide().length) {
-              <p class="secondaire" style="margin:0">
+            @if (guide().length) {
+              <ul class="list-group list-group-flush">
+                @for (g of guide(); track g.id) {
+                  <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
+                    <span class="text-body-secondary">{{ g.cle }}</span>
+                    <span class="text-end">
+                      {{ g.valeur }}
+                      @if (peutModifierFiche()) {
+                        <button class="btn btn-sm btn-link text-body-secondary p-0 ms-2" type="button"
+                                (click)="retirerLigneFiche(g.id)">retirer</button>
+                      }
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-body-secondary small mb-0">
                 Rien pour l'instant. Les clés, l'eau, les poubelles, les voisins, le wifi.
               </p>
             }
             @if (peutModifierFiche()) {
-              <form class="ajout" (ngSubmit)="ajouterLigneFiche('guide')">
-                <input name="gcle" [(ngModel)]="fGuideCle" placeholder="Eau" aria-label="Intitulé">
-                <input name="gval" [(ngModel)]="fGuideValeur" aria-label="Valeur"
-                       placeholder="vanne générale sous l'escalier">
-                <button class="btn" type="submit" [disabled]="occupe() || !fGuideCle.trim()">Ajouter</button>
+              <form class="row g-2 mt-1" (ngSubmit)="ajouterLigneFiche('guide')">
+                <div class="col-12 col-md-3">
+                  <input class="form-control" name="gcle" [(ngModel)]="fGuideCle" placeholder="Eau" aria-label="Intitulé">
+                </div>
+                <div class="col-12 col-md-7">
+                  <input class="form-control" name="gval" [(ngModel)]="fGuideValeur" aria-label="Valeur"
+                         placeholder="vanne générale sous l'escalier">
+                </div>
+                <div class="col-12 col-md-2">
+                  <button class="btn btn-outline-secondary w-100" type="submit"
+                          [disabled]="occupe() || !fGuideCle.trim()">Ajouter</button>
+                </div>
               </form>
             }
-          </section>
-
-          <section class="carte">
-            <h2>Inventaire</h2>
-            @for (i of inventaire(); track i.id) {
-              <div class="kv"><span class="cle">{{ i.libelle }}</span><span>{{ i.etat || 'Bon' }}</span></div>
-            }
-            @if (!inventaire().length) {
-              <p class="secondaire" style="margin:8px 0 0">Aucune ligne d'inventaire.</p>
-            }
-            <button class="btn" type="button" style="margin-top:12px"
-                    (click)="casse.set(!casse())">
-              {{ casse() ? 'Fermer' : 'Signaler une casse' }}
-            </button>
-            @if (casse()) {
-              <form class="ajout" style="margin-top:10px" (ngSubmit)="signalerCasse()">
-                <input name="klib" [(ngModel)]="fCasseLibelle" aria-label="Ce qui est cassé"
-                       placeholder="le matelas de la chambre nord">
-                <input name="kdet" [(ngModel)]="fCasseDetail" aria-label="Détail"
-                       placeholder="affaissé au milieu">
-                <button class="btn btn-primaire" type="submit"
-                        [disabled]="occupe() || !fCasseLibelle.trim()">Signaler</button>
-              </form>
-              <p class="secondaire" style="margin:8px 0 0;font-size:12.5px">
-                Le signalement crée une tâche dans le carnet d'entretien et marque la ligne
-                d'inventaire à remplacer.
-              </p>
-            }
-          </section>
-        </div>
-
-        <section class="carte">
-          <div class="entre">
-            <h2><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Carnet d'adresses</h2>
-            <span class="pastille">{{ contacts().length }}</span>
           </div>
-          <p class="secondaire" style="margin:4px 0 10px">
-            Artisans, voisins, mairie, urgences. Utile le jour où la chaudière lâche pendant le
-            séjour de quelqu'un qui ne connaît pas le plombier.
-          </p>
-          @for (c of contacts(); track c.id) {
-            <div class="contact">
-              <span class="pastille">{{ libelleRoleContact(c.role) }}</span>
-              <span style="flex:1;min-width:150px">
-                <span style="display:block;font-size:14px">{{ c.nom }}</span>
-                @if (c.notes) { <span class="meta">{{ c.notes }}</span> }
-              </span>
-              @if (c.telephone) { <a class="btn" [href]="'tel:' + c.telephone">{{ c.telephone }}</a> }
-              @if (c.email) { <a class="btn" [href]="'mailto:' + c.email">Courriel</a> }
-              @if (peutModifierContacts()) {
-                <button class="lien" type="button" (click)="retirerContact(c.id)">retirer</button>
-              }
+        </section>
+
+        <section class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+              <div class="eyebrow">
+                <i class="bi bi-person-lines-fill me-2" aria-hidden="true"></i>Carnet d'adresses
+              </div>
+              <span class="badge rounded-pill text-bg-light border">{{ contacts().length }}</span>
             </div>
-          }
-          @if (!contacts().length) {
-            <p class="secondaire" style="margin:0">Aucun contact enregistré.</p>
-          }
-          @if (peutModifierContacts()) {
-            <form class="ajout-contact" (ngSubmit)="ajouterContact()">
-              <input name="cnom" [(ngModel)]="fContactNom" aria-label="Nom" placeholder="Le Bihan, plombier">
-              <select name="crole" [(ngModel)]="fContactRole" aria-label="Rôle">
-                @for (r of rolesContact(); track r.cle) { <option [value]="r.cle">{{ r.libelle }}</option> }
-              </select>
-              <input name="ctel" [(ngModel)]="fContactTel" aria-label="Téléphone" placeholder="02 98 00 00 00">
-              <input name="cnotes" [(ngModel)]="fContactNotes" aria-label="Notes"
-                     placeholder="Connaît la chaudière depuis 2009">
-              <button class="btn" type="submit" [disabled]="occupe() || !fContactNom.trim()">Ajouter</button>
-            </form>
-          }
+            <p class="text-body-secondary small">
+              Artisans, voisins, mairie, urgences. Utile le jour où la chaudière lâche pendant le
+              séjour de quelqu'un qui ne connaît pas le plombier.
+            </p>
+            @if (contacts().length) {
+              <ul class="list-group list-group-flush">
+                @for (c of contacts(); track c.id) {
+                  <li class="list-group-item d-flex gap-3 align-items-center flex-wrap px-0">
+                    <span class="badge rounded-pill text-bg-light border fw-normal">{{ libelleRoleContact(c.role) }}</span>
+                    <span class="flex-grow-1" style="min-width:150px">
+                      <span class="d-block small fw-medium">{{ c.nom }}</span>
+                      @if (c.notes) {
+                        <span class="d-block text-body-secondary" style="font-size:.72rem">{{ c.notes }}</span>
+                      }
+                    </span>
+                    @if (c.telephone) {
+                      <a class="btn btn-sm btn-outline-secondary" [href]="'tel:' + c.telephone">{{ c.telephone }}</a>
+                    }
+                    @if (c.email) {
+                      <a class="btn btn-sm btn-outline-secondary" [href]="'mailto:' + c.email">Courriel</a>
+                    }
+                    @if (peutModifierContacts()) {
+                      <button class="btn btn-sm btn-link text-body-secondary p-0" type="button"
+                              (click)="retirerContact(c.id)">retirer</button>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-body-secondary small mb-0">Aucun contact enregistré.</p>
+            }
+            @if (peutModifierContacts()) {
+              <form class="row g-2 mt-1" (ngSubmit)="ajouterContact()">
+                <div class="col-12 col-md-3">
+                  <input class="form-control" name="cnom" [(ngModel)]="fContactNom" aria-label="Nom"
+                         placeholder="Le Bihan, plombier">
+                </div>
+                <div class="col-12 col-md-2">
+                  <select class="form-select" name="crole" [(ngModel)]="fContactRole" aria-label="Rôle">
+                    @for (r of rolesContact(); track r.cle) { <option [value]="r.cle">{{ r.libelle }}</option> }
+                  </select>
+                </div>
+                <div class="col-12 col-md-2">
+                  <input class="form-control" name="ctel" [(ngModel)]="fContactTel" aria-label="Téléphone"
+                         placeholder="02 98 00 00 00">
+                </div>
+                <div class="col-12 col-md-3">
+                  <input class="form-control" name="cnotes" [(ngModel)]="fContactNotes" aria-label="Notes"
+                         placeholder="Connaît la chaudière depuis 2009">
+                </div>
+                <div class="col-12 col-md-2">
+                  <button class="btn btn-outline-secondary w-100" type="submit"
+                          [disabled]="occupe() || !fContactNom.trim()">Ajouter</button>
+                </div>
+              </form>
+            }
+          </div>
         </section>
 
         @if (f.bien.notes) {
-          <section class="carte">
-            <h2>Notes</h2>
-            <p class="secondaire" style="margin-top:8px;white-space:pre-wrap">{{ f.bien.notes }}</p>
+          <section class="card">
+            <div class="card-body">
+              <div class="eyebrow mb-2">Notes</div>
+              <p class="text-body-secondary small mb-0" style="white-space:pre-wrap">{{ f.bien.notes }}</p>
+            </div>
           </section>
         }
       }
