@@ -191,6 +191,15 @@ const RESULTAT: Record<string, string> = {
                     </ul>
                   </details>
                 }
+              } @else {
+                <!-- Le serveur ne rend le détail d'un scrutin qu'à ses
+                     électeurs. Sans cette phrase, un membre de foyer voyait une
+                     carte de vote sans décompte, sans bouton et sans un mot :
+                     l'écran avait l'air cassé alors qu'il faisait son travail. -->
+                <p class="text-body-secondary small border-top mt-4 pt-3 mb-0">
+                  Vous ne faites pas partie du corps électoral de ce scrutin, figé à son ouverture,
+                  et le détail des voix ne vous est donc pas rendu. Vous suivez le vote sans y prendre part.
+                </p>
               }
             </div>
           </article>
