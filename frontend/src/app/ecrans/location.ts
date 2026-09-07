@@ -51,194 +51,210 @@ const LIBELLE: Record<Statut, string> = {
   standalone: true,
   imports: [FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .mesures { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
-    .mesure { background: var(--surface); border: 1px solid var(--bordure); border-radius: 14px; padding: 16px 18px; }
-    .mesure .cle { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--encre-3); }
-    .mesure .val { font: 500 25px/1.1 'Bricolage Grotesque', sans-serif; margin-top: 8px; }
-    .mesure .val.deficit { color: var(--accent-doux-encre); }
-    .ligne-r { display: grid; grid-template-columns: 130px 1fr 105px 105px 120px 150px; gap: 12px;
-               align-items: center; padding: 11px 0; border-top: 1px solid var(--separateur); font-size: 13px; }
-    .ligne-r:first-of-type { border-top: none; }
-    .st-solde { background: #e4e9dc; color: #556340; }
-    .st-acompte { background: #f0e0d5; color: #8d4a2e; }
-    .st-annule { text-decoration: line-through; }
-    .annulee { opacity: .55; }
-    .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .saisie { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: end; }
-    .detail { font-size: 12.5px; white-space: pre-wrap; background: var(--pastille-neutre);
-              border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
-    .annee { display: flex; gap: 8px; align-items: center; }
-    .annee button { min-width: 40px; }
-    @media (max-width: 860px) {
-      .deux, .saisie { grid-template-columns: 1fr; }
-      .ligne-r { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
-    }
-  `],
   template: `
-    <div class="colonne">
-      <div class="entre">
+    <div class="d-flex flex-column gap-4">
+      <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap">
         <div>
-          <h1>Location saisonnière @if (etat.bien(); as b) { · {{ b.nom }} }</h1>
-          <p class="secondaire" style="margin:6px 0 0">
+          <h1 class="h2 mb-2">Location saisonnière @if (etat.bien(); as b) { · {{ b.nom }} }</h1>
+          <p class="text-body-secondary mb-0">
             Les semaines famille sont posées avant l'ouverture à la location.
           </p>
         </div>
-        <div class="annee">
-          <button class="btn" type="button" (click)="changerAnnee(-1)">‹</button>
-          <strong class="chiffres">{{ annee() }}</strong>
-          <button class="btn" type="button" (click)="changerAnnee(1)">›</button>
+        <div class="d-flex gap-2 align-items-center">
+          <button class="btn btn-sm btn-outline-secondary" type="button" (click)="changerAnnee(-1)"
+                  aria-label="Année précédente">
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          </button>
+          <strong class="tnum">{{ annee() }}</strong>
+          <button class="btn btn-sm btn-outline-secondary" type="button" (click)="changerAnnee(1)"
+                  aria-label="Année suivante">
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
 
-      @if (erreur()) { <div class="encart">{{ erreur() }}</div> }
-      @if (message()) { <div class="encart-positif">{{ message() }}</div> }
+      @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
+      @if (message()) { <div class="alert alert-success mb-0">{{ message() }}</div> }
 
       @if (refus()) {
-        <section class="carte">
-          <h2>La location n'est pas activée sur ce bien</h2>
-          <p class="secondaire" style="margin:8px 0 0">{{ refus() }}</p>
+        <section class="card">
+          <div class="card-body">
+            <h2 class="h5 card-title">La location n'est pas activée sur ce bien</h2>
+            <p class="text-body-secondary small mb-0">{{ refus() }}</p>
+          </div>
         </section>
       }
 
       @if (saison(); as s) {
-        @if (s.alerte) { <div class="encart">{{ s.alerte }}</div> }
+        @if (s.alerte) { <div class="alert alert-primary mb-0">{{ s.alerte }}</div> }
 
-        <div class="mesures">
-          <div class="mesure">
-            <div class="cle">Loyers encaissés {{ s.annee }}</div>
-            <div class="val chiffres">{{ euros(s.exercice.encaisseCents) }}</div>
-          </div>
-          <div class="mesure">
-            <div class="cle">Nuits louées</div>
-            <div class="val chiffres">{{ s.exercice.nuitsLouees }}</div>
-          </div>
-          <div class="mesure">
-            <div class="cle">Charges déduites</div>
-            <div class="val chiffres">{{ euros(s.exercice.chargesCents) }}</div>
-          </div>
-          <div class="mesure">
-            <div class="cle">Net à répartir</div>
-            <div class="val chiffres" [class.deficit]="s.exercice.netCents < 0">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3">
+          <div class="col"><div class="card h-100"><div class="card-body">
+            <div class="text-body-secondary small">Loyers encaissés {{ s.annee }}</div>
+            <div class="fs-3 mt-2 tnum card-title">{{ euros(s.exercice.encaisseCents) }}</div>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body">
+            <div class="text-body-secondary small">Nuits louées</div>
+            <div class="fs-3 mt-2 tnum card-title">{{ s.exercice.nuitsLouees }}</div>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body">
+            <div class="text-body-secondary small">Charges déduites</div>
+            <div class="fs-3 mt-2 tnum card-title">{{ euros(s.exercice.chargesCents) }}</div>
+          </div></div></div>
+          <div class="col"><div class="card h-100"><div class="card-body">
+            <div class="text-body-secondary small">Net à répartir</div>
+            <div class="fs-3 mt-2 tnum card-title"
+                 [class.text-primary-emphasis]="s.exercice.netCents < 0"
+                 [class.text-success-emphasis]="s.exercice.netCents > 0">
               {{ euros(s.exercice.netCents) }}
             </div>
-          </div>
+          </div></div></div>
         </div>
 
-        <section class="carte">
-          <div class="entre">
-            <h2>Réservations</h2>
-            @if (s.peutModifier) {
-              <button class="btn" type="button" (click)="depot.set(!depot())">
-                {{ depot() ? 'Fermer' : 'Ajouter une réservation' }}
-              </button>
-            }
-          </div>
-
-          @if (depot() && s.peutModifier) {
-            <form class="saisie" style="margin:14px 0 4px" (ngSubmit)="creer()">
-              <div style="grid-column:1/-1">
-                <label for="r-loc">Locataire</label>
-                <input id="r-loc" name="rloc" [(ngModel)]="fLocataire" placeholder="M. et Mme Corre">
-              </div>
-              <div>
-                <label for="r-arr">Arrivée</label>
-                <input id="r-arr" name="rarr" type="date" [(ngModel)]="fArrivee">
-              </div>
-              <div>
-                <label for="r-dep">Départ</label>
-                <input id="r-dep" name="rdep" type="date" [(ngModel)]="fDepart">
-              </div>
-              <div>
-                <label for="r-occ">Occupants</label>
-                <input id="r-occ" name="rocc" type="number" min="1" [(ngModel)]="fOccupants">
-              </div>
-              <div>
-                <label for="r-loyer">Loyer (euros)</label>
-                <input id="r-loyer" name="rloyer" type="number" min="0" step="0.01" [(ngModel)]="fLoyer">
-              </div>
-              <div>
-                <label for="r-ac">Acompte reçu (euros)</label>
-                <input id="r-ac" name="rac" type="number" min="0" step="0.01" [(ngModel)]="fAcompte">
-              </div>
-              <div>
-                <label for="r-mail">Courriel (facultatif)</label>
-                <input id="r-mail" name="rmail" type="email" [(ngModel)]="fEmail">
-              </div>
-              <div style="grid-column:1/-1">
-                <button class="btn btn-primaire" type="submit"
-                        [disabled]="occupe() || !fLocataire.trim() || !fArrivee || !fDepart">
-                  Enregistrer la réservation
+        <section class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+              <div class="eyebrow">Réservations</div>
+              @if (s.peutModifier) {
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="depot.set(!depot())">
+                  <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>
+                  {{ depot() ? 'Fermer' : 'Ajouter une réservation' }}
                 </button>
-                <span class="secondaire" style="margin-left:12px;font-size:12.5px">
-                  La semaine est aussitôt bloquée au calendrier, comme un séjour de famille.
-                </span>
-              </div>
-            </form>
-          }
+              }
+            </div>
 
-          <div style="margin-top:10px">
-            @for (r of s.reservations; track r.id) {
-              <div class="ligne-r" [class.annulee]="r.statut === 'annule'">
-                <span class="secondaire">{{ plage(r.arrivee, r.depart) }}</span>
-                <span>
-                  {{ r.locataire }}
-                  <br><span class="secondaire" style="font-size:12px">{{ nuitsLisible(r.nuits) }}</span>
-                </span>
-                <span class="secondaire">{{ r.occupants }} personnes</span>
-                <span class="chiffres">{{ euros(r.loyerCents) }}</span>
-                <span class="pastille" [class.st-solde]="r.statut === 'solde'"
-                      [class.st-acompte]="r.statut === 'acompte'"
-                      [class.st-annule]="r.statut === 'annule'">{{ libelle(r.statut) }}</span>
-                @if (s.peutModifier && r.statut !== 'annule') {
-                  <select (change)="changerStatut(r, $event)"
-                          [attr.aria-label]="'Changer le statut de la réservation de ' + r.locataire">
-                    <option value="">Changer...</option>
-                    @for (o of STATUTS; track o) {
-                      @if (o !== r.statut) { <option [value]="o">{{ libelle(o) }}</option> }
+            @if (depot() && s.peutModifier) {
+              <form class="row g-3 mb-3" (ngSubmit)="creer()">
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="r-loc">Locataire</label>
+                  <input class="form-control" id="r-loc" name="rloc" [(ngModel)]="fLocataire"
+                         placeholder="M. et Mme Corre">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="r-mail">Courriel (facultatif)</label>
+                  <input class="form-control" id="r-mail" name="rmail" type="email" [(ngModel)]="fEmail">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-body-secondary" for="r-arr">Arrivée</label>
+                  <input class="form-control" id="r-arr" name="rarr" type="date" [(ngModel)]="fArrivee">
+                </div>
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-body-secondary" for="r-dep">Départ</label>
+                  <input class="form-control" id="r-dep" name="rdep" type="date" [(ngModel)]="fDepart">
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small text-body-secondary" for="r-occ">Occupants</label>
+                  <input class="form-control" id="r-occ" name="rocc" type="number" min="1" [(ngModel)]="fOccupants">
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small text-body-secondary" for="r-loyer">Loyer (euros)</label>
+                  <input class="form-control" id="r-loyer" name="rloyer" type="number" min="0" step="0.01"
+                         [(ngModel)]="fLoyer">
+                </div>
+                <div class="col-6 col-md-2">
+                  <label class="form-label small text-body-secondary" for="r-ac">Acompte (euros)</label>
+                  <input class="form-control" id="r-ac" name="rac" type="number" min="0" step="0.01"
+                         [(ngModel)]="fAcompte">
+                </div>
+                <div class="col-12 d-flex gap-3 align-items-center flex-wrap">
+                  <button class="btn btn-primary" type="submit"
+                          [disabled]="occupe() || !fLocataire.trim() || !fArrivee || !fDepart">
+                    Enregistrer la réservation
+                  </button>
+                  <span class="text-body-secondary small">
+                    La semaine est aussitôt bloquée au calendrier, comme un séjour de famille.
+                  </span>
+                </div>
+              </form>
+            }
+
+            @if (s.reservations.length) {
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead>
+                    <tr class="eyebrow">
+                      <th scope="col">Dates</th><th scope="col">Locataire</th>
+                      <th scope="col">Occupants</th><th class="text-end" scope="col">Loyer</th>
+                      <th scope="col">Statut</th><th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (r of s.reservations; track r.id) {
+                      <tr [class.opacity-50]="r.statut === 'annule'">
+                        <td class="tnum small text-body-secondary">{{ plage(r.arrivee, r.depart) }}</td>
+                        <td>
+                          <span class="d-block small fw-medium">{{ r.locataire }}</span>
+                          <span class="d-block text-body-secondary" style="font-size:.72rem">
+                            {{ nuitsLisible(r.nuits) }}
+                          </span>
+                        </td>
+                        <td class="small text-body-secondary">{{ r.occupants }} personnes</td>
+                        <td class="small fw-medium tnum text-end">{{ euros(r.loyerCents) }}</td>
+                        <td>
+                          <span class="badge rounded-pill" [class]="classeStatut(r.statut)">{{ libelle(r.statut) }}</span>
+                        </td>
+                        <td class="text-end">
+                          @if (s.peutModifier && r.statut !== 'annule') {
+                            <select class="form-select form-select-sm w-auto d-inline-block"
+                                    (change)="changerStatut(r, $event)"
+                                    [attr.aria-label]="'Changer le statut de la réservation de ' + r.locataire">
+                              <option value="">Changer...</option>
+                              @for (o of STATUTS; track o) {
+                                @if (o !== r.statut) { <option [value]="o">{{ libelle(o) }}</option> }
+                              }
+                            </select>
+                          }
+                        </td>
+                      </tr>
                     }
-                  </select>
-                } @else { <span></span> }
-              </div>
-            }
-            @if (!s.reservations.length) {
-              <p class="secondaire" style="margin:6px 0 0">
-                Aucune réservation sur {{ s.annee }}.
-              </p>
-            }
-          </div>
-
-          <div class="detail">{{ s.exercice.explication }}</div>
-        </section>
-
-        <div class="deux">
-          <section class="carte">
-            <h2>Répartition des loyers</h2>
-            <p class="secondaire" style="margin:10px 0 0">
-              Le net est réparti au prorata des {{ etat.vocabulaire().parts }} en vigueur à la
-              clôture de la saison, avec les mêmes règles et les mêmes arrondis que les dépenses.
-              Il se ventile depuis l'écran Dépenses, pour qu'il n'existe qu'une seule table de
-              répartition et un seul historique.
-            </p>
-          </section>
-          <section class="carte">
-            <h2>Charges de la saison</h2>
-            @if (s.charges.length) {
-              <div style="margin-top:8px">
-                @for (c of s.charges; track c.id) {
-                  <div class="ligne-r" style="grid-template-columns:1fr 110px">
-                    <span>{{ c.libelle }}</span>
-                    <span class="chiffres">{{ euros(c.montantCents) }}</span>
-                  </div>
-                }
+                  </tbody>
+                </table>
               </div>
             } @else {
-              <p class="secondaire" style="margin:10px 0 0">
-                Aucune charge marquée « liée à la location » sur {{ s.annee }}. La case se coche
-                à la saisie d'une dépense : ménage de fin de séjour, blanchisserie, commission.
-              </p>
+              <p class="text-body-secondary small mb-0">Aucune réservation sur {{ s.annee }}.</p>
             }
-          </section>
+
+            <div class="bg-body-tertiary rounded p-3 mt-3 small"
+                 style="white-space:pre-wrap">{{ s.exercice.explication }}</div>
+          </div>
+        </section>
+
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Répartition des loyers</div>
+                <p class="small text-secondary-emphasis mb-0">
+                  Le net est réparti au prorata des {{ etat.vocabulaire().parts }} en vigueur à la
+                  clôture de la saison, avec les mêmes règles et les mêmes arrondis que les dépenses.
+                  Il se ventile depuis l'écran Dépenses, pour qu'il n'existe qu'une seule table de
+                  répartition et un seul historique.
+                </p>
+              </div>
+            </section>
+          </div>
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Charges de la saison</div>
+                @if (s.charges.length) {
+                  <ul class="list-group list-group-flush">
+                    @for (c of s.charges; track c.id) {
+                      <li class="list-group-item d-flex justify-content-between gap-2 px-0 small">
+                        <span>{{ c.libelle }}</span>
+                        <span class="fw-medium tnum">{{ euros(c.montantCents) }}</span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="small text-secondary-emphasis mb-0">
+                    Aucune charge marquée « liée à la location » sur {{ s.annee }}. La case se coche
+                    à la saisie d'une dépense : ménage de fin de séjour, blanchisserie, commission.
+                  </p>
+                }
+              </div>
+            </section>
+          </div>
         </div>
       }
     </div>
@@ -271,6 +287,13 @@ export class Location {
 
   readonly bienId = computed(() => this.etat.bien()?.id ?? 0);
   readonly libelle = (s: Statut): string => LIBELLE[s];
+
+  /** Soldé se lit d'un coup d'oeil, un acompte se distingue d'une annulation. */
+  classeStatut(s: Statut): string {
+    if (s === 'solde') return 'text-success-emphasis bg-success-subtle border border-success-subtle';
+    if (s === 'acompte') return 'text-primary-emphasis bg-primary-subtle border border-primary-subtle';
+    return 'text-bg-light border';
+  }
 
   constructor() {
     effect(() => { const id = this.bienId(); const a = this.annee(); if (id) void this.charger(id, a); });
