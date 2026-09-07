@@ -105,9 +105,10 @@ async function cliquer(selecteur, quoi) {
   await capture('gerant-reglages-vacances', { scrollTo: 'h2:has-text("Vacances scolaires")' });
   if (FICHIER_VACANCES) {
     await page.setInputFiles('input[type=file][accept*=csv]', FICHIER_VACANCES);
-    await page.waitForSelector('.apercu', { timeout: 15000 }).catch(() => soucis.push('aperçu des vacances absent'));
+    await page.waitForSelector('h3:has-text("Ce qui a été lu")', { timeout: 15000 })
+      .catch(() => soucis.push('aperçu des vacances absent'));
     await attendre(700);
-    await capture('gerant-vacances-apercu', { scrollTo: '.apercu' });
+    await capture('gerant-vacances-apercu', { scrollTo: 'h3:has-text("Ce qui a été lu")' });
     if (await cliquer('button:has-text("Enregistrer ces")', 'bouton enregistrer les vacances')) {
       await attendre(900);
       await capture('gerant-vacances-enregistre', { scrollTo: 'h2:has-text("Vacances scolaires")' });

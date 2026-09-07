@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="./image-slot.js"></script>
+<style>
+  :root {
+    --bs-primary: #b0603f; --bs-primary-rgb: 176,96,63;
+    --bs-primary-bg-subtle: #f0e0d5; --bs-primary-border-subtle: #ddc3b0; --bs-primary-text-emphasis: #8d4a2e;
+    --bs-success: #7a8b5c; --bs-success-rgb: 122,139,92;
+    --bs-success-bg-subtle: #e4e9dc; --bs-success-border-subtle: #c3cfb1; --bs-success-text-emphasis: #4c5836;
+    --bs-info: #4a6572; --bs-info-rgb: 74,101,114;
+    --bs-info-bg-subtle: #e5e8ea; --bs-info-border-subtle: #c3ccd1; --bs-info-text-emphasis: #33454f;
+    --bs-warning: #a5813f; --bs-warning-rgb: 165,129,63;
+    --bs-warning-bg-subtle: #f3e8d3; --bs-warning-border-subtle: #e2cda6; --bs-warning-text-emphasis: #6f5527;
+    --bs-secondary-bg-subtle: #f2ede5; --bs-secondary-border-subtle: #e4dcd1; --bs-secondary-text-emphasis: #4a443c;
+    --bs-body-bg: #f2ede5; --bs-body-color: #24201b; --bs-secondary-color: #6b6157;
+    --bs-tertiary-bg: #eae3d8; --bs-secondary-bg: #e6ded1;
+    --bs-border-color: #e4dcd1; --bs-border-color-translucent: #e4dcd1;
+    --bs-emphasis-color: #24201b; --bs-dark-rgb: 36,32,27;
+    --bs-body-font-family: 'Instrument Sans', system-ui, sans-serif;
+    --bs-body-font-size: .9375rem;
+    --bs-border-radius: .625rem; --bs-border-radius-sm: .5rem; --bs-border-radius-lg: 1rem; --bs-border-radius-xl: 1.125rem;
+    --bs-link-color: #b0603f; --bs-link-hover-color: #8d4a2e;
+    --bs-link-color-rgb: 176,96,63; --bs-link-hover-color-rgb: 141,74,46;
+    --bs-btn-focus-box-shadow: 0 0 0 .25rem rgba(176,96,63,.25);
+    --bs-focus-ring-color: rgba(176,96,63,.25);
+    --bs-nav-pills-link-active-bg: #24201b;
+    --bs-heading-color: #24201b;
+  }
+  body { background: var(--bs-body-bg); }
+  h1, h2, h3, h4, .display-6, .card-title { font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 500; letter-spacing: -.015em; }
+  .card { --bs-card-bg: #fffdf9; --bs-card-border-color: #e4dcd1; --bs-card-cap-bg: transparent; }
+  .list-group { --bs-list-group-bg: transparent; --bs-list-group-border-color: #efe8de; --bs-list-group-action-hover-bg: #f5efe6; --bs-list-group-color: #24201b; }
+  .table { --bs-table-bg: transparent; --bs-table-border-color: #efe8de; --bs-table-hover-bg: #f5efe6; --bs-table-color: #24201b; }
+  .form-control, .form-select { --bs-body-bg: #fffdf9; border-color: #d9cfc2; }
+  .nav-pills { --bs-nav-link-color: #4a443c; --bs-nav-link-hover-color: #b0603f; --bs-nav-pills-link-active-bg: #24201b; --bs-nav-pills-link-active-color: #fffdf9; }
+  .nav-tabs { --bs-nav-tabs-link-active-color: #b0603f; --bs-nav-tabs-link-active-bg: #fffdf9; --bs-nav-tabs-link-active-border-color: #e4dcd1 #e4dcd1 #fffdf9; --bs-nav-link-color: #4a443c; --bs-nav-link-hover-color: #b0603f; }
+  .nav-justified { --bs-nav-link-color: #5f564c; }
+  .nav-justified .nav-link.active { color: #b0603f; background: transparent; }
+  .btn-check:focus + .btn, .btn:focus { box-shadow: 0 0 0 .2rem rgba(176,96,63,.2); }
+  .btn-primary { --bs-btn-bg: #b0603f; --bs-btn-border-color: #b0603f; --bs-btn-color: #fffdf9; --bs-btn-hover-bg: #98502f; --bs-btn-hover-border-color: #98502f; --bs-btn-hover-color: #fffdf9; --bs-btn-active-bg: #8d4a2e; --bs-btn-active-border-color: #8d4a2e; --bs-btn-disabled-bg: #d9b6a3; --bs-btn-disabled-border-color: #d9b6a3; }
+  .btn-outline-primary { --bs-btn-color: #b0603f; --bs-btn-border-color: #b0603f; --bs-btn-hover-bg: #b0603f; --bs-btn-hover-border-color: #b0603f; --bs-btn-hover-color: #fffdf9; --bs-btn-active-bg: #98502f; --bs-btn-active-border-color: #98502f; }
+  .btn-outline-secondary { --bs-btn-color: #4a443c; --bs-btn-border-color: #d9cfc2; --bs-btn-hover-bg: #b0603f; --bs-btn-hover-border-color: #b0603f; --bs-btn-hover-color: #fffdf9; --bs-btn-active-bg: #98502f; --bs-btn-active-border-color: #98502f; --bs-btn-active-color: #fffdf9; }
+  .btn-success { --bs-btn-bg: #7a8b5c; --bs-btn-border-color: #7a8b5c; --bs-btn-color: #fffdf9; --bs-btn-hover-bg: #68784c; --bs-btn-hover-border-color: #68784c; --bs-btn-hover-color: #fffdf9; --bs-btn-active-bg: #5c6b42; --bs-btn-active-border-color: #5c6b42; }
+  .btn-dark { --bs-btn-bg: #24201b; --bs-btn-border-color: #24201b; --bs-btn-color: #fffdf9; --bs-btn-hover-bg: #3b352d; --bs-btn-hover-border-color: #3b352d; --bs-btn-active-bg: #3b352d; --bs-btn-active-border-color: #3b352d; }
+  .btn-link { --bs-btn-color: #b0603f; --bs-btn-hover-color: #8d4a2e; }
+  .progress { --bs-progress-bg: #efe8de; }
+  .form-check-input:checked { background-color: #7a8b5c; border-color: #7a8b5c; }
+  .eyebrow { font-size: .65rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #5f564c; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .cal-cell { min-height: 76px; }
+  .cal-dashed { border-style: dashed !important; }
+  .nav-pills .nav-link.side-link.active { background: #e6ded1; color: #24201b; }
+</style>
+</helmet>
+<div class="min-vh-100">
+
+  <nav class="navbar bg-body border-bottom sticky-top px-3 py-2" style="z-index:1040">
+    <div class="d-flex align-items-center gap-3 w-100">
+      <span class="navbar-brand d-flex align-items-center gap-2 me-0">
+        <span class="d-grid place-content-center bg-primary text-white rounded-3" style="width:32px;height:32px;place-items:center"><i class="bi bi-houses"></i></span>
+        <span class="d-flex flex-column lh-sm">
+          <span class="fs-6">Patrimoine Prudhomme</span>
+          <span class="text-body-secondary" style="font-size:.7rem">{{ bienCount }} biens · indivision, SCI, nom propre</span>
+        </span>
+      </span>
+      <div class="flex-grow-1"></div>
+      <div class="btn-group btn-group-sm" role="group" aria-label="Aperçu">
+        <button type="button" class="btn {{ clsViewDesktop }}" onClick="{{ setDesktop }}"><i class="bi bi-display me-1"></i>Bureau</button>
+        <button type="button" class="btn {{ clsViewMobile }}" onClick="{{ setMobile }}"><i class="bi bi-phone me-1"></i>Mobile</button>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onClick="{{ toggleNotes }}"><i class="bi bi-journal-text me-1"></i>Notes de comportement</button>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-link text-body text-decoration-none dropdown-toggle d-flex align-items-center gap-2" onClick="{{ toggleUserMenu }}" aria-expanded="{{ userMenuOpen }}">
+          <span class="d-grid rounded-circle bg-secondary-subtle text-body-secondary" style="width:30px;height:30px;place-items:center;font-size:.7rem">HP</span>
+          <span class="text-start lh-sm d-none d-sm-block"><span class="d-block small">Hélène</span><span class="d-block text-body-secondary" style="font-size:.7rem">Gérante</span></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end {{ clsUserMenu }}" data-bs-popper="static">
+          <li><h6 class="dropdown-header">Hélène Prudhomme</h6></li>
+          <li><a class="dropdown-item" href="#profil">Mon profil et mon foyer</a></li>
+          <li><a class="dropdown-item" href="#notifications">Notifications</a></li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a class="dropdown-item" href="#instance">Réglages de l'instance</a></li>
+          <li><a class="dropdown-item" href="#export">Exporter mes données</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+  <div class="bg-body-tertiary border-bottom px-3 py-2 position-sticky" style="top:57px;z-index:1020">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <ul class="nav nav-pills nav-pills-sm gap-1 bg-body rounded-3 p-1">
+        <li class="nav-item"><button class="nav-link py-1 px-3 d-flex align-items-center gap-2 {{ clsPillAll }}" onClick="{{ setAll }}"><i class="bi bi-houses"></i>Tous les biens</button></li>
+        <li class="nav-item"><button class="nav-link py-1 px-3 d-flex align-items-center gap-2 {{ clsPillMer }}" onClick="{{ setMer }}"><i class="bi bi-water"></i>Kerloc'h</button></li>
+        <li class="nav-item"><button class="nav-link py-1 px-3 d-flex align-items-center gap-2 {{ clsPillMont }}" onClick="{{ setMont }}"><i class="bi bi-triangle"></i>Les Arcs</button></li>
+      </ul>
+      <sc-if value="{{ scopeBien }}" hint-placeholder-val="{{ true }}">
+        <div class="d-flex align-items-center gap-4 flex-wrap small text-secondary-emphasis">
+          <span><i class="bi bi-geo-alt me-2 text-body-secondary"></i>{{ bienPlace }}</span>
+          <span><i class="bi bi-diagram-3 me-2 text-body-secondary"></i>{{ bienStructure }}</span>
+          <span><i class="bi bi-hand-thumbs-up me-2 text-body-secondary"></i>{{ bienMajority }}</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ scopeAll }}">
+        <div class="small text-secondary-emphasis"><i class="bi bi-diagram-3 me-2 text-body-secondary"></i>Vue consolidée du portefeuille · {{ bienCount }} biens, 2 structures</div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div class="container-fluid px-0">
+    <div class="row g-0">
+      <div class="col-12 col-sm-auto">
+        <div class="position-sticky p-3" style="top:105px;width:230px;max-width:100%">
+          <div class="eyebrow px-2 pb-2">Portefeuille</div>
+          <ul class="nav nav-pills flex-column gap-1 mb-4">
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavDash }}" onClick="{{ goDash }}"><i class="bi bi-house-heart text-body-secondary"></i>Tableau de bord</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavBiens }}" onClick="{{ goBiens }}"><i class="bi bi-houses text-body-secondary"></i>Biens gérés</button></li>
+          </ul>
+          <sc-if value="{{ scopeBien }}" hint-placeholder-val="{{ true }}">
+          <div class="d-flex align-items-center gap-2 bg-secondary-bg rounded-3 px-3 py-2 mb-3">
+            <i class="bi bi-house-door text-secondary-emphasis"></i>
+            <span class="fw-medium" style="font-family:'Bricolage Grotesque',sans-serif">{{ bienShort }}</span>
+          </div>
+          <div class="eyebrow px-2 pb-2">Séjours</div>
+          <ul class="nav nav-pills flex-column gap-1 mb-4">
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavCal }}" onClick="{{ goCal }}"><i class="bi bi-calendar3 text-body-secondary"></i>Calendrier d'occupation</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavReq }}" onClick="{{ goReq }}"><i class="bi bi-envelope-paper text-body-secondary"></i><span class="flex-grow-1">Demandes de séjour</span><sc-if value="{{ hasPending }}" hint-placeholder-val="{{ true }}"><span class="badge rounded-pill text-bg-primary">{{ pendingCount }}</span></sc-if></button></li>
+          </ul>
+          <div class="eyebrow px-2 pb-2">Argent</div>
+          <ul class="nav nav-pills flex-column gap-1 mb-4">
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavExp }}" onClick="{{ goExp }}"><i class="bi bi-receipt text-body-secondary"></i>Dépenses & répartition</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavBal }}" onClick="{{ goBal }}"><i class="bi bi-arrow-left-right text-body-secondary"></i>Soldes & remboursements</button></li>
+            <sc-if value="{{ rentalHere }}" hint-placeholder-val="{{ true }}">
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavRent }}" onClick="{{ goRent }}"><i class="bi bi-key text-body-secondary"></i>Location saisonnière</button></li>
+            </sc-if>
+          </ul>
+          <div class="eyebrow px-2 pb-2">Maison</div>
+          <ul class="nav nav-pills flex-column gap-1 mb-4">
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavMaint }}" onClick="{{ goMaint }}"><i class="bi bi-tools text-body-secondary"></i>Carnet d'entretien</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavProp }}" onClick="{{ goProp }}"><i class="bi bi-journal-bookmark text-body-secondary"></i>Fiche du bien</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavVault }}" onClick="{{ goVault }}"><i class="bi bi-shield-lock text-body-secondary"></i>Coffre-fort</button></li>
+          </ul>
+          <div class="eyebrow px-2 pb-2">Famille</div>
+          <ul class="nav nav-pills flex-column gap-1">
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavVote }}" onClick="{{ goVote }}"><i class="bi bi-hand-thumbs-up text-body-secondary"></i>Décisions & votes</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavSouv }}" onClick="{{ goSouv }}"><i class="bi bi-images text-body-secondary"></i>Souvenirs</button></li>
+            <li class="nav-item"><button class="nav-link side-link text-start w-100 d-flex align-items-center gap-2 {{ clsNavMem }}" onClick="{{ goMem }}"><i class="bi bi-people text-body-secondary"></i>Membres & quotes-parts</button></li>
+          </ul>
+          </sc-if>
+          <div class="border-top mt-4 pt-3 px-2 text-body-secondary lh-base" style="font-size:.7rem">Auto-hébergé · données en Europe<br />Dernière sauvegarde : hier 03:00</div>
+        </div>
+      </div>
+
+      <div class="col">
+        <main class="p-4 pb-5" style="max-width:1140px">
+
+          <sc-if value="{{ navDash }}" hint-placeholder-val="{{ true }}">
+          <section data-screen-label="Tableau de bord">
+            <sc-if value="{{ scopeAll }}">
+              <h1 class="h2 mb-2">Bonjour Hélène</h1>
+              <p class="text-body-secondary mb-4">Vue d'ensemble du portefeuille. Choisissez un bien dans la barre du haut pour entrer dans son dossier.</p>
+              <div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
+                <div class="col">
+                  <div class="card h-100 overflow-hidden" role="button" onClick="{{ setMer }}">
+                    <div class="ratio" style="--bs-aspect-ratio:38%"><image-slot id="bs-kerloch-card" shape="rect" placeholder="Photo de la maison de Kerloc'h"></image-slot></div>
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-baseline gap-2">
+                        <h2 class="h5 card-title mb-0">Maison de Kerloc'h</h2>
+                        <span class="small text-success-emphasis fw-medium"><i class="bi bi-water me-1"></i>Bord de mer</span>
+                      </div>
+                      <p class="text-body-secondary small mb-2">Crozon (29) · 8 couchages · louée en saison</p>
+                      <span class="badge rounded-pill text-bg-light border">Indivision · 4 indivisaires</span>
+                      <div class="d-flex gap-4 flex-wrap border-top mt-3 pt-3">
+                        <div><div class="text-body-secondary" style="font-size:.7rem">Prochain séjour</div><div class="small fw-medium">Claire, 4 juil.</div></div>
+                        <div><div class="text-body-secondary" style="font-size:.7rem">Occupation été</div><div class="small fw-medium tnum">62 %</div></div>
+                        <div><div class="text-body-secondary" style="font-size:.7rem">À traiter</div><div class="small fw-medium text-primary">2 demandes</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card h-100 overflow-hidden" role="button" onClick="{{ setMont }}">
+                    <div class="ratio" style="--bs-aspect-ratio:38%"><image-slot id="bs-arcs-card" shape="rect" placeholder="Photo de l'appartement des Arcs"></image-slot></div>
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-baseline gap-2">
+                        <h2 class="h5 card-title mb-0">Les Arcs 1800</h2>
+                        <span class="small text-info-emphasis fw-medium"><i class="bi bi-triangle me-1"></i>Montagne</span>
+                      </div>
+                      <p class="text-body-secondary small mb-2">Bourg-Saint-Maurice (73) · 6 couchages</p>
+                      <span class="badge rounded-pill text-bg-light border">SCI Prudhomme Immobilier · 3 associés</span>
+                      <div class="d-flex gap-4 flex-wrap border-top mt-3 pt-3">
+                        <div><div class="text-body-secondary" style="font-size:.7rem">Prochain séjour</div><div class="small fw-medium">Julien, 11 juil.</div></div>
+                        <div><div class="text-body-secondary" style="font-size:.7rem">Occupation hiver</div><div class="small fw-medium tnum">88 %</div></div>
+                        <div><div class="text-body-secondary" style="font-size:.7rem">À traiter</div><div class="small fw-medium text-primary">1 demande</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ scopeBien }}" hint-placeholder-val="{{ true }}">
+              <h1 class="h2 mb-2">{{ bienName }}</h1>
+              <p class="text-body-secondary mb-4">{{ bienGreeting }}</p>
+              <div class="card mb-4">
+                <div class="card-body d-flex flex-wrap gap-4 align-items-start">
+                  <div class="d-flex flex-wrap gap-4 flex-grow-1">
+                    <div><div class="text-body-secondary small">Prochain séjour</div><div class="fs-6 fw-medium mt-1">{{ bienNext }}</div></div>
+                    <div><div class="text-body-secondary small">{{ bienOccLabel }}</div><div class="fs-6 fw-medium mt-1 tnum">{{ bienOcc }}</div></div>
+                    <div><div class="text-body-secondary small">À traiter</div><div class="fs-6 fw-medium mt-1 text-primary">{{ bienTodo }}</div></div>
+                    <div><div class="text-body-secondary small">Dépenses 2026</div><div class="fs-6 fw-medium mt-1 tnum">{{ bienSpend }}</div></div>
+                  </div>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-outline-secondary" onClick="{{ goCal }}"><i class="bi bi-calendar3 me-1"></i>Calendrier</button>
+                    <button class="btn btn-sm btn-outline-secondary" onClick="{{ goReq }}"><i class="bi bi-envelope-paper me-1"></i>Demandes</button>
+                    <button class="btn btn-sm btn-outline-secondary" onClick="{{ goProp }}"><i class="bi bi-journal-bookmark me-1"></i>Fiche</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-2"><i class="bi bi-bell me-2"></i>Ce qui vous attend</div>
+                    <div class="list-group list-group-flush">
+                      <sc-if value="{{ hasPending }}" hint-placeholder-val="{{ true }}">
+                      <button class="list-group-item list-group-item-action d-flex gap-3 px-0 border-0" onClick="{{ goReq }}">
+                        <i class="bi bi-envelope-paper text-primary"></i>
+                        <span class="text-start"><span class="d-block small fw-medium">{{ pendingLabel }} de séjour à arbitrer</span><span class="d-block text-body-secondary" style="font-size:.78rem">{{ reqSubline }}</span></span>
+                      </button>
+                      </sc-if>
+                      <sc-if value="{{ alertMer }}" hint-placeholder-val="{{ true }}">
+                      <button class="list-group-item list-group-item-action d-flex gap-3 px-0 border-0" onClick="{{ goVote }}">
+                        <i class="bi bi-hand-thumbs-up text-primary"></i>
+                        <span class="text-start"><span class="d-block small fw-medium">Vote chaudière : 2 voix manquantes</span><span class="d-block text-body-secondary" style="font-size:.78rem">Majorité des deux tiers requise · clôture le 20 sept.</span></span>
+                      </button>
+                      <button class="list-group-item list-group-item-action d-flex gap-3 px-0 border-0" onClick="{{ goMaint }}">
+                        <i class="bi bi-tools text-body-secondary"></i>
+                        <span class="text-start"><span class="d-block small fw-medium">Ramonage à programmer avant le 15 octobre</span><span class="d-block text-body-secondary" style="font-size:.78rem">Kerloc'h · obligation annuelle</span></span>
+                      </button>
+                      </sc-if>
+                      <sc-if value="{{ alertMont }}">
+                      <button class="list-group-item list-group-item-action d-flex gap-3 px-0 border-0" onClick="{{ goMaint }}">
+                        <i class="bi bi-snow text-primary"></i>
+                        <span class="text-start"><span class="d-block small fw-medium">Hivernage de la plomberie avant le 1er novembre</span><span class="d-block text-body-secondary" style="font-size:.78rem">Les Arcs · à confirmer au syndic</span></span>
+                      </button>
+                      <button class="list-group-item list-group-item-action d-flex gap-3 px-0 border-0" onClick="{{ goVote }}">
+                        <i class="bi bi-people text-body-secondary"></i>
+                        <span class="text-start"><span class="d-block small fw-medium">Assemblée générale de la SCI le 12 décembre</span><span class="d-block text-body-secondary" style="font-size:.78rem">Ordre du jour à envoyer 15 jours avant</span></span>
+                      </button>
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow"><i class="bi bi-wallet2 me-2"></i>Trésorerie</div>
+                    <div class="fs-6 fw-medium mt-2" style="font-family:'Bricolage Grotesque',sans-serif">{{ tresTitle }}</div>
+                    <div class="display-6 mt-2 tnum">{{ tresAmount }}</div>
+                    <p class="text-body-secondary small mt-2 mb-0">{{ tresSub }}</p>
+                    <ul class="list-group list-group-flush mt-3">
+                      <sc-for list="{{ tresRows }}" as="t" hint-placeholder-count="3">
+                        <li class="list-group-item d-flex justify-content-between gap-2 px-0 small"><span class="text-body-secondary">{{ t.k }}</span><span class="fw-medium tnum">{{ t.v }}</span></li>
+                      </sc-for>
+                    </ul>
+                    <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onClick="{{ goBal }}">Voir les soldes</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-2"><i class="bi bi-suitcase-lg me-2"></i>Prochains séjours</div>
+                    <ul class="list-group list-group-flush">
+                      <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="4">
+                        <li class="list-group-item d-flex gap-3 px-0">
+                          <span class="text-body-secondary tnum flex-shrink-0" style="font-size:.78rem;width:96px">{{ u.range }}</span>
+                          <span><span class="d-block small fw-medium">{{ u.who }}</span><span class="d-block text-body-secondary" style="font-size:.72rem">{{ u.where }}</span></span>
+                        </li>
+                      </sc-for>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navBiens }}">
+          <section data-screen-label="Biens gérés">
+            <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap mb-4">
+              <div>
+                <h1 class="h2 mb-2">Biens gérés</h1>
+                <p class="text-body-secondary mb-0">Chaque bien porte son propre mode de détention : indivision, SCI, ou propriété en nom propre.</p>
+              </div>
+              <button class="btn btn-primary" onClick="{{ toggleAddBien }}"><i class="bi bi-plus-circle me-1"></i>{{ addBienLabel }}</button>
+            </div>
+
+            <sc-if value="{{ addBienOpen }}">
+            <div class="card mb-4">
+              <div class="card-body">
+                <h2 class="h5 card-title">Ajouter un bien</h2>
+                <div class="eyebrow mt-4 mb-2">Mode de détention</div>
+                <div class="row row-cols-1 row-cols-md-3 g-2">
+                  <div class="col">
+                    <div class="card h-100 {{ clsStructIndivision }}" role="button" onClick="{{ pickIndivision }}">
+                      <div class="card-body p-3">
+                        <div class="small fw-medium d-flex align-items-center gap-2"><i class="bi bi-people"></i>Indivision</div>
+                        <p class="text-body-secondary mb-0 mt-2" style="font-size:.78rem">Quotes-parts, majorité des deux tiers, unanimité pour vendre.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="card h-100 {{ clsStructSci }}" role="button" onClick="{{ pickSci }}">
+                      <div class="card-body p-3">
+                        <div class="small fw-medium d-flex align-items-center gap-2"><i class="bi bi-building"></i>SCI</div>
+                        <p class="text-body-secondary mb-0 mt-2" style="font-size:.78rem">Parts sociales, gérant statutaire, décisions en assemblée.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="card h-100 {{ clsStructPropre }}" role="button" onClick="{{ pickPropre }}">
+                      <div class="card-body p-3">
+                        <div class="small fw-medium d-flex align-items-center gap-2"><i class="bi bi-person"></i>Nom propre</div>
+                        <p class="text-body-secondary mb-0 mt-2" style="font-size:.78rem">Un seul propriétaire décide, les autres membres sont invités.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mt-4">
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label small text-body-secondary" for="bs-nom">Nom du bien</label>
+                    <input class="form-control" id="bs-nom" type="text" defaultValue="Maison des Cévennes" />
+                  </div>
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label small text-body-secondary" for="bs-commune">Commune</label>
+                    <input class="form-control" id="bs-commune" type="text" defaultValue="Anduze (30)" />
+                  </div>
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label small text-body-secondary" for="bs-couchages">Couchages</label>
+                    <input class="form-control" id="bs-couchages" type="number" defaultValue="6" />
+                  </div>
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label small text-body-secondary" for="bs-loc">Location saisonnière</label>
+                    <select class="form-select" id="bs-loc"><option>Désactivée</option><option>Activée</option></select>
+                  </div>
+                </div>
+                <div class="d-flex gap-2 align-items-center flex-wrap mt-4">
+                  <button class="btn btn-primary" onClick="{{ addBien }}">Créer le bien</button>
+                  <button class="btn btn-outline-secondary" onClick="{{ toggleAddBien }}">Annuler</button>
+                  <span class="text-body-secondary small">La structure choisie détermine les règles de vote et de répartition du bien.</span>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+
+            <div class="d-flex flex-column gap-3">
+              <sc-for list="{{ biens }}" as="b" hint-placeholder-count="2">
+                <div class="card">
+                  <div class="card-body d-flex flex-wrap gap-4 align-items-start">
+                    <div class="flex-grow-1" style="min-width:260px">
+                      <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                        <h2 class="h5 card-title mb-0">{{ b.name }}</h2>
+                        <span class="small fw-medium text-body-secondary">{{ b.kind }}</span>
+                      </div>
+                      <p class="text-body-secondary small mt-1 mb-2">{{ b.place }} · {{ b.beds }} couchages · {{ b.rental }}</p>
+                      <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge rounded-pill text-bg-light border fw-medium">{{ b.structure }}</span>
+                        <span class="badge rounded-pill text-bg-light border fw-normal">{{ b.holders }}</span>
+                        <span class="badge rounded-pill text-bg-light border fw-normal">{{ b.majority }}</span>
+                      </div>
+                      <p class="text-body-secondary small mt-3 mb-0" style="max-width:56ch">{{ b.note }}</p>
+                    </div>
+                    <div class="d-flex flex-column gap-2" style="min-width:190px">
+                      <sc-if value="{{ b.idle }}">
+                        <button class="btn btn-sm btn-outline-secondary" onClick="{{ b.open }}"><i class="bi bi-box-arrow-in-right me-1"></i>Ouvrir le dossier</button>
+                        <button class="btn btn-sm btn-link text-body-secondary" onClick="{{ b.ask }}">Retirer ce bien</button>
+                      </sc-if>
+                      <sc-if value="{{ b.asking }}">
+                        <div class="alert alert-primary mb-0 p-3">
+                          <p class="small mb-3">Retirer le bien archive ses séjours, dépenses et documents. Rien n'est effacé.</p>
+                          <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary flex-fill" onClick="{{ b.confirm }}">Retirer</button>
+                            <button class="btn btn-sm btn-outline-secondary flex-fill" onClick="{{ b.cancel }}">Garder</button>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ b.archived }}">
+                        <span class="badge text-bg-light border py-2">Archivé</span>
+                        <button class="btn btn-sm btn-link text-body-secondary" onClick="{{ b.cancel }}">Réactiver</button>
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navCal }}">
+          <section data-screen-label="Calendrier d'occupation">
+            <h1 class="h2 mb-2">Calendrier d'occupation</h1>
+            <p class="text-body-secondary mb-4">Séjours famille, locations et interventions du bien sur la même grille.</p>
+
+            <sc-if value="{{ showConflict }}">
+            <div class="alert alert-primary d-flex gap-3 align-items-start" role="alert">
+              <i class="bi bi-exclamation-circle fs-5"></i>
+              <div class="small"><strong>Chevauchement détecté</strong> — la demande de Julien (8 → 16 août) recouvre la location Berger de 24 heures et dépasse la capacité de 8 couchages.
+                <button class="btn btn-link btn-sm p-0 ms-1 align-baseline" onClick="{{ goReq }}">Arbitrer</button>
+              </div>
+            </div>
+            </sc-if>
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" onClick="{{ prevMonth }}" aria-label="Mois précédent"><i class="bi bi-chevron-left"></i></button>
+                    <div class="h5 mb-0 text-center" style="min-width:170px">{{ monthLabel }}</div>
+                    <button class="btn btn-sm btn-outline-secondary" onClick="{{ nextMonth }}" aria-label="Mois suivant"><i class="bi bi-chevron-right"></i></button>
+                  </div>
+                  <div class="d-flex gap-3 flex-wrap small text-body-secondary">
+                    <span class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-1 bg-primary-subtle border border-primary-subtle" style="width:12px;height:12px"></span>Séjour famille</span>
+                    <span class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-1 bg-success-subtle border border-success-subtle" style="width:12px;height:12px"></span>Location</span>
+                    <span class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-1 border border-primary cal-dashed" style="width:12px;height:12px"></span>Demande en attente</span>
+                    <span class="d-flex align-items-center gap-2"><span class="d-inline-block rounded-1 bg-info-subtle border border-info-subtle" style="width:12px;height:12px"></span>Entretien</span>
+                  </div>
+                </div>
+
+                <div class="row row-cols-7 g-1 mb-1">
+                  <sc-for list="{{ dayNames }}" as="d" hint-placeholder-count="7">
+                    <div class="col text-center eyebrow">{{ d }}</div>
+                  </sc-for>
+                </div>
+                <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="5">
+                  <div class="row row-cols-7 g-1 mb-1">
+                    <sc-for list="{{ w.days }}" as="d" hint-placeholder-count="7">
+                      <div class="col">
+                        <div class="cal-cell rounded-2 p-2 h-100 overflow-hidden {{ d.cls }}">
+                          <div class="tnum {{ d.numCls }}" style="font-size:.78rem">{{ d.n }}</div>
+                          <div class="fw-medium text-truncate mt-1" style="font-size:.7rem">{{ d.label }}</div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Séjours du mois</div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead><tr class="eyebrow"><th scope="col">Dates</th><th scope="col">Qui</th><th scope="col">Détail</th><th scope="col">Nature</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ monthStays }}" as="s" hint-placeholder-count="3">
+                        <tr>
+                          <td class="tnum small text-body-secondary">{{ s.range }}</td>
+                          <td class="small fw-medium">{{ s.who }}</td>
+                          <td class="small text-body-secondary">{{ s.detail }}</td>
+                          <td><span class="badge rounded-pill {{ s.cls }}">{{ s.tag }}</span></td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navReq }}">
+          <section data-screen-label="Demandes de séjour">
+            <h1 class="h2 mb-2">Demandes de séjour</h1>
+            <p class="text-body-secondary mb-4">Deux modes de décision : validation au fil de l'eau par la gérante, ou tour de choix par saison.</p>
+
+            <ul class="nav nav-tabs mb-4">
+              <li class="nav-item"><button class="nav-link {{ clsTabValider }}" onClick="{{ setTabValider }}">File d'attente</button></li>
+              <li class="nav-item"><button class="nav-link {{ clsTabTour }}" onClick="{{ setTabTour }}">Tour de choix — Été 2026</button></li>
+            </ul>
+
+            <sc-if value="{{ tabValider }}" hint-placeholder-val="{{ true }}">
+            <div class="d-flex flex-column gap-3">
+              <sc-for list="{{ requests }}" as="r" hint-placeholder-count="3">
+                <div class="card">
+                  <div class="card-body d-flex flex-wrap gap-4 align-items-start">
+                    <div class="flex-grow-1" style="min-width:240px">
+                      <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                        <h2 class="h5 card-title mb-0">{{ r.who }}</h2>
+                        <span class="small text-body-secondary">{{ r.house }}</span>
+                      </div>
+                      <p class="small mb-2 mt-2 tnum">{{ r.dates }} · {{ r.nights }} nuits · {{ r.people }}</p>
+                      <p class="small text-secondary-emphasis mb-0" style="max-width:52ch">{{ r.note }}</p>
+                      <sc-if value="{{ r.warn }}">
+                        <div class="alert alert-primary d-inline-flex align-items-center gap-2 py-2 px-3 mt-3 mb-0 small"><i class="bi bi-exclamation-triangle"></i>{{ r.warnText }}</div>
+                      </sc-if>
+                    </div>
+                    <div class="d-flex flex-column gap-2" style="min-width:200px">
+                      <sc-if value="{{ r.pending }}">
+                        <button class="btn btn-primary" onClick="{{ r.approve }}"><i class="bi bi-check2 me-1"></i>Valider le séjour</button>
+                        <button class="btn btn-outline-secondary" onClick="{{ r.refuse }}">Proposer d'autres dates</button>
+                      </sc-if>
+                      <sc-if value="{{ r.decided }}">
+                        <span class="badge py-2 {{ r.stateCls }}">{{ r.stateLabel }}</span>
+                        <button class="btn btn-sm btn-link text-body-secondary" onClick="{{ r.reset }}">Annuler la décision</button>
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ tabTour }}">
+            <div class="d-flex flex-column gap-3">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <div>
+                      <h2 class="h5 card-title mb-1">Vœux déposés — Kerloc'h, juillet à août</h2>
+                      <p class="text-body-secondary small mb-0">Ordre de priorité rotatif : Thomas passe premier cette année, Hélène l'an prochain.</p>
+                    </div>
+                    <button class="btn btn-primary">Lancer l'arbitrage</button>
+                  </div>
+                  <div class="table-responsive mt-3">
+                    <table class="table align-middle mb-0">
+                      <thead><tr class="eyebrow"><th scope="col">Indivisaire</th><th scope="col">1<sup>er</sup> choix</th><th scope="col">2<sup>e</sup> choix</th><th scope="col">Quota</th></tr></thead>
+                      <tbody>
+                        <sc-for list="{{ wishes }}" as="w" hint-placeholder-count="4">
+                          <tr>
+                            <td class="small fw-medium">{{ w.who }}</td>
+                            <td class="small tnum">{{ w.first }}</td>
+                            <td class="small tnum text-body-secondary">{{ w.second }}</td>
+                            <td class="small tnum">{{ w.quota }}</td>
+                          </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-body">
+                  <div class="eyebrow mb-2">Règles de la saison</div>
+                  <ul class="mb-0 small lh-lg">
+                    <li>Dépôt des vœux jusqu'au 31 mars, deux semaines maximum en juillet-août.</li>
+                    <li>Quota indicatif de 21 nuits par foyer en haute saison, ajustable par la gérante.</li>
+                    <li>Les semaines louées sont bloquées avant l'ouverture du tour de choix.</li>
+                    <li>Semaine non réclamée après arbitrage : ouverte à tous, premier arrivé.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navExp }}">
+          <section data-screen-label="Dépenses et répartition">
+            <h1 class="h2 mb-2">Dépenses & répartition</h1>
+            <p class="text-body-secondary mb-4">Chaque catégorie suit sa propre règle de partage. Le calcul se refait à chaque saisie.</p>
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="eyebrow">Règles de répartition</div>
+                <p class="text-body-secondary small mt-2 mb-2">Cliquez une règle pour la changer. Elle s'applique aux dépenses futures de la catégorie.</p>
+                <ul class="list-group list-group-flush">
+                  <sc-for list="{{ rules }}" as="r" hint-placeholder-count="6">
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-3 px-0">
+                      <span class="small fw-medium">{{ r.cat }}</span>
+                      <button class="btn btn-sm btn-outline-secondary rounded-pill" onClick="{{ r.cycle }}">{{ r.rule }}</button>
+                    </li>
+                  </sc-for>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+                  <div class="eyebrow">{{ expTotal }}</div>
+                  <button class="btn btn-sm btn-primary"><i class="bi bi-plus-circle me-1"></i>Saisir une dépense</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead><tr class="eyebrow"><th scope="col">Date</th><th scope="col">Libellé</th><th scope="col">Bien</th><th scope="col">Avancé par</th><th scope="col">Règle</th><th class="text-end" scope="col">Montant</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ expenses }}" as="e" hint-placeholder-count="7">
+                        <tr>
+                          <td class="tnum small text-body-secondary">{{ e.date }}</td>
+                          <td class="small fw-medium">{{ e.label }}</td>
+                          <td class="small text-body-secondary">{{ e.house }}</td>
+                          <td class="small text-body-secondary">{{ e.paidBy }}</td>
+                          <td><span class="badge rounded-pill text-bg-light border fw-normal">{{ e.rule }}</span></td>
+                          <td class="small fw-medium tnum text-end">{{ e.amount }}</td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navBal }}">
+          <section data-screen-label="Soldes et remboursements">
+            <h1 class="h2 mb-2">Soldes & remboursements</h1>
+            <p class="text-body-secondary mb-4">Qui a avancé quoi, et le minimum de virements pour remettre tout le monde à zéro.</p>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-3">
+              <sc-for list="{{ balances }}" as="b" hint-placeholder-count="4">
+                <div class="col">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="d-grid rounded-circle bg-secondary-subtle text-body-secondary" style="width:32px;height:32px;place-items:center;font-size:.7rem">{{ b.initials }}</span>
+                        <span class="small fw-medium">{{ b.who }}</span>
+                      </div>
+                      <div class="fs-3 mt-3 tnum {{ b.cls }}" style="font-family:'Bricolage Grotesque',sans-serif">{{ b.amount }}</div>
+                      <p class="text-body-secondary mb-0 mt-2" style="font-size:.78rem">{{ b.detail }}</p>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+                  <div class="eyebrow">Virements proposés</div>
+                  <button class="btn btn-sm btn-primary"><i class="bi bi-file-earmark-text me-1"></i>Générer l'appel de fonds</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead><tr class="eyebrow"><th scope="col">Virement</th><th scope="col">Motif</th><th class="text-end" scope="col">Montant</th><th scope="col">Statut</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ transfers }}" as="t" hint-placeholder-count="3">
+                        <tr>
+                          <td class="small"><span class="fw-medium">{{ t.from }}</span> <i class="bi bi-arrow-right mx-1 text-body-secondary"></i> <span class="fw-medium">{{ t.to }}</span></td>
+                          <td class="small text-body-secondary">{{ t.why }}</td>
+                          <td class="small fw-medium tnum text-end">{{ t.amount }}</td>
+                          <td><span class="badge rounded-pill text-bg-light border fw-normal">{{ t.status }}</span></td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="text-body-secondary small mt-3 mb-0">Régularisation annuelle au 31 décembre. L'indemnité d'occupation éventuelle et la répartition des loyers sont incluses dans le calcul.</p>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navRent }}">
+          <section data-screen-label="Location saisonnière">
+            <h1 class="h2 mb-2">Location saisonnière · Kerloc'h</h1>
+            <p class="text-body-secondary mb-4">Seule la maison de Kerloc'h est louée. Les semaines famille sont posées avant l'ouverture à la location.</p>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-3">
+              <div class="col"><div class="card h-100"><div class="card-body"><div class="text-body-secondary small">Loyers encaissés 2026</div><div class="fs-3 mt-2 tnum" style="font-family:'Bricolage Grotesque',sans-serif">8 400 €</div></div></div></div>
+              <div class="col"><div class="card h-100"><div class="card-body"><div class="text-body-secondary small">Semaines louées</div><div class="fs-3 mt-2 tnum" style="font-family:'Bricolage Grotesque',sans-serif">6 / 10</div><div class="progress mt-2" style="height:6px" role="progressbar" aria-label="Semaines louées" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width:60%"></div></div></div></div></div>
+              <div class="col"><div class="card h-100"><div class="card-body"><div class="text-body-secondary small">Charges déduites</div><div class="fs-3 mt-2 tnum" style="font-family:'Bricolage Grotesque',sans-serif">1 380 €</div></div></div></div>
+              <div class="col"><div class="card h-100"><div class="card-body"><div class="text-body-secondary small">Net à répartir</div><div class="fs-3 mt-2 tnum text-success-emphasis" style="font-family:'Bricolage Grotesque',sans-serif">7 020 €</div></div></div></div>
+            </div>
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+                  <div class="eyebrow">Réservations</div>
+                  <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-plus-circle me-1"></i>Ajouter une réservation</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead><tr class="eyebrow"><th scope="col">Dates</th><th scope="col">Locataire</th><th scope="col">Occupants</th><th class="text-end" scope="col">Prix</th><th scope="col">Statut</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ rentals }}" as="r" hint-placeholder-count="4">
+                        <tr>
+                          <td class="tnum small text-body-secondary">{{ r.range }}</td>
+                          <td class="small fw-medium">{{ r.tenant }}</td>
+                          <td class="small text-body-secondary">{{ r.people }}</td>
+                          <td class="small fw-medium tnum text-end">{{ r.price }}</td>
+                          <td><span class="badge rounded-pill {{ r.cls }}">{{ r.status }}</span></td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+              <div class="col"><div class="card h-100"><div class="card-body"><div class="eyebrow mb-2">Répartition des loyers</div><p class="small text-secondary-emphasis mb-0">Versés sur le compte de l'indivision, distribués au prorata des quotes-parts après clôture de la saison. Chaque indivisaire reçoit 1 755 € pour 25 %.</p></div></div></div>
+              <div class="col"><div class="card h-100"><div class="card-body"><div class="eyebrow mb-2">Accès locataire</div><p class="small text-secondary-emphasis mb-0">Le locataire reçoit un lien limité : dates de son séjour, guide d'arrivée, code de la boîte à clés. Aucun accès aux dépenses, aux documents ni aux autres séjours.</p></div></div></div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navMaint }}">
+          <section data-screen-label="Carnet d'entretien">
+            <h1 class="h2 mb-2">Carnet d'entretien</h1>
+            <p class="text-body-secondary mb-4">Les obligations récurrentes, les tâches ouvertes et l'historique des interventions.</p>
+
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="eyebrow mb-2"><i class="bi bi-tools me-2"></i>Tâches ouvertes</div>
+                <ul class="list-group list-group-flush">
+                  <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="5">
+                    <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                      <input class="form-check-input mt-0 flex-shrink-0" type="checkbox" checked="{{ t.done }}" onChange="{{ t.toggle }}" id="{{ t.id }}" />
+                      <label class="flex-grow-1" htmlFor="{{ t.id }}" role="button">
+                        <span class="d-block small fw-medium {{ t.labelCls }}">{{ t.label }}</span>
+                        <span class="d-block text-body-secondary" style="font-size:.78rem">{{ t.meta }}</span>
+                      </label>
+                      <span class="badge rounded-pill flex-shrink-0 {{ t.tagCls }}">{{ t.tag }}</span>
+                    </li>
+                  </sc-for>
+                </ul>
+              </div>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-2">Récurrences</div>
+                    <ul class="list-group list-group-flush">
+                      <sc-for list="{{ recurring }}" as="r" hint-placeholder-count="4">
+                        <li class="list-group-item d-flex justify-content-between gap-3 px-0 small"><span>{{ r.label }}</span><span class="text-body-secondary">{{ r.every }}</span></li>
+                      </sc-for>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-2"><i class="bi bi-list-check me-2"></i>Checklist de départ</div>
+                    <p class="text-body-secondary small">Envoyée automatiquement la veille de chaque fin de séjour.</p>
+                    <ul class="mb-0 small lh-lg">
+                      <li>Compteur d'eau relevé et vanne fermée</li>
+                      <li>Draps au sale, lave-vaisselle vidé</li>
+                      <li>Volets fermés côté mer, alarme armée</li>
+                      <li>Photo de l'état des lieux dans le fil du séjour</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navProp }}">
+          <section data-screen-label="Fiche du bien">
+            <sc-if value="{{ isMer }}" hint-placeholder-val="{{ true }}">
+              <div class="ratio rounded-4 overflow-hidden border mb-4" style="--bs-aspect-ratio:26%"><image-slot id="bs-kerloch-hero" shape="rect" placeholder="Photo principale — Kerloc'h"></image-slot></div>
+            </sc-if>
+            <sc-if value="{{ isMont }}">
+              <div class="ratio rounded-4 overflow-hidden border mb-4" style="--bs-aspect-ratio:26%"><image-slot id="bs-arcs-hero" shape="rect" placeholder="Photo principale — Les Arcs 1800"></image-slot></div>
+            </sc-if>
+            <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap mb-4">
+              <div>
+                <h1 class="h2 mb-2">{{ ficheName }}</h1>
+                <p class="text-body-secondary mb-0">{{ ficheSub }}</p>
+              </div>
+              <button class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Modifier la fiche</button>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-2">Caractéristiques</div>
+                    <ul class="list-group list-group-flush">
+                      <sc-for list="{{ ficheRows }}" as="r" hint-placeholder-count="5">
+                        <li class="list-group-item d-flex justify-content-between gap-3 px-0 small"><span class="text-body-secondary">{{ r.k }}</span><span class="fw-medium">{{ r.v }}</span></li>
+                      </sc-for>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-3"><i class="bi bi-signpost-split me-2"></i>Guide d'arrivée</div>
+                    <div class="d-flex flex-column gap-3 small text-secondary-emphasis">
+                      <sc-for list="{{ ficheGuide }}" as="g" hint-placeholder-count="5">
+                        <div><strong class="fw-medium">{{ g.k }}</strong> — {{ g.v }}</div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body d-flex flex-column">
+                    <div class="eyebrow mb-2">Inventaire</div>
+                    <ul class="list-group list-group-flush flex-grow-1">
+                      <sc-for list="{{ inventory }}" as="i" hint-placeholder-count="5">
+                        <li class="list-group-item d-flex justify-content-between gap-3 px-0 small"><span>{{ i.label }}</span><span class="text-body-secondary">{{ i.state }}</span></li>
+                      </sc-for>
+                    </ul>
+                    <button class="btn btn-sm btn-outline-secondary w-100 mt-3">Signaler une casse</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navVault }}">
+          <section data-screen-label="Coffre-fort">
+            <h1 class="h2 mb-2">Coffre-fort</h1>
+            <p class="text-body-secondary mb-4">{{ vaultSub }}</p>
+
+            <div class="row row-cols-1 row-cols-xl-2 g-3">
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                      <div class="eyebrow"><i class="bi bi-file-earmark-text me-2"></i>Documents</div>
+                      <button class="btn btn-sm btn-outline-secondary">Déposer</button>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <sc-for list="{{ docs }}" as="d" hint-placeholder-count="6">
+                        <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                          <span class="d-grid bg-secondary-subtle border rounded-1 text-body-secondary flex-shrink-0" style="width:32px;height:36px;place-items:center;font-size:.6rem;font-weight:600">{{ d.ext }}</span>
+                          <span class="flex-grow-1"><span class="d-block small fw-medium">{{ d.name }}</span><span class="d-block text-body-secondary" style="font-size:.72rem">{{ d.meta }}</span></span>
+                          <span class="badge rounded-pill text-bg-light border fw-normal flex-shrink-0">{{ d.scope }}</span>
+                        </li>
+                      </sc-for>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                      <div class="eyebrow"><i class="bi bi-key me-2"></i>Codes & accès</div>
+                      <button class="btn btn-sm btn-outline-secondary" onClick="{{ toggleCodes }}">{{ codesLabel }}</button>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <sc-for list="{{ codes }}" as="c" hint-placeholder-count="5">
+                        <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                          <span class="flex-grow-1"><span class="d-block small fw-medium">{{ c.label }}</span><span class="d-block text-body-secondary" style="font-size:.72rem">{{ c.house }}</span></span>
+                          <span class="font-monospace fw-medium">{{ c.value }}</span>
+                        </li>
+                      </sc-for>
+                    </ul>
+                    <p class="text-body-secondary small mt-3 mb-0">{{ vaultNote }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navVote }}">
+          <section data-screen-label="Décisions et votes">
+            <h1 class="h2 mb-2">Décisions & votes</h1>
+            <p class="text-body-secondary mb-4">Les voix sont pondérées par les quotes-parts, avec la majorité requise selon la nature de l'acte.</p>
+
+            <sc-if value="{{ isMer }}" hint-placeholder-val="{{ true }}">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="row g-4">
+                  <div class="col-12 col-lg-7">
+                    <div class="small fw-medium text-primary">Vote ouvert · clôture le 20 septembre</div>
+                    <h2 class="h4 mt-2 mb-2">Remplacement de la chaudière — Kerloc'h</h2>
+                    <span class="badge rounded-pill text-bg-light border fw-medium">Indivision Kerloc'h · deux tiers des droits indivis</span>
+                    <p class="small text-secondary-emphasis mt-3 mb-0" style="max-width:60ch">Devis Le Bihan Énergies, 6 800 € TTC, pompe à chaleur air-eau. Acte de gestion courante : les biens en SCI suivent les statuts, un bien en nom propre ne déclenche pas de vote.</p>
+                  </div>
+                  <div class="col-12 col-lg-5">
+                    <div class="text-body-secondary small">Voix exprimées</div>
+                    <div class="progress-stacked mt-2" style="height:9px">
+                      <div class="progress" role="progressbar" aria-label="Pour" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width:50%"><div class="progress-bar bg-success"></div></div>
+                      <div class="progress" role="progressbar" aria-label="Contre" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width:25%"><div class="progress-bar bg-primary"></div></div>
+                    </div>
+                    <ul class="list-group list-group-flush mt-2">
+                      <li class="list-group-item d-flex justify-content-between px-0 py-1 small"><span class="text-body-secondary">Pour</span><span class="fw-medium">50 %</span></li>
+                      <li class="list-group-item d-flex justify-content-between px-0 py-1 small"><span class="text-body-secondary">Contre</span><span class="fw-medium">25 %</span></li>
+                      <li class="list-group-item d-flex justify-content-between px-0 py-1 small"><span class="text-body-secondary">En attente</span><span class="fw-medium">25 %</span></li>
+                    </ul>
+                    <div class="text-body-secondary mt-2" style="font-size:.72rem">Seuil à atteindre : 66,7 %</div>
+                  </div>
+                </div>
+                <div class="d-flex gap-2 align-items-center flex-wrap border-top mt-4 pt-3">
+                  <button class="btn {{ clsVoteFor }}" onClick="{{ voteFor }}"><i class="bi bi-hand-thumbs-up me-1"></i>Pour</button>
+                  <button class="btn {{ clsVoteAgainst }}" onClick="{{ voteAgainst }}"><i class="bi bi-hand-thumbs-down me-1"></i>Contre</button>
+                  <span class="text-body-secondary small">{{ voteHint }}</span>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ isMont }}">
+            <div class="card mb-3">
+              <div class="card-body">
+                <span class="badge rounded-pill text-bg-light border fw-medium">SCI Prudhomme Immobilier · assemblée générale</span>
+                <h2 class="h4 mt-3 mb-2">Aucun vote ouvert sur ce bien</h2>
+                <p class="small text-secondary-emphasis" style="max-width:60ch">Les décisions de la SCI se prennent en assemblée, selon les statuts : majorité simple pour la gestion courante, unanimité pour céder un bien. Prochaine assemblée le 12 décembre, ordre du jour à envoyer quinze jours avant.</p>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-primary"><i class="bi bi-calendar-plus me-1"></i>Convoquer l'assemblée</button>
+                  <button class="btn btn-outline-secondary" onClick="{{ goVault }}">Voir les statuts</button>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="eyebrow mb-2">Historique</div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0">
+                    <thead><tr class="eyebrow"><th scope="col">Date</th><th scope="col">Objet</th><th scope="col">Majorité</th><th scope="col">Résultat</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ decisions }}" as="d" hint-placeholder-count="4">
+                        <tr>
+                          <td class="tnum small text-body-secondary">{{ d.date }}</td>
+                          <td class="small fw-medium">{{ d.label }}</td>
+                          <td class="small text-body-secondary">{{ d.majority }}</td>
+                          <td><span class="badge rounded-pill {{ d.cls }}">{{ d.result }}</span></td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navSouv }}">
+          <section data-screen-label="Souvenirs">
+            <h1 class="h2 mb-2">Souvenirs</h1>
+            <p class="text-body-secondary mb-4">Un album par séjour, alimenté par la famille. Rien ne sort de l'instance auto-hébergée.</p>
+            <div class="d-flex gap-3 align-items-baseline mb-3">
+              <div class="h5 mb-0">{{ souvTitle }}</div>
+              <div class="text-body-secondary small">{{ souvMeta }}</div>
+            </div>
+            <sc-if value="{{ isMer }}" hint-placeholder-val="{{ true }}">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mb-3">
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-1" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-2" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-3" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-4" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-5" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-6" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+            </div>
+            </sc-if>
+            <sc-if value="{{ isMont }}">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 mb-3">
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-arcs-1" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-arcs-2" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-arcs-3" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-arcs-4" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-arcs-5" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+              <div class="col"><div class="ratio ratio-4x3 rounded-3 overflow-hidden"><image-slot id="bs-souv-arcs-6" radius="12" placeholder="Déposer une photo"></image-slot></div></div>
+            </div>
+            </sc-if>
+            <div class="card">
+              <div class="card-body d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <p class="small text-secondary-emphasis mb-0" style="max-width:60ch">Les albums plus anciens sont archivés par année : 2024, 2023, 2022. Le livre d'or de la maison reprend les mots laissés à chaque fin de séjour.</p>
+                <button class="btn btn-sm btn-outline-secondary flex-shrink-0"><i class="bi bi-journal-text me-1"></i>Ouvrir le livre d'or</button>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+          <sc-if value="{{ navMem }}">
+          <section data-screen-label="Membres et quotes-parts">
+            <h1 class="h2 mb-2">Membres & quotes-parts</h1>
+            <p class="text-body-secondary mb-4">Les détenteurs sont rattachés à une structure, pas à l'application. Un membre peut appartenir à l'une et pas à l'autre.</p>
+
+            <sc-for list="{{ structures }}" as="st" hint-placeholder-count="2">
+              <div class="card mb-3">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <div>
+                      <h2 class="h5 card-title mb-1">{{ st.title }}</h2>
+                      <p class="text-body-secondary small mb-0">{{ st.subtitle }}</p>
+                    </div>
+                    <span class="badge rounded-pill text-bg-light border fw-medium flex-shrink-0">{{ st.majority }}</span>
+                  </div>
+                  <div class="table-responsive mt-3">
+                    <table class="table table-hover align-middle mb-0">
+                      <thead><tr class="eyebrow"><th scope="col">Détenteur</th><th scope="col">Rôle</th><th class="text-end" scope="col">Quote-part</th><th class="text-end" scope="col">Nuits</th></tr></thead>
+                      <tbody>
+                        <sc-for list="{{ st.members }}" as="m" hint-placeholder-count="4">
+                          <tr>
+                            <td>
+                              <div class="d-flex align-items-center gap-3">
+                                <span class="d-grid rounded-circle bg-secondary-subtle text-body-secondary flex-shrink-0" style="width:34px;height:34px;place-items:center;font-size:.72rem">{{ m.initials }}</span>
+                                <span><span class="d-block small fw-medium">{{ m.who }}</span><span class="d-block text-body-secondary" style="font-size:.72rem">{{ m.household }}</span></span>
+                              </div>
+                            </td>
+                            <td><span class="badge rounded-pill {{ m.roleCls }}">{{ m.role }}</span></td>
+                            <td class="small fw-medium tnum text-end">{{ m.share }}</td>
+                            <td class="small text-body-secondary text-end">{{ m.nights }}</td>
+                          </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="eyebrow mb-3">Ce que chaque rôle peut faire</div>
+                    <div class="accordion accordion-flush" id="bs-roles">
+                      <div class="accordion-item bg-transparent">
+                        <h3 class="accordion-header"><button class="accordion-button collapsed bg-transparent px-0 small fw-medium" type="button" data-bs-toggle="collapse" data-bs-target="#bs-role-1">Gérant</button></h3>
+                        <div class="accordion-collapse collapse" id="bs-role-1" data-bs-parent="#bs-roles"><div class="accordion-body px-0 pt-0 small text-secondary-emphasis">Gérante d'indivision, gérant de SCI ou propriétaire en nom propre : valide les séjours, saisit les dépenses, ouvre les votes, gère les accès de son bien.</div></div>
+                      </div>
+                      <div class="accordion-item bg-transparent">
+                        <h3 class="accordion-header"><button class="accordion-button collapsed bg-transparent px-0 small fw-medium" type="button" data-bs-toggle="collapse" data-bs-target="#bs-role-2">Détenteur</button></h3>
+                        <div class="accordion-collapse collapse" id="bs-role-2" data-bs-parent="#bs-roles"><div class="accordion-body px-0 pt-0 small text-secondary-emphasis">Indivisaire ou associé : demande des séjours, vote, consulte tout, dépose des justificatifs.</div></div>
+                      </div>
+                      <div class="accordion-item bg-transparent">
+                        <h3 class="accordion-header"><button class="accordion-button collapsed bg-transparent px-0 small fw-medium" type="button" data-bs-toggle="collapse" data-bs-target="#bs-role-3">Membre de foyer</button></h3>
+                        <div class="accordion-collapse collapse" id="bs-role-3" data-bs-parent="#bs-roles"><div class="accordion-body px-0 pt-0 small text-secondary-emphasis">Voit les séjours de son foyer, l'album et le guide d'arrivée.</div></div>
+                      </div>
+                      <div class="accordion-item bg-transparent">
+                        <h3 class="accordion-header"><button class="accordion-button collapsed bg-transparent px-0 small fw-medium" type="button" data-bs-toggle="collapse" data-bs-target="#bs-role-4">Invité</button></h3>
+                        <div class="accordion-collapse collapse" id="bs-role-4" data-bs-parent="#bs-roles"><div class="accordion-body px-0 pt-0 small text-secondary-emphasis">Accès au séjour auquel il est rattaché, sur la durée du séjour.</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                      <div class="eyebrow">Accès temporaires</div>
+                      <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-person-plus me-1"></i>Inviter</button>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                      <sc-for list="{{ guests }}" as="g" hint-placeholder-count="3">
+                        <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                          <span class="flex-grow-1"><span class="d-block small fw-medium">{{ g.who }}</span><span class="d-block text-body-secondary" style="font-size:.72rem">{{ g.scope }}</span></span>
+                          <span class="badge rounded-pill text-bg-light border fw-normal flex-shrink-0">{{ g.until }}</span>
+                        </li>
+                      </sc-for>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          </sc-if>
+
+        </main>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isMobile }}">
+  <div class="d-flex justify-content-center py-5 px-3">
+    <div class="bg-body border border-4 border-dark rounded-5 overflow-hidden shadow-lg d-flex flex-column" style="width:390px;max-width:100%;background:#fffdf9">
+      <div class="d-flex justify-content-between align-items-center px-4 py-1 small text-body-secondary" style="background:#fffdf9"><span class="tnum">9:41</span><span>{{ bienShort }}</span></div>
+      <div class="flex-grow-1 p-3" style="min-height:600px;background:#fffdf9">
+
+        <sc-if value="{{ mAccueil }}" hint-placeholder-val="{{ true }}">
+        <h2 class="h4 mb-1">Bonjour Claire</h2>
+        <p class="text-body-secondary small mb-3">Votre séjour commence dans 12 jours.</p>
+        <div class="card mb-3 overflow-hidden">
+          <div class="ratio" style="--bs-aspect-ratio:42%"><image-slot id="bs-mobile-hero" shape="rect" placeholder="Photo"></image-slot></div>
+          <div class="card-body">
+            <h3 class="h6 card-title mb-1">Kerloc'h · 4 → 18 juillet</h3>
+            <p class="text-body-secondary mb-3" style="font-size:.78rem">Validé par Hélène · 5 personnes</p>
+            <div class="d-grid gap-2 d-flex">
+              <button class="btn btn-sm btn-outline-secondary flex-fill">Guide d'arrivée</button>
+              <button class="btn btn-sm btn-outline-secondary flex-fill">Codes</button>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="eyebrow">Votre solde</div>
+            <div class="fs-2 mt-2 tnum text-primary" style="font-family:'Bricolage Grotesque',sans-serif">− 310 €</div>
+            <p class="text-body-secondary mb-0 mt-1" style="font-size:.78rem">À verser à Hélène avant le 31 décembre</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="eyebrow">Vote en cours</div>
+            <div class="small fw-medium mt-2 mb-3">Chaudière — devis 6 800 €</div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-primary flex-fill">Voter</button>
+              <button class="btn btn-sm btn-outline-secondary flex-fill">Le devis</button>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ mCal }}">
+        <h2 class="h4 mb-3">{{ monthLabel }}</h2>
+        <div class="d-flex flex-column gap-2">
+          <sc-for list="{{ monthStays }}" as="s" hint-placeholder-count="3">
+            <div class="card">
+              <div class="card-body d-flex gap-3 p-3">
+                <span class="rounded-pill flex-shrink-0 {{ s.barCls }}" style="width:4px"></span>
+                <span><span class="d-block small fw-medium">{{ s.who }}</span><span class="d-block text-body-secondary tnum" style="font-size:.78rem">{{ s.range }} · {{ s.detail }}</span></span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <p class="text-body-secondary small mt-3 mb-0">Vue mensuelle complète en pivotant l'écran. Les semaines louées apparaissent en vert olive.</p>
+        </sc-if>
+
+        <sc-if value="{{ mAsk }}">
+        <h2 class="h4 mb-3">Demander un séjour</h2>
+        <div class="mb-3">
+          <label class="form-label small text-body-secondary">Bien</label>
+          <div class="btn-group w-100" role="group">
+            <button class="btn btn-outline-primary active" type="button">Kerloc'h</button>
+            <button class="btn btn-outline-secondary" type="button">Les Arcs</button>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6"><label class="form-label small text-body-secondary" for="bs-in">Arrivée</label><input class="form-control" id="bs-in" type="date" defaultValue="2026-07-04" /></div>
+          <div class="col-6"><label class="form-label small text-body-secondary" for="bs-out">Départ</label><input class="form-control" id="bs-out" type="date" defaultValue="2026-07-18" /></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small text-body-secondary" for="bs-who">Qui vient</label>
+          <input class="form-control" id="bs-who" type="text" defaultValue="Claire, Marc, 3 enfants" />
+          <div class="form-text">5 / 8 couchages</div>
+        </div>
+        <div class="alert alert-success small" role="alert">Ces dates sont libres. Votre demande part à Hélène pour validation.</div>
+        <button class="btn btn-primary w-100">Envoyer la demande</button>
+        </sc-if>
+
+      </div>
+      <ul class="nav nav-justified border-top" style="background:#fffdf9">
+        <li class="nav-item"><button class="nav-link py-2 {{ clsMAccueil }}" onClick="{{ setMAccueil }}"><i class="bi bi-house-heart d-block fs-5"></i><span style="font-size:.7rem">Accueil</span></button></li>
+        <li class="nav-item"><button class="nav-link py-2 {{ clsMCal }}" onClick="{{ setMCal }}"><i class="bi bi-calendar3 d-block fs-5"></i><span style="font-size:.7rem">Calendrier</span></button></li>
+        <li class="nav-item"><button class="nav-link py-2 {{ clsMAsk }}" onClick="{{ setMAsk }}"><i class="bi bi-plus-circle d-block fs-5"></i><span style="font-size:.7rem">Demander</span></button></li>
+      </ul>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ notesOpen }}">
+  <div class="offcanvas-backdrop fade show" onClick="{{ toggleNotes }}"></div>
+  <div class="offcanvas offcanvas-end show" style="visibility:visible;background:#fffdf9" tabindex="-1" aria-labelledby="bs-notes-title">
+    <div class="offcanvas-header border-bottom">
+      <div>
+        <div class="eyebrow">Notes de comportement</div>
+        <h2 class="h5 offcanvas-title mt-1 mb-0" id="bs-notes-title">{{ noteTitle }}</h2>
+      </div>
+      <button type="button" class="btn-close" onClick="{{ toggleNotes }}" aria-label="Fermer"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+        <sc-for list="{{ noteItems }}" as="n" hint-placeholder-count="4">
+          <li class="d-flex gap-2"><i class="bi bi-dot text-body-secondary flex-shrink-0"></i><span class="small text-secondary-emphasis">{{ n }}</span></li>
+        </sc-for>
+      </ul>
+      <p class="text-body-secondary small border-top mt-4 pt-3 mb-0">Ces notes décrivent le comportement attendu écran par écran, à reprendre comme spécification de développement.</p>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;weekStart&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Lundi&quot;,&quot;Dimanche&quot;],&quot;default&quot;:&quot;Lundi&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Calendrier&quot;},&quot;showConflicts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Calendrier&quot;},&quot;rentalEnabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Modules&quot;}}">
+const K = {
+  famille: { cell: 'bg-primary-subtle border border-primary-subtle', badge: 'text-bg-light border border-primary-subtle text-primary-emphasis', bar: 'bg-primary', tag: 'Famille' },
+  location: { cell: 'bg-success-subtle border border-success-subtle', badge: 'text-bg-light border border-success-subtle text-success-emphasis', bar: 'bg-success', tag: 'Location' },
+  demande: { cell: 'border border-primary cal-dashed', badge: 'text-bg-light border border-primary text-primary', bar: 'bg-primary', tag: 'En attente' },
+  entretien: { cell: 'bg-info-subtle border border-info-subtle', badge: 'text-bg-light border border-info-subtle text-info-emphasis', bar: 'bg-info', tag: 'Entretien' }
+};
+
+const STAYS = [
+  { bien: 'mer', who: 'Hélène', from: '2026-06-13', to: '2026-06-21', kind: 'famille', detail: '2 personnes' },
+  { bien: 'mer', who: 'Claire & Marc + 3', from: '2026-07-04', to: '2026-07-18', kind: 'famille', detail: '5 personnes' },
+  { bien: 'mer', who: 'Location — famille Berger', from: '2026-07-25', to: '2026-08-08', kind: 'location', detail: '6 personnes' },
+  { bien: 'mer', who: 'Julien — demande', from: '2026-08-08', to: '2026-08-16', kind: 'demande', detail: '4 personnes' },
+  { bien: 'mer', who: 'Thomas + invités', from: '2026-08-22', to: '2026-08-30', kind: 'famille', detail: '7 personnes' },
+  { bien: 'mont', who: 'Entretien — chaudière', from: '2026-06-09', to: '2026-06-11', kind: 'entretien', detail: 'Le Bihan' },
+  { bien: 'mont', who: 'Julien & Sofia', from: '2026-07-11', to: '2026-07-19', kind: 'famille', detail: '2 personnes' },
+  { bien: 'mont', who: 'Hélène', from: '2026-08-01', to: '2026-08-09', kind: 'famille', detail: '4 personnes' },
+  { bien: 'mont', who: 'Claire — demande', from: '2026-08-15', to: '2026-08-22', kind: 'demande', detail: '5 personnes' }
+];
+
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const RULE_OPTIONS = ['Quotes-parts', 'Nuits occupées', 'Parts égales par foyer'];
+
+const BIENS = [
+  { id: 'b1', name: "Maison de Kerloc'h", place: 'Crozon (29)', beds: 8, kind: 'Bord de mer', rental: 'louée en saison', structure: 'Indivision', holders: '4 indivisaires · quotes-parts égales', majority: 'Deux tiers pour la gestion courante', note: "Issue de la succession de Robert Prudhomme, convention d'indivision signée en 2019 chez le notaire Kervella." },
+  { id: 'b2', name: 'Les Arcs 1800', place: 'Bourg-Saint-Maurice (73)', beds: 6, kind: 'Montagne', rental: 'non louée', structure: 'SCI Prudhomme Immobilier', holders: '3 associés · 300 parts', majority: 'Assemblée générale, gérant Thomas', note: 'Acquis en 2021 par la SCI familiale. Les charges passent par le compte de la société, la répartition suit les parts sociales.' }
+];
+
+const NOTES = {
+  biens: ["Un bien porte son mode de détention : indivision, SCI ou nom propre. Le mode détermine les règles de vote, la répartition par défaut et le vocabulaire affiché (quotes-parts ou parts sociales).", "Ajouter un bien crée sa structure, ses détenteurs et son calendrier ; les modules location et votes s'activent bien par bien.", "Retirer un bien l'archive : séjours, dépenses et documents restent consultables en lecture seule et l'action est réversible.", "Un utilisateur ne voit que les biens dont il est détenteur, membre de foyer ou invité.", "Un bien en nom propre n'ouvre aucun vote : le propriétaire décide et invite les autres."],
+  dash: ["Le bien sélectionné dans la barre du haut est le contexte de toute l'application : navigation, calendrier, dépenses, coffre-fort et détenteurs suivent ce choix, mémorisé par utilisateur.", "La vue « Tous les biens » ne garde que ce qui a du sens consolidé : le portefeuille et la liste des biens.", "La page d'accueil dépend du rôle : la gérante voit la file d'attente, un indivisaire voit son prochain séjour et son solde.", "La liste « Ce qui vous attend » agrège demandes, votes ouverts et échéances d'entretien, triés par date limite."],
+  cal: ["Un calendrier par bien ; le bien vient du contexte global, pas d'un sélecteur local.", "Un séjour occupe une plage continue, nuit d'arrivée incluse et nuit de départ exclue, pour permettre les rotations le même jour.", "La détection de conflit compare les plages et la somme des occupants contre la capacité du bien.", "Un glisser-déposer sur la grille ouvre le formulaire de demande pré-rempli.", "Export iCal en lecture seule par bien, pour les agendas personnels."],
+  req: ["Deux modes coexistent : file d'attente validée par la gérante, et tour de choix saisonnier avec priorité rotative annuelle.", "Valider une demande crée le séjour et notifie le demandeur ; « proposer d'autres dates » renvoie la demande avec un message.", "Le quota de nuits est indicatif : la gérante peut le dépasser, l'écart est journalisé.", "L'arbitrage du tour de choix attribue les premiers choix par ordre de priorité, puis les seconds choix sur les semaines restantes.", "Toute décision est horodatée et visible de tous les détenteurs."],
+  exp: ["La comptabilité est tenue par bien et consolidée par structure : une dépense de SCI n'entre jamais dans les comptes de l'indivision.", "Chaque catégorie porte sa règle de répartition, modifiable par la gérante ; le changement ne recalcule pas les dépenses passées.", "La règle « nuits occupées » utilise les nuits réellement consommées sur l'exercice, hors semaines louées.", "Une dépense peut être avancée par un détenteur ou payée depuis le compte commun.", "Chaque dépense accepte un justificatif photo ou PDF, stocké dans le coffre-fort."],
+  bal: ["Les soldes se recalculent à chaque dépense validée et à chaque loyer encaissé.", "Les virements proposés minimisent le nombre de transactions entre détenteurs.", "L'appel de fonds génère un PDF par foyer avec le détail du calcul.", "Un solde marqué réglé attend confirmation du bénéficiaire avant de passer à zéro."],
+  rent: ["La location est activable par bien : seule Kerloc'h l'a activée ici.", "Les semaines famille sont posées avant l'ouverture à la location ; l'inverse déclenche une alerte.", "Le loyer net se calcule après déduction des charges directement liées à la location.", "Le locataire dispose d'un lien à durée limitée, sans compte, révocable à tout moment."],
+  maint: ["Les récurrences génèrent automatiquement une tâche avec sa date limite légale ou d'usage.", "Cocher une tâche demande une date de réalisation et accepte une facture.", "La checklist de départ part la veille de chaque fin de séjour à l'occupant.", "Une tâche peut être rattachée à un vote quand son coût dépasse le seuil défini dans la convention."],
+  prop: ["Un bien porte ses caractéristiques, son guide d'arrivée, son inventaire et sa capacité, utilisée par la détection de conflit.", "Le guide d'arrivée est visible des membres de foyer et des locataires pendant leur séjour.", "Un signalement de casse crée une tâche d'entretien et une ligne d'inventaire à remplacer.", "Les photos sont stockées sur l'instance, jamais sur un service externe."],
+  vault: ["Deux natures d'éléments : documents versionnés et codes chiffrés.", "Chaque document est rattaché à un bien, ou aux deux quand il les concerne tous (déclaration fiscale).", "La portée détermine qui voit quoi : détenteurs seuls, tous les membres, ou locataire pendant son séjour.", "L'affichage d'un code est journalisé avec l'auteur et l'horodatage.", "Export complet des documents en une archive, à tout moment, sans verrouillage."],
+  vote: ["Le mode de détention décide : vote pondéré en indivision, assemblée générale en SCI, aucune consultation en nom propre.", "Les voix sont pondérées par les quotes-parts, pas par tête.", "La majorité requise dépend de la nature de l'acte : deux tiers pour la gestion courante, unanimité pour un acte de disposition.", "Un vote a une date de clôture ; les abstentions restent visibles jusqu'au dépouillement.", "Une décision adoptée peut créer la dépense et la tâche correspondantes."],
+  souv: ["Un album par séjour et par bien, créé automatiquement à la fin du séjour.", "Tout membre de foyer peut déposer des photos ; seul l'auteur ou la gérante peut supprimer.", "Stockage local à l'instance, avec vignettes générées côté serveur.", "Le livre d'or reprend les mots laissés en fin de séjour, un fil par année."],
+  mem: ["Les détenteurs appartiennent à une structure : indivision, SCI ou propriétaire unique. Un même membre peut être dans l'une et pas dans l'autre.", "Quatre rôles, du plus large au plus étroit : gérant, détenteur, membre de foyer, invité.", "Les quotes-parts ou parts sociales pilotent le poids des votes et la répartition par défaut des dépenses et des loyers.", "Un invité ou un locataire reçoit un accès limité dans le temps, révocable.", "Le compteur de nuits par foyer sert de base au quota de la saison suivante."]
+};
+
+const ACTIVE = 'active';
+const PILL = (on) => on ? 'active' : '';
+
+class Component extends DCLogic {
+  state = {
+    screen: 'dash', view: 'desktop', notes: false, mtab: 'accueil', userMenu: false,
+    bien: 'mer', month: 6, reqTab: 'valider', codes: false, vote: null,
+    addBien: false, newStructure: 'Indivision', extraBiens: [], bienState: {},
+    decisions: { r1: 'pending', r2: 'pending', r3: 'pending' },
+    rules: {
+      'Taxe foncière': 'Quotes-parts',
+      'Assurance habitation': 'Quotes-parts',
+      'Énergie, eau, internet': 'Nuits occupées',
+      'Ménage et linge': 'Nuits occupées',
+      'Travaux et gros entretien': 'Quotes-parts',
+      'Courses et consommables': 'Parts égales par foyer'
+    },
+    tasks: { t1: false, t2: false, t3: true, t4: false, t5: false }
+  };
+
+  go = (screen) => () => this.setState({ screen });
+  fmtDay = (iso) => { const d = new Date(iso + 'T00:00:00Z'); return d.getUTCDate() + ' ' + SHORT[d.getUTCMonth()]; };
+
+  buildMonth(y, m, bien, sundayFirst) {
+    const first = new Date(Date.UTC(y, m, 1));
+    const offset = sundayFirst ? first.getUTCDay() : (first.getUTCDay() + 6) % 7;
+    const daysIn = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    const blank = { n: '', cls: '', numCls: 'invisible', label: '' };
+    const cells = [];
+    for (let i = 0; i < offset; i++) cells.push(Object.assign({}, blank));
+    for (let d = 1; d <= daysIn; d++) {
+      const iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      const s = STAYS.find(v => v.bien === bien && iso >= v.from && iso < v.to);
+      cells.push({
+        n: d,
+        cls: s ? K[s.kind].cell : 'bg-body border',
+        numCls: 'text-body-secondary',
+        label: s && s.from === iso ? s.who : ''
+      });
+    }
+    while (cells.length % 7) cells.push(Object.assign({}, blank));
+    const weeks = [];
+    for (let i = 0; i < cells.length; i += 7) weeks.push({ days: cells.slice(i, i + 7) });
+    return weeks;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const rentalOn = this.props.rentalEnabled ?? true;
+    const sundayFirst = (this.props.weekStart ?? 'Lundi') === 'Dimanche';
+    let screen = (!rentalOn && s.screen === 'rent') ? 'dash' : s.screen;
+    if (s.bien === 'all' && screen !== 'dash' && screen !== 'biens') screen = 'dash';
+
+    const bienSel = s.bien === 'all' ? 'mer' : s.bien;
+    const label = s.bien === 'mont' ? 'Les Arcs' : "Kerloc'h";
+    const mine = (txt) => s.bien === 'all' || (txt || '').indexOf(label) >= 0 || (txt || '').indexOf('les deux') >= 0;
+
+    const reqData = [
+      { id: 'r1', bien: 'mer', who: 'Julien & Sofia', house: "Kerloc'h", dates: '8 → 16 août', nights: 8, people: '4 personnes', note: "Deuxième semaine d'août demandée pour rejoindre les cousins. Julien propose de décaler au 9 si la sortie des locataires prend la journée.", warn: true, warnText: 'Chevauche la location Berger de 24 h · capacité dépassée' },
+      { id: 'r2', bien: 'mont', who: 'Claire & Marc', house: 'Les Arcs 1800', dates: '15 → 22 août', nights: 7, people: '5 personnes', note: 'Semaine de randonnée avec les enfants. Aucune autre demande sur ces dates.', warn: false, warnText: '' },
+      { id: 'r3', bien: 'mer', who: 'Thomas', house: "Kerloc'h", dates: '22 → 30 août', nights: 8, people: '7 personnes dont 3 invités', note: 'Trois amis invités le week-end du 29. Thomas prend en charge le ménage de fin de séjour.', warn: false, warnText: '' }
+    ];
+    const stateCls = { approved: { cls: 'text-bg-light border border-success-subtle text-success-emphasis', label: 'Séjour validé' }, refused: { cls: 'text-bg-light border text-body-secondary', label: 'Dates à revoir' } };
+    const pendHere = reqData.filter(r => r.bien === bienSel && s.decisions[r.id] === 'pending').length;
+    const conflictHere = (this.props.showConflicts ?? true) && bienSel === 'mer' && s.decisions.r1 === 'pending';
+
+    const monthStays = STAYS.filter(v => v.bien === bienSel && Number(v.from.slice(5, 7)) - 1 <= s.month && Number(v.to.slice(5, 7)) - 1 >= s.month).map(v => ({
+      who: v.who,
+      range: this.fmtDay(v.from) + ' → ' + this.fmtDay(v.to),
+      detail: v.detail,
+      tag: K[v.kind].tag, cls: K[v.kind].badge, barCls: K[v.kind].bar
+    }));
+
+    const taskData = [
+      { id: 't1', bien: 'mer', label: 'Ramonage de la cheminée', meta: "Kerloc'h · avant le 15 octobre", tag: 'Obligatoire', tagCls: 'text-bg-light border border-primary-subtle text-primary-emphasis' },
+      { id: 't2', bien: 'mont', label: 'Hivernage de la plomberie', meta: 'Les Arcs · avant le 1er novembre', tag: 'Saison', tagCls: 'text-bg-light border border-info-subtle text-info-emphasis' },
+      { id: 't3', bien: 'mer', label: 'Taille de la haie côté chemin', meta: "Kerloc'h · fait le 12 juin par Thomas", tag: 'Courant', tagCls: 'text-bg-light border text-body-secondary' },
+      { id: 't4', bien: 'mer', label: 'Remplacer le matelas chambre nord', meta: "Kerloc'h · signalé par Claire", tag: 'Inventaire', tagCls: 'text-bg-light border text-body-secondary' },
+      { id: 't5', bien: 'mont', label: 'Contrôle annuel de la chaudière', meta: 'Les Arcs · rendez-vous à prendre', tag: 'Obligatoire', tagCls: 'text-bg-light border border-primary-subtle text-primary-emphasis' }
+    ];
+
+    const FICHE = {
+      mer: {
+        name: "Maison de Kerloc'h", sub: '12 route du Fret, 29160 Crozon · acquise en 1978, en indivision depuis 2019',
+        rows: [['Surface', '142 m²'], ['Couchages', '8 (4 chambres)'], ['Chauffage', 'Fioul, chaudière 2009'], ['Taxe foncière', '2 340 € / an'], ['Valeur estimée', '410 000 €']],
+        guide: [['Clés', 'boîte à clés à droite du portail, code dans le coffre-fort.'], ['Eau', 'vanne générale sous l\'escalier, à ouvrir doucement.'], ['Poubelles', 'sortie le mardi soir, tri au bout du chemin.'], ['Voisins', 'Mme Le Guen (n° 14) garde un double des clés.'], ['Wifi', 'réseau « Kerloch », mot de passe dans le coffre-fort.']],
+        inv: [{ label: 'Literie, 8 couchages', state: 'Bon' }, { label: 'Vaisselle 12 couverts', state: 'Complet' }, { label: 'Vélos adultes ×3', state: '1 à réviser' }, { label: 'Barbecue et mobilier', state: 'Bon' }, { label: 'Matelas chambre nord', state: 'À remplacer' }]
+      },
+      mont: {
+        name: 'Les Arcs 1800', sub: 'Résidence Belles Cimes, 73700 Bourg-Saint-Maurice · détenu par la SCI depuis 2021',
+        rows: [['Surface', '58 m²'], ['Couchages', '6 (2 chambres, cabine)'], ['Chauffage', 'Électrique, radiateurs 2021'], ['Charges de copropriété', '1 840 € / an'], ['Valeur estimée', '295 000 €']],
+        guide: [['Clés', 'boîte à clés au local à skis, code dans le coffre-fort.'], ['Accès', 'portail résidence, code à 5 chiffres, parking niveau -1.'], ['Skis', 'casier n° 12, chausse-pieds et sangles fournis.'], ['Navette', 'arrêt Charmettoger, toutes les 20 minutes.'], ['Wifi', 'réseau « BellesCimes-12 », mot de passe dans le coffre-fort.']],
+        inv: [{ label: 'Literie, 6 couchages', state: 'Bon' }, { label: 'Vaisselle 8 couverts', state: 'Complet' }, { label: 'Luges et casques', state: 'Bon' }, { label: 'Aspirateur', state: 'À remplacer' }]
+      }
+    };
+    const fiche = FICHE[bienSel];
+
+    const BAL = {
+      mer: {
+        rows: [
+          { who: 'Hélène', initials: 'HP', amount: '+ 1 240 €', cls: 'text-success-emphasis', detail: 'A avancé taxe foncière et fioul' },
+          { who: 'Claire', initials: 'CP', amount: '− 310 €', cls: 'text-primary', detail: '14 nuits consommées en juillet' },
+          { who: 'Thomas', initials: 'TP', amount: '− 620 €', cls: 'text-primary', detail: 'Literie déduite de sa quote-part' },
+          { who: 'Julien', initials: 'JP', amount: '− 310 €', cls: 'text-primary', detail: '8 nuits prévues en août' }
+        ],
+        transfers: [
+          { from: 'Thomas', to: 'Hélène', why: 'Régularisation indivision 2026', amount: '620 €', status: 'À faire' },
+          { from: 'Claire', to: 'Hélène', why: 'Régularisation indivision 2026', amount: '310 €', status: 'À faire' },
+          { from: 'Julien', to: 'Hélène', why: 'Régularisation indivision 2026', amount: '310 €', status: 'Annoncé' }
+        ]
+      },
+      mont: {
+        rows: [
+          { who: 'Thomas', initials: 'TP', amount: '+ 480 €', cls: 'text-success-emphasis', detail: 'A avancé la literie, remboursable par la SCI' },
+          { who: 'Claire', initials: 'CP', amount: '− 144 €', cls: 'text-primary', detail: 'Compte courant d\'associé, 90 parts' },
+          { who: 'Julien', initials: 'JP', amount: '− 144 €', cls: 'text-primary', detail: 'Compte courant d\'associé, 90 parts' }
+        ],
+        transfers: [
+          { from: 'SCI', to: 'Thomas', why: 'Remboursement de frais avancés', amount: '480 €', status: 'À faire' },
+          { from: 'Claire', to: 'SCI', why: 'Appel de fonds charges 2026', amount: '144 €', status: 'Annoncé' },
+          { from: 'Julien', to: 'SCI', why: 'Appel de fonds charges 2026', amount: '144 €', status: 'À faire' }
+        ]
+      }
+    };
+    const bal = BAL[bienSel];
+
+    const EXPENSES = [
+      { date: '02/09', bien: 'mer', label: 'Taxe foncière 2026', house: "Kerloc'h", paidBy: 'Hélène', cat: 'Taxe foncière', amt: 2340 },
+      { date: '18/07', bien: 'mer', label: 'Ménage fin de location', house: "Kerloc'h", paidBy: 'compte commun', cat: 'Ménage et linge', amt: 420 },
+      { date: '02/07', bien: 'mer', label: 'Fioul, plein de saison', house: "Kerloc'h", paidBy: 'Hélène', cat: 'Énergie, eau, internet', amt: 1160 },
+      { date: '20/06', bien: 'mont', label: 'Literie, deux matelas', house: 'Les Arcs', paidBy: 'Thomas', cat: 'Courses et consommables', amt: 780 },
+      { date: '05/05', bien: 'both', label: 'Assurance multirisque', house: 'les deux biens', paidBy: 'compte commun', cat: 'Assurance habitation', amt: 1128 },
+      { date: '12/04', bien: 'mer', label: 'Jardinier, contrat annuel', house: "Kerloc'h", paidBy: 'Hélène', cat: 'Travaux et gros entretien', amt: 960 },
+      { date: '03/03', bien: 'mont', label: 'Réparation du portail', house: 'Les Arcs', paidBy: 'Claire', cat: 'Travaux et gros entretien', amt: 480 },
+      { date: '15/02', bien: 'mont', label: 'Charges de copropriété T1', house: 'Les Arcs', paidBy: 'la SCI', cat: 'Assurance habitation', amt: 460 }
+    ];
+    const eur = (n) => n.toLocaleString('fr-FR').replace(/\u202f|\u00a0/g, ' ') + ' €';
+    const expRows = EXPENSES.filter(e => s.bien === 'all' || e.bien === 'both' || e.bien === bienSel);
+    const expTotal = expRows.reduce((t, e) => t + (e.bien === 'both' && s.bien !== 'all' ? e.amt / 2 : e.amt), 0);
+    const expList = expRows.map(e => Object.assign({}, e, {
+      rule: s.rules[e.cat] || 'Parts sociales',
+      amount: eur(e.bien === 'both' && s.bien !== 'all' ? e.amt / 2 : e.amt)
+    }));
+
+    const TRES = {
+      mer: { title: "Trésorerie de l'indivision", amount: '4 180 €', sub: "Compte joint de l'indivision Kerloc'h", rows: [['Loyers encaissés', '8 400 €'], ['À régulariser', '1 240 €']] },
+      mont: { title: 'Trésorerie de la SCI', amount: '2 640 €', sub: 'Compte courant de la SCI Prudhomme Immobilier', rows: [['Appels de fonds versés', '1 800 €'], ["Comptes courants d'associés", '288 €']] },
+      all: { title: 'Trésorerie consolidée', amount: '6 820 €', sub: "Indivision Kerloc'h et SCI Prudhomme Immobilier", rows: [['Recettes encaissées', '10 200 €'], ['À régulariser', '1 528 €']] }
+    };
+    const tres = TRES[s.bien] || TRES.mer;
+
+    const vals = {
+      isDesktop: s.view === 'desktop', isMobile: s.view === 'mobile',
+      clsViewDesktop: s.view === 'desktop' ? 'btn-dark' : 'btn-outline-secondary',
+      clsViewMobile: s.view === 'mobile' ? 'btn-dark' : 'btn-outline-secondary',
+      setDesktop: () => this.setState({ view: 'desktop' }), setMobile: () => this.setState({ view: 'mobile' }),
+      notesOpen: s.notes, toggleNotes: () => this.setState({ notes: !s.notes, userMenu: false }),
+      userMenuOpen: !!s.userMenu, clsUserMenu: s.userMenu ? 'show' : '',
+      toggleUserMenu: () => this.setState({ userMenu: !s.userMenu }),
+
+      scopeAll: s.bien === 'all', scopeBien: s.bien !== 'all',
+      clsPillAll: PILL(s.bien === 'all'), clsPillMer: PILL(s.bien === 'mer'), clsPillMont: PILL(s.bien === 'mont'),
+      setAll: () => this.setState({ bien: 'all', screen: 'dash' }),
+      setMer: () => this.setState({ bien: 'mer' }), setMont: () => this.setState({ bien: 'mont' }),
+      isMer: bienSel === 'mer', isMont: bienSel === 'mont',
+
+      bienName: bienSel === 'mont' ? 'Les Arcs 1800' : "Maison de Kerloc'h",
+      bienShort: bienSel === 'mont' ? 'Les Arcs' : "Kerloc'h",
+      bienPlace: bienSel === 'mont' ? 'Bourg-Saint-Maurice (73) · 6 couchages' : 'Crozon (29) · 8 couchages',
+      bienStructure: bienSel === 'mont' ? 'SCI Prudhomme Immobilier · 3 associés · 300 parts' : 'Indivision · 4 indivisaires · quotes-parts égales',
+      bienMajority: bienSel === 'mont' ? 'Assemblée générale, gérant Thomas' : 'Deux tiers pour la gestion courante',
+      rentalHere: rentalOn && s.bien === 'mer',
+      bienCount: BIENS.length + s.extraBiens.length,
+
+      goDash: this.go('dash'), goCal: this.go('cal'), goReq: this.go('req'), goExp: this.go('exp'),
+      goBal: this.go('bal'), goRent: this.go('rent'), goMaint: this.go('maint'), goProp: this.go('prop'),
+      goVault: this.go('vault'), goVote: this.go('vote'), goSouv: this.go('souv'), goMem: this.go('mem'),
+      goBiens: this.go('biens'),
+
+      pendingCount: pendHere, pendingLabel: pendHere + (pendHere > 1 ? ' demandes' : ' demande'),
+      hasPending: pendHere > 0,
+      showConflict: conflictHere,
+      reqSubline: conflictHere ? "Dont un chevauchement du 8 au 16 août à Kerloc'h" : 'Aucun conflit de dates détecté',
+      alertMer: bienSel === 'mer', alertMont: bienSel === 'mont',
+
+      bienNext: bienSel === 'mont' ? 'Julien & Sofia, 11 juil.' : 'Claire & Marc, 4 juil.',
+      bienOccLabel: bienSel === 'mont' ? 'Occupation hiver' : 'Occupation été',
+      bienOcc: bienSel === 'mont' ? '88 %' : '62 %',
+      bienTodo: pendHere + (pendHere > 1 ? ' demandes' : ' demande'),
+      bienSpend: eur(expTotal),
+      bienGreeting: pendHere === 0 ? 'Aucune demande en attente sur ce bien.' : pendHere + (pendHere > 1 ? ' demandes de séjour attendent' : ' demande de séjour attend') + ' votre arbitrage.',
+
+      tresTitle: tres.title, tresAmount: tres.amount, tresSub: tres.sub,
+      tresRows: [{ k: bienSel === 'mont' ? 'Charges engagées 2026' : 'Dépenses engagées 2026', v: eur(expTotal) }].concat(tres.rows.map(r => ({ k: r[0], v: r[1] }))),
+
+      upcoming: [
+        { range: '4 → 18 juil.', who: 'Claire & Marc + 3', where: "Kerloc'h · validé" },
+        { range: '11 → 19 juil.', who: 'Julien & Sofia', where: 'Les Arcs · validé' },
+        { range: '25 juil. → 8 août', who: 'Famille Berger', where: "Kerloc'h · location" },
+        { range: '22 → 30 août', who: 'Thomas + invités', where: "Kerloc'h · en attente" }
+      ].filter(u => mine(u.where)),
+
+      addBienOpen: s.addBien,
+      addBienLabel: s.addBien ? 'Fermer le formulaire' : 'Ajouter un bien',
+      toggleAddBien: () => this.setState({ addBien: !s.addBien }),
+      clsStructIndivision: s.newStructure === 'Indivision' ? 'border-primary border-2 text-primary' : '',
+      clsStructSci: s.newStructure === 'SCI' ? 'border-primary border-2 text-primary' : '',
+      clsStructPropre: s.newStructure === 'Nom propre' ? 'border-primary border-2 text-primary' : '',
+      pickIndivision: () => this.setState({ newStructure: 'Indivision' }),
+      pickSci: () => this.setState({ newStructure: 'SCI' }),
+      pickPropre: () => this.setState({ newStructure: 'Nom propre' }),
+      addBien: () => {
+        const n = s.extraBiens.length + 1;
+        const st = s.newStructure;
+        this.setState({
+          addBien: false,
+          extraBiens: s.extraBiens.concat([{
+            id: 'x' + n, name: 'Maison des Cévennes', place: 'Anduze (30)', beds: 6,
+            kind: 'Campagne', rental: 'non louée',
+            structure: st === 'SCI' ? 'SCI à créer' : st,
+            holders: st === 'Indivision' ? 'Détenteurs à inviter' : st === 'SCI' ? 'Associés et parts à saisir' : 'Hélène Prudhomme, seule propriétaire',
+            majority: st === 'Nom propre' ? 'Décision du propriétaire' : st === 'SCI' ? 'Selon les statuts' : 'Deux tiers pour la gestion courante',
+            note: "Bien créé à l'instant. Complétez les détenteurs, le calendrier et les documents pour l'ouvrir à la famille."
+          }])
+        });
+      },
+      biens: BIENS.concat(s.extraBiens).map(b => {
+        const st = s.bienState[b.id] || 'idle';
+        return Object.assign({}, b, {
+          idle: st === 'idle', asking: st === 'asking', archived: st === 'archived',
+          open: () => this.setState({ bien: b.id === 'b2' ? 'mont' : 'mer', screen: 'dash' }),
+          ask: () => this.setState({ bienState: Object.assign({}, s.bienState, { [b.id]: 'asking' }) }),
+          confirm: () => this.setState({ bienState: Object.assign({}, s.bienState, { [b.id]: 'archived' }) }),
+          cancel: () => this.setState({ bienState: Object.assign({}, s.bienState, { [b.id]: 'idle' }) })
+        });
+      }),
+
+      dayNames: sundayFirst ? ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'] : ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      monthLabel: MONTHS[s.month].charAt(0).toUpperCase() + MONTHS[s.month].slice(1) + ' 2026',
+      weeks: this.buildMonth(2026, s.month, bienSel, sundayFirst),
+      monthStays,
+      prevMonth: () => this.setState({ month: Math.max(0, s.month - 1) }),
+      nextMonth: () => this.setState({ month: Math.min(11, s.month + 1) }),
+
+      tabValider: s.reqTab === 'valider', tabTour: s.reqTab === 'tour',
+      clsTabValider: PILL(s.reqTab === 'valider'), clsTabTour: PILL(s.reqTab === 'tour'),
+      setTabValider: () => this.setState({ reqTab: 'valider' }), setTabTour: () => this.setState({ reqTab: 'tour' }),
+      requests: reqData.filter(r => r.bien === bienSel).map(r => {
+        const st = s.decisions[r.id];
+        const style = stateCls[st] || {};
+        return Object.assign({}, r, {
+          pending: st === 'pending', decided: st !== 'pending',
+          stateCls: style.cls, stateLabel: style.label,
+          warn: r.warn && st === 'pending',
+          approve: () => this.setState({ decisions: Object.assign({}, s.decisions, { [r.id]: 'approved' }) }),
+          refuse: () => this.setState({ decisions: Object.assign({}, s.decisions, { [r.id]: 'refused' }) }),
+          reset: () => this.setState({ decisions: Object.assign({}, s.decisions, { [r.id]: 'pending' }) })
+        });
+      }),
+      wishes: [
+        { who: 'Thomas', first: '22 → 30 août', second: '4 → 11 juil.', quota: '8 / 21 n' },
+        { who: 'Hélène', first: '13 → 21 juin', second: '1 → 9 août', quota: '8 / 21 n' },
+        { who: 'Claire', first: '4 → 18 juil.', second: '15 → 22 août', quota: '14 / 21 n' },
+        { who: 'Julien', first: '8 → 16 août', second: '11 → 19 juil.', quota: '16 / 21 n' }
+      ],
+
+      rules: Object.keys(s.rules).map(cat => ({
+        cat, rule: s.rules[cat],
+        cycle: () => {
+          const next = RULE_OPTIONS[(RULE_OPTIONS.indexOf(s.rules[cat]) + 1) % RULE_OPTIONS.length];
+          this.setState({ rules: Object.assign({}, s.rules, { [cat]: next }) });
+        }
+      })),
+      expenses: expList,
+      expTotal: 'Dépenses 2026 · ' + eur(expTotal),
+
+      balances: bal.rows,
+      transfers: bal.transfers,
+
+      rentals: [
+        { range: '4 → 11 juil.', tenant: 'M. et Mme Corre', people: '4 personnes', price: '1 350 €', status: 'Soldé', cls: 'text-bg-light border border-success-subtle text-success-emphasis' },
+        { range: '25 juil. → 8 août', tenant: 'Famille Berger', people: '6 personnes', price: '3 100 €', status: 'Acompte reçu', cls: 'text-bg-light border border-primary-subtle text-primary-emphasis' },
+        { range: '8 → 15 août', tenant: 'Mme Rolland', people: '3 personnes', price: '1 550 €', status: 'À confirmer', cls: 'text-bg-light border text-body-secondary' },
+        { range: '5 → 12 sept.', tenant: 'M. Guillou', people: '2 personnes', price: '890 €', status: 'Soldé', cls: 'text-bg-light border border-success-subtle text-success-emphasis' }
+      ],
+
+      tasks: taskData.filter(t => t.bien === bienSel).map(t => {
+        const done = s.tasks[t.id];
+        return Object.assign({}, t, {
+          done,
+          labelCls: done ? 'text-decoration-line-through text-body-secondary' : '',
+          toggle: () => this.setState({ tasks: Object.assign({}, s.tasks, { [t.id]: !done }) })
+        });
+      }),
+      recurring: [
+        { label: 'Ramonage', every: 'Tous les ans' },
+        { label: 'Contrôle chaudière', every: 'Tous les ans' },
+        { label: 'Entretien du jardin', every: 'Tous les mois, avr. à oct.' },
+        { label: 'Relevé des compteurs', every: 'À chaque séjour' }
+      ],
+
+      inventory: fiche.inv,
+      ficheName: fiche.name, ficheSub: fiche.sub,
+      ficheRows: fiche.rows.map(r => ({ k: r[0], v: r[1] })),
+      ficheGuide: fiche.guide.map(r => ({ k: r[0], v: r[1] })),
+
+      vaultSub: bienSel === 'mont' ? "Statuts de la SCI, règlement de copropriété et codes d'accès, chiffrés et visibles selon le rôle." : "Documents de l'indivision et codes d'accès, chiffrés et visibles selon le rôle.",
+      vaultNote: bienSel === 'mont' ? 'Chiffré côté serveur. Les codes du portail et du local à skis sont partagés aux membres de foyer pendant leur séjour, jamais au-delà.' : 'Chiffré côté serveur. Le code de la boîte à clés est le seul partagé aux locataires, et uniquement pendant leur séjour.',
+      docs: [
+        { bien: 'mer', ext: 'PDF', name: "Convention d'indivision", meta: 'Signée le 14/03/2019 · notaire Kervella', scope: 'Indivisaires' },
+        { bien: 'mer', ext: 'PDF', name: 'Acte de notoriété', meta: 'Succession Robert Prudhomme', scope: 'Indivisaires' },
+        { bien: 'mer', ext: 'PDF', name: "Attestation d'assurance Kerloc'h", meta: "Valable jusqu'au 30/04/2027", scope: 'Tous les membres' },
+        { bien: 'mer', ext: 'PDF', name: 'Diagnostic DPE', meta: 'Classe E · établi en 2023', scope: 'Tous les membres' },
+        { bien: 'mer', ext: 'JPG', name: 'Compteurs relevés juillet', meta: 'Déposé par Claire', scope: 'Indivisaires' },
+        { bien: 'mer', ext: 'PDF', name: 'Devis chaudière Le Bihan', meta: 'Rattaché au vote en cours', scope: 'Indivisaires' },
+        { bien: 'mont', ext: 'PDF', name: 'Statuts de la SCI Prudhomme Immobilier', meta: 'Enregistrés en 2021 · 300 parts', scope: 'Associés' },
+        { bien: 'mont', ext: 'PDF', name: 'Règlement de copropriété', meta: 'Résidence Belles Cimes', scope: 'Tous les membres' },
+        { bien: 'mont', ext: 'PDF', name: "Attestation d'assurance Les Arcs", meta: "Valable jusqu'au 31/12/2026", scope: 'Tous les membres' },
+        { bien: 'both', ext: 'PDF', name: 'Déclaration de revenus fonciers 2025', meta: 'Déposée par Hélène · les deux biens', scope: 'Indivisaires' }
+      ].filter(d => d.bien === 'both' || d.bien === bienSel),
+      codes: [
+        { bien: 'mer', label: 'Alarme', house: "Kerloc'h", value: s.codes ? '4712' : '••••' },
+        { bien: 'mer', label: 'Boîte à clés', house: "Kerloc'h", value: s.codes ? '2059' : '••••' },
+        { bien: 'mer', label: 'Wifi « Kerloch »', house: "Kerloc'h", value: s.codes ? 'goelands29' : '••••••••' },
+        { bien: 'mont', label: 'Portail résidence', house: 'Les Arcs', value: s.codes ? '1840B' : '•••••' },
+        { bien: 'mont', label: 'Local à skis', house: 'Les Arcs', value: s.codes ? '3371' : '••••' },
+        { bien: 'mont', label: 'Wifi « BellesCimes-12 »', house: 'Les Arcs', value: s.codes ? 'edelweiss73' : '••••••••' }
+      ].filter(c => c.bien === bienSel),
+      codesLabel: s.codes ? 'Masquer' : 'Afficher',
+      toggleCodes: () => this.setState({ codes: !s.codes }),
+
+      clsVoteFor: s.vote === 'for' ? 'btn-success' : 'btn-outline-secondary',
+      clsVoteAgainst: s.vote === 'against' ? 'btn-primary' : 'btn-outline-secondary',
+      voteHint: s.vote ? "Votre voix pèse 25 % des droits indivis. Modifiable jusqu'au 20 septembre." : 'Il manque deux voix pour atteindre les deux tiers.',
+      voteFor: () => this.setState({ vote: s.vote === 'for' ? null : 'for' }),
+      voteAgainst: () => this.setState({ vote: s.vote === 'against' ? null : 'against' }),
+      decisions: [
+        { date: '04/2026', label: 'Contrat jardinier annuel', majority: 'Deux tiers', result: 'Adopté', cls: 'text-bg-light border border-success-subtle text-success-emphasis' },
+        { date: '12/2025', label: 'Les Arcs · budget travaux salle de bain', majority: 'Assemblée générale', result: 'Adopté', cls: 'text-bg-light border border-success-subtle text-success-emphasis' },
+        { date: '11/2025', label: "Mise en location de Kerloc'h", majority: 'Deux tiers', result: 'Adopté', cls: 'text-bg-light border border-success-subtle text-success-emphasis' },
+        { date: '06/2025', label: 'Réfection de la terrasse, 14 000 €', majority: 'Deux tiers', result: 'Reporté', cls: 'text-bg-light border text-body-secondary' },
+        { date: '02/2025', label: 'Vente du garage mitoyen', majority: 'Unanimité', result: 'Rejeté', cls: 'text-bg-light border border-primary-subtle text-primary-emphasis' }
+      ],
+
+      souvTitle: bienSel === 'mont' ? 'Hiver 2026 · Les Arcs' : "Été 2025 · Kerloc'h",
+      souvMeta: bienSel === 'mont' ? '62 photos · 4 contributeurs' : '148 photos · 6 contributeurs',
+
+      structures: [
+        {
+          bien: 'mer', title: "Indivision Kerloc'h", subtitle: 'Succession Robert Prudhomme · convention de 2019 · quotes-parts égales', majority: 'Deux tiers · unanimité pour vendre',
+          members: [
+            { who: 'Hélène Prudhomme', initials: 'HP', household: 'Foyer Hélène · 2 personnes', role: 'Gérante', roleCls: 'text-bg-light border border-primary-subtle text-primary-emphasis', share: '25 %', nights: '8 nuits en 2026' },
+            { who: 'Claire Prudhomme-Vasseur', initials: 'CP', household: 'Foyer Vasseur · 5 personnes', role: 'Indivisaire', roleCls: 'text-bg-light border text-secondary-emphasis', share: '25 %', nights: '14 nuits en 2026' },
+            { who: 'Thomas Prudhomme', initials: 'TP', household: 'Foyer Thomas · 4 personnes', role: 'Indivisaire', roleCls: 'text-bg-light border text-secondary-emphasis', share: '25 %', nights: '8 nuits en 2026' },
+            { who: 'Julien Prudhomme', initials: 'JP', household: 'Foyer Julien · 4 personnes', role: 'Indivisaire', roleCls: 'text-bg-light border text-secondary-emphasis', share: '25 %', nights: '16 nuits en 2026' }
+          ]
+        },
+        {
+          bien: 'mont', title: 'SCI Prudhomme Immobilier', subtitle: 'Les Arcs 1800 · 300 parts sociales · exercice au 31 décembre', majority: 'Assemblée générale selon les statuts',
+          members: [
+            { who: 'Thomas Prudhomme', initials: 'TP', household: 'Foyer Thomas · 4 personnes', role: 'Gérant', roleCls: 'text-bg-light border border-primary-subtle text-primary-emphasis', share: '120 parts', nights: '12 nuits en 2026' },
+            { who: 'Claire Prudhomme-Vasseur', initials: 'CP', household: 'Foyer Vasseur · 5 personnes', role: 'Associée', roleCls: 'text-bg-light border text-secondary-emphasis', share: '90 parts', nights: '7 nuits en 2026' },
+            { who: 'Julien Prudhomme', initials: 'JP', household: 'Foyer Julien · 4 personnes', role: 'Associé', roleCls: 'text-bg-light border text-secondary-emphasis', share: '90 parts', nights: '8 nuits en 2026' }
+          ]
+        }
+      ].filter(st => s.bien === 'all' || st.bien === bienSel),
+      guests: [
+        { who: 'Famille Berger', scope: "Locataire · Kerloc'h, 25 juil. → 8 août", until: "Jusqu'au 9 août" },
+        { who: 'Marc Vasseur', scope: 'Membre de foyer · séjours de Claire', until: 'Permanent' },
+        { who: 'Léa et Antoine', scope: 'Invités de Thomas · week-end du 29 août', until: "Jusqu'au 31 août" }
+      ],
+
+      mAccueil: s.mtab === 'accueil', mCal: s.mtab === 'cal', mAsk: s.mtab === 'ask',
+      clsMAccueil: PILL(s.mtab === 'accueil'), clsMCal: PILL(s.mtab === 'cal'), clsMAsk: PILL(s.mtab === 'ask'),
+      setMAccueil: () => this.setState({ mtab: 'accueil' }), setMCal: () => this.setState({ mtab: 'cal' }), setMAsk: () => this.setState({ mtab: 'ask' }),
+
+      noteTitle: { biens: 'Biens gérés', dash: 'Tableau de bord', cal: "Calendrier d'occupation", req: 'Demandes de séjour', exp: 'Dépenses & répartition', bal: 'Soldes & remboursements', rent: 'Location saisonnière', maint: "Carnet d'entretien", prop: 'Fiche du bien', vault: 'Coffre-fort', vote: 'Décisions & votes', souv: 'Souvenirs', mem: 'Membres & quotes-parts' }[screen],
+      noteItems: NOTES[screen] || []
+    };
+
+    ['biens', 'dash', 'cal', 'req', 'exp', 'bal', 'rent', 'maint', 'prop', 'vault', 'vote', 'souv', 'mem'].forEach(k => {
+      const on = screen === k;
+      vals['nav' + k.charAt(0).toUpperCase() + k.slice(1)] = on;
+      vals['clsNav' + k.charAt(0).toUpperCase() + k.slice(1)] = on ? ACTIVE : '';
+    });
+    return vals;
+  }
+}
+
+</script>
+</body>
+</html>

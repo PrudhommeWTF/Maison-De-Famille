@@ -31,7 +31,6 @@
               "@fontsource/instrument-sans/500.css",
               "@fontsource/instrument-sans/600.css",
               "bootstrap-icons/font/bootstrap-icons.css",
-              "src/styles.css",
               "src/styles.scss"
             ],
             "baseHref": "/",
