@@ -36,7 +36,7 @@ const MAJ = {
   await page.waitForTimeout(1400);
 
   // Le réglage se pose par l'interface, comme un gérant le ferait.
-  await page.goto(`${RACINE}/reglages`, { waitUntil: 'networkidle' });
+  await page.goto(`${RACINE}/administration/reglages`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(900);
   await page.locator('#r-majVerification').check();
   await page.waitForTimeout(900);
@@ -45,7 +45,7 @@ const MAJ = {
   await page.route('**/api/systeme/maj/verification', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MAJ) }));
 
-  await page.goto(`${RACINE}/etat`, { waitUntil: 'networkidle' });
+  await page.goto(`${RACINE}/administration`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(900);
   await page.getByRole('button', { name: /Vérifier les mises à jour/ }).click();
   await page.waitForTimeout(1200);

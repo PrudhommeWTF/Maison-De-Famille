@@ -157,7 +157,7 @@ MDF_BASE_HREF=/maison/
 curl -s http://127.0.0.1:8099/api/sante          # {"ok":true,"version":"..."}
 ```
 
-Puis, connecté en gérant, l'écran **État du service** montre d'un coup d'oeil la
+Puis, connecté en gérant, l'écran **Administration**, section « Vue d'ensemble », montre d'un coup d'oeil la
 version du schéma, le relais SMTP et la file des courriels en attente avec
 l'erreur exacte du relais. C'est le premier endroit à regarder quand quelqu'un
 dit « je n'ai rien reçu ».
@@ -180,7 +180,7 @@ git pull && docker compose up -d --build
 
 ### Mettre à jour depuis l'application
 
-Un gérant peut aussi lancer la mise à jour depuis l'écran **État du service**,
+Un gérant peut aussi lancer la mise à jour depuis **Administration**, section « Vue d'ensemble »,
 sans ouvrir de terminal. Il faut deux choses, et elles sont indépendantes :
 
 1. **L'assistant root**, installé par l'installateur quand on le lui demande :
@@ -192,7 +192,7 @@ sans ouvrir de terminal. Il faut deux choses, et elles sont indépendantes :
    Il pose `/usr/local/sbin/maison-de-famille-maj.sh` et deux unités systemd.
    Sans lui, le bouton n'apparaît pas, parce qu'il ne mènerait à rien.
 
-2. **Le réglage** « Vérifier les nouvelles versions sur GitHub », dans Réglages,
+2. **Le réglage** « Vérifier les nouvelles versions sur GitHub », dans Administration, Réglages,
    section Exploitation. C'est un appel réseau sortant, donc il est éteint par
    défaut et le serveur doit avoir le droit de sortir sur Internet.
 

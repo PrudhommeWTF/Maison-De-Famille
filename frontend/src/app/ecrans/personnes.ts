@@ -115,7 +115,7 @@ const LIBELLES: Record<string, string> = {
               </div>
             } @else {
               <p class="text-body-secondary small mb-0">
-                Courriel d'invitation mis en file. S'il n'arrive pas, l'écran « État du service »
+                Courriel d'invitation mis en file. S'il n'arrive pas, l'Administration, section « Courriel »,
                 montre la file et l'erreur exacte du relais.
               </p>
             }

@@ -13,7 +13,7 @@ comprend l'écran sans que vous lui expliquiez.**
 
 - [ ] `curl -s http://127.0.0.1:8099/api/sante` répond `{"ok":true,...}`
 - [ ] `MDF_PUBLIC_URL` et le relais SMTP sont renseignés, service redémarré
-- [ ] L'écran **État du service** montre le relais SMTP, et zéro courriel en attente
+- [ ] **Administration**, section « Courriel », montre le relais SMTP, et zéro courriel en attente
 
 ---
 
@@ -116,7 +116,7 @@ comprend l'écran sans que vous lui expliquiez.**
 journalctl -f -u maison-de-famille          # ce que fait le service
 ```
 
-L'écran **État du service** dit le reste : version du schéma, relais SMTP, file
+L'écran **Administration** dit le reste : version du schéma, relais SMTP, file
 des courriels avec le message d'erreur exact du relais.
 
 Les messages d'erreur de l'application sont écrits pour être lus par la famille.

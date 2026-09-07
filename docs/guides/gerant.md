@@ -258,7 +258,7 @@ important de cet écran :
 
 > **Un code de portée « pendant le séjour » s'ouvre quelques jours avant
 > l'arrivée et se ferme le lendemain du départ.** Le nombre de jours se règle
-> dans les Réglages. Un code encore affiché à quelqu'un dont le séjour est
+> dans l'Administration. Un code encore affiché à quelqu'un dont le séjour est
 > terminé est une faille : c'est pour cela que la fenêtre se referme toute seule.
 
 ### Ce que le coffre garantit
@@ -440,7 +440,7 @@ sa raison, jamais deviné.
 
 ## 16. Sortir vos données
 
-En bas de l'écran **Réglages** :
+Dans **Administration**, section « Données » :
 
 - **Séjours en CSV** : le planning, pour un tableur.
 - **Export complet de l'instance** : la base et toutes les pièces jointes, dans
@@ -448,30 +448,43 @@ En bas de l'écran **Réglages** :
 
 Vous n'êtes prisonnier ni d'un tableur ni de cette application.
 
-## 17. L'état du service
+## 17. L'administration
 
-![L'état du service](images/gerant-etat.png)
+![L'administration](images/gerant-administration.png)
 
-Pour savoir si tout va bien : version, place disque, courriels en attente ou
-abandonnés avec l'erreur exacte du relais, dernières migrations appliquées.
+Tout ce qui concerne l'instance elle-même est là, rangé en six sections dont
+chacune dit ce qu'elle contient :
 
-C'est l'écran à regarder quand quelqu'un vous dit « je n'ai pas reçu le
-courriel ».
+| Section | Ce qu'on y trouve |
+| --- | --- |
+| **Vue d'ensemble** | La version installée, les mises à jour, la santé du service |
+| **Réglages** | Nom de l'instance, sécurité, courriel, fichiers, journalisation |
+| **Vacances scolaires** | Le calendrier officiel des trois zones |
+| **Courriel** | La file d'envoi et les erreurs exactes du relais |
+| **Données** | Export, base de données, migrations appliquées |
+| **Serveur** | Les commandes utiles sur la machine |
+
+**Courriel** est la section à ouvrir quand quelqu'un vous dit « je n'ai pas reçu
+le courriel » : elle montre combien de messages attendent et, mot pour mot, ce
+que le serveur de courriel a répondu.
 
 ### Mettre l'application à jour
 
 ![Une version disponible, et la confirmation par mot de passe](images/gerant-maj-disponible.png)
 
-La carte **Mises à jour** dit la version installée et va demander à GitHub s'il
-en existe une plus récente. Le même résumé apparaît dans **Réglages**, avec un
-lien vers cet écran pour l'installation.
+**Vue d'ensemble** dit la version installée et va demander à GitHub s'il en
+existe une plus récente.
 
-Deux réglages commandent cette carte, et l'écran vous dit lequel manque :
+Deux verrous commandent cette carte, et l'écran vous dit lequel manque :
 
 - la **vérification** est un appel réseau sortant, autorisée par un réglage dans
-  Réglages, section Exploitation ;
+  Administration, Réglages, section Exploitation ;
 - l'**installation** demande un assistant installé sur le serveur. S'il n'y est
-  pas, la carte le dit et vous met à jour à la main.
+  pas, l'écran le dit et donne la commande qui le pose.
+
+Si la version installée s'affiche comme **inconnue**, le service n'a pas su la
+déterminer. Toute comparaison est alors fausse, l'écran le dit et refuse de
+prétendre le contraire ; relancer l'installateur suffit à corriger.
 
 Quand une version est disponible, vous voyez ses notes, puis un formulaire qui
 **redemande votre mot de passe**. Ce n'est pas de la formalité : ce bouton fait

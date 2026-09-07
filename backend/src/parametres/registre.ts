@@ -97,7 +97,7 @@ export const REGISTRE: readonly Declaration[] = [
   {
     cle: 'majVerification', type: 'bool', portee: 'instance', section: 'exploitation', module: 'Système',
     libelle: 'Vérifier les nouvelles versions sur GitHub',
-    description: "Ajoute à l'écran « État du service » un bouton qui demande à GitHub s'il existe une version plus récente. C'est un appel réseau sortant : il faut que ce serveur ait le droit de sortir sur Internet. Rien ne s'installe tout seul, et l'installation demande en plus votre mot de passe.",
+    description: "Ajoute à l'Administration, section « Vue d'ensemble », un bouton qui demande à GitHub s'il existe une version plus récente. C'est un appel réseau sortant : il faut que ce serveur ait le droit de sortir sur Internet. Rien ne s'installe tout seul, et l'installation demande en plus votre mot de passe.",
     defaut: false,
   },
   {
@@ -151,7 +151,7 @@ export const REGISTRE: readonly Declaration[] = [
   {
     cle: 'notificationsTentativesMax', type: 'int', portee: 'instance', section: 'courriel', module: 'Notifications',
     libelle: 'Tentatives avant abandon',
-    description: "Nombre d'essais d'envoi avant qu'une notification soit marquée abandonnée. Chaque échec double l'attente avant l'essai suivant. Une notification abandonnée reste visible dans l'écran d'état, avec l'erreur exacte du relais.",
+    description: "Nombre d'essais d'envoi avant qu'une notification soit marquée abandonnée. Chaque échec double l'attente avant l'essai suivant. Une notification abandonnée reste visible dans l'Administration, section « Courriel », avec l'erreur exacte du relais.",
     defaut: 5, min: 1, max: 20,
   },
   {

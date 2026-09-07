@@ -88,7 +88,7 @@ import type { LigneDetention, Personne, Structure } from '../core/modeles';
             @if (!s.partsVisibles) {
               <p class="text-body-secondary small mt-3 mb-0">
                 La répartition chiffrée n'est pas affichée aux membres de foyer. Un gérant peut changer
-                ce réglage dans la page Réglages.
+                ce réglage dans l'Administration, section Réglages.
               </p>
             }
           </div>

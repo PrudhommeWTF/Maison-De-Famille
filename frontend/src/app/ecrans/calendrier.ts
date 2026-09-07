@@ -98,7 +98,7 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
           }
           Les jours fériés, eux, restent justes : ils se calculent.
           @if (etat.estGeranteIci()) {
-            <a class="ms-1" routerLink="/reglages">Déposer le calendrier officiel</a>
+            <a class="ms-1" routerLink="/administration/vacances">Déposer le calendrier officiel</a>
           }
         </div>
       }

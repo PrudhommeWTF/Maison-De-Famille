@@ -40,7 +40,7 @@ docker compose exec maison-de-famille \
 tar -czf maison-$(date +%F).tar.gz -C ./data sauvegardes/maison-$(date +%F).db fichiers
 ```
 
-Ou, plus simplement, depuis l'application : l'écran **Réglages** propose
+Ou, plus simplement, depuis l'application : **Administration**, section « Données », propose
 « Export complet de l'instance », qui produit la même archive.
 
 ### Automatiser
