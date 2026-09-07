@@ -143,6 +143,11 @@ Trois pièges déjà rencontrés, à ne pas réintroduire :
 - **`MDF_PUBLIC_URL` obligatoire dès qu'un relais SMTP est configuré** : les
   liens des courriels sont absolus.
 - **Aucun appel réseau sortant**, en dehors du relais SMTP. Polices et icônes
-  sont dans le dépôt, jamais sur un CDN.
+  sont dans le dépôt, jamais sur un CDN. **Une seule exception**, décidée
+  explicitement : le téléchargement du calendrier scolaire depuis
+  data.education.gouv.fr, éteint par défaut, allumé par un réglage, adresse en
+  dur, et sans écriture sans confirmation humaine. Toute autre sortie réseau
+  reste interdite, et celle-ci ne sert pas de précédent : elle a coûté une
+  discussion et elle est documentée comme telle.
 - Sauvegarde et restauration : `deploy/lxc/sauvegarde.sh` et
   `restauration.sh`, documentées dans `docs/sauvegarde-restauration.md`.

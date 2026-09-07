@@ -95,6 +95,12 @@ export const REGISTRE: readonly Declaration[] = [
     defaut: false,
   },
   {
+    cle: 'vacancesTelechargement', type: 'bool', portee: 'instance', section: 'general', module: 'Calendrier',
+    libelle: 'Télécharger le calendrier scolaire depuis data.education.gouv.fr',
+    description: "Ajoute un bouton qui va chercher le calendrier officiel en ligne, au lieu de le déposer à la main. C'est le seul appel réseau sortant de l'application en dehors du relais de courriel : il faut que ce serveur ait le droit de sortir sur Internet, et l'instance signale alors son existence au portail. Rien n'est enregistré sans qu'un gérant relise l'aperçu.",
+    defaut: false,
+  },
+  {
     cle: 'semaineCommenceDimanche', type: 'bool', portee: 'personnel', section: 'general', module: 'Calendrier',
     libelle: 'Commencer la semaine le dimanche',
     description: "Change la première colonne de la grille du calendrier. Chacun règle le sien, cela n'affecte personne d'autre.",

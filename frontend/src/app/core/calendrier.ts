@@ -103,6 +103,8 @@ export interface PeriodeImportee {
  */
 export interface ApercuVacances {
   format: string;
+  /** D'où viennent les octets : le nom du fichier déposé, ou le portail. */
+  source: string;
   encodage: string | null;
   entetes: string[];
   lues: number;

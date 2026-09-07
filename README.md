@@ -97,6 +97,12 @@ Aucun service supplémentaire, aucune base externe, et **aucun appel réseau
 sortant** en dehors du relais SMTP que vous configurez : les polices et les
 icônes sont dans le dépôt.
 
+Une seule exception, **éteinte par défaut** : le réglage « Télécharger le
+calendrier scolaire » ajoute un bouton qui va chercher les dates de vacances sur
+data.education.gouv.fr, pour éviter de déposer le fichier à la main une fois par
+an. Tant que personne ne l'allume, l'application ne parle qu'à votre relais de
+courriel.
+
 ## Documentation
 
 ### Pour la famille qui s'en sert

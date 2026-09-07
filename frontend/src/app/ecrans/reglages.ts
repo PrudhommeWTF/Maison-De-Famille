@@ -143,11 +143,26 @@ import type { ParametreExpose } from '../core/modeles';
               <input type="file" accept=".xlsx,.xls,.csv,.txt,text/csv" style="display:none"
                      [disabled]="occupe()" (change)="analyserCalendrier($event)">
             </label>
+            <!-- Le seul appel réseau sortant de l'application. Le bouton
+                 n'apparaît que si un gérant l'a autorisé, et il ne fait que
+                 remplir l'aperçu : l'enregistrement reste un second clic. -->
+            @if (telechargementAutorise()) {
+              <button class="btn" (click)="telechargerCalendrier()" [disabled]="occupe()">
+                <i class="bi bi-cloud-arrow-down" aria-hidden="true"></i> Récupérer en ligne
+              </button>
+            }
           </div>
           <p class="secondaire" style="margin:8px 0 0;max-width:620px">
             Le fichier attendu est le calendrier scolaire publié sur data.education.gouv.fr
             (jeu de données « fr-en-calendrier-scolaire », export CSV). Un tableau tenu à la main
             convient aussi, avec cinq colonnes : période, zone, début, fin, année scolaire.
+            @if (telechargementAutorise()) {
+              « Récupérer en ligne » va le chercher pour vous : c'est le seul appel réseau
+              sortant de l'application, et il n'enregistre rien sans votre confirmation.
+            } @else {
+              Le réglage « Télécharger le calendrier scolaire » ajoute un bouton qui va le
+              chercher pour vous, au prix du seul appel réseau sortant de l'application.
+            }
           </p>
         } @else {
           <div class="apercu">
@@ -156,7 +171,7 @@ import type { ParametreExpose } from '../core/modeles';
               <button class="btn" (click)="apercu.set(null)" [disabled]="occupe()">Annuler</button>
             </div>
             <p class="secondaire" style="margin:6px 0 0">
-              {{ apercu()!.format }} · {{ apercu()!.lues }} lignes lues ·
+              {{ apercu()!.source }} · {{ apercu()!.format }} · {{ apercu()!.lues }} lignes lues ·
               {{ apercu()!.periodes.length }} périodes retenues.
             </p>
             <!-- La borne de fin est le seul point où deux fichiers honnêtes
@@ -338,6 +353,27 @@ export class Reglages {
       // Sans cela, redéposer le même fichier après une correction ne
       // déclencherait aucun évènement et donnerait l'impression d'un bouton mort.
       input.value = '';
+      this.occupe.set(false);
+    }
+  }
+
+  /** Le réglage qui commande l'existence même du bouton de téléchargement. */
+  readonly telechargementAutorise = computed(() =>
+    this.instance().find((p) => p.cle === 'vacancesTelechargement')?.valeur === true);
+
+  async telechargerCalendrier(): Promise<void> {
+    if (this.occupe()) return;
+    this.occupe.set(true);
+    this.erreur.set('');
+    this.message.set('');
+    try {
+      this.apercu.set(await this.api.post<ApercuVacances>('/calendrier/vacances/telechargement', {}));
+      this.nomFichier = 'data.education.gouv.fr';
+    } catch (e) {
+      // Le serveur dit déjà quoi faire (portail muet, sortie réseau fermée) :
+      // le remplacer ferait perdre la seule information utile.
+      this.erreur.set(e instanceof ErreurAppel ? e.message : 'Le téléchargement a échoué.');
+    } finally {
       this.occupe.set(false);
     }
   }
