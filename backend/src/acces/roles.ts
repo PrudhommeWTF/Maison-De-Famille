@@ -132,5 +132,16 @@ export const roleSurStructure = (p: Portee, structureId: number): Role | null =>
 /** Les identifiants de biens visibles, pour un `WHERE bien_id IN (...)`. */
 export const biensVisibles = (p: Portee): number[] => [...p.biens.keys()];
 
+/**
+ * Les biens où le rôle atteint au moins `requis`.
+ *
+ * Sert aux listes consolidées, qui traversent plusieurs biens sans que l'adresse
+ * en porte un : sans ce filtre, elles rendent au plus large ce que la route d'un
+ * bien réserve au plus étroit. Le carnet d'entretien demande `membre_foyer`,
+ * mais ses échéances remontaient au tableau de bord d'un invité.
+ */
+export const biensAuMoins = (p: Portee, requis: Role): number[] =>
+  [...p.biens.entries()].filter(([, role]) => auMoins(role, requis)).map(([id]) => id);
+
 /** Gérant d'au moins une structure : le droit de créer une structure ou un bien. */
 export const estGerant = (p: Portee): boolean => [...p.structures.values()].includes('gerant');

@@ -66,10 +66,13 @@ interface Gouvernance { alertes: { structureNom: string }[] }
         <div>
           <h1>{{ b.nom }}</h1>
           <p class="secondaire" style="margin:6px 0 0">
-            {{ b.commune }} · {{ b.couchages }} couchages ·
-            @if (etat.demandesEnAttente() > 0) {
-              {{ etat.demandesEnAttente() }} demande{{ etat.demandesEnAttente() > 1 ? 's' : '' }} en attente
-            } @else { aucune demande en attente }
+            {{ b.commune }} · {{ b.couchages }} couchages
+            @if (etat.roleIci() !== 'invite') {
+              ·
+              @if (etat.demandesEnAttente() > 0) {
+                {{ etat.demandesEnAttente() }} demande{{ etat.demandesEnAttente() > 1 ? 's' : '' }} en attente
+              } @else { aucune demande en attente }
+            }
           </p>
         </div>
 
@@ -107,14 +110,22 @@ interface Gouvernance { alertes: { structureNom: string }[] }
               <div class="valeur chiffres">{{ nuitsAVenir() }}</div>
               <div class="quoi">Nuits réservées à venir</div>
             </div>
-            <div class="stat">
-              <div class="valeur chiffres">{{ etat.demandesEnAttente() }}</div>
-              <div class="quoi">À traiter</div>
-            </div>
+            <!-- L'arbitrage est une affaire de famille : un invité n'a ni le
+                 chiffre, ni l'écran qui va avec, ni rien à en faire. -->
+            @if (etat.roleIci() !== 'invite') {
+              <div class="stat">
+                <div class="valeur chiffres">{{ etat.demandesEnAttente() }}</div>
+                <div class="quoi">À traiter</div>
+              </div>
+            }
           </div>
           <div class="acces-rapide">
             <a class="btn" routerLink="/bien/calendrier">Calendrier</a>
-            <a class="btn" routerLink="/bien/demandes">Demandes</a>
+            @if (etat.roleIci() !== 'invite') {
+              <a class="btn" routerLink="/bien/demandes">Demandes</a>
+            } @else {
+              <a class="btn" routerLink="/bien/coffre">Coffre-fort</a>
+            }
             <a class="btn" routerLink="/bien/fiche">Fiche</a>
           </div>
         </div>
@@ -165,7 +176,10 @@ interface Gouvernance { alertes: { structureNom: string }[] }
 
       <div class="grille trois">
         <!-- Ce qui vous attend : agrège les demandes et les échéances, triées
-             par date limite. Chaque ligne mène droit à l'écran concerné. -->
+             par date limite. Chaque ligne mène droit à l'écran concerné.
+             Un invité n'a ni demande à arbitrer ni carnet d'entretien : la
+             carte serait vide à jamais, et une carte vide se retire. -->
+        @if (etat.roleIci() !== 'invite') {
         <section class="carte">
           <h2>Ce qui vous attend</h2>
           @if (attentes().length) {
@@ -184,6 +198,7 @@ interface Gouvernance { alertes: { structureNom: string }[] }
             <p class="vide">Rien à traiter pour le moment.</p>
           }
         </section>
+        }
 
         <!-- La trésorerie. Le tableau de bord ne calcule rien : il compose ce
              que le module argent lui rend, et n'affiche la carte que s'il a

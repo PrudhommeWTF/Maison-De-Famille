@@ -246,7 +246,12 @@ export class Cadre {
         titre: 'Séjours',
         entrees: [
           { chemin: '/bien/calendrier', libelle: "Calendrier d'occupation", icone: 'bi-calendar3' },
-          { chemin: '/bien/demandes', libelle: 'Demandes de séjour', icone: 'bi-envelope-paper', badge: true },
+          // Un invité ne dépose pas de demande : il en a un, c'est la raison de
+          // son accès. L'entrée le menait à un écran où il n'y avait rien à
+          // faire et rien à lire qui le concerne.
+          ...(membre ? [
+            { chemin: '/bien/demandes', libelle: 'Demandes de séjour', icone: 'bi-envelope-paper', badge: true },
+          ] : []),
         ],
       },
       {
@@ -294,7 +299,9 @@ export class Cadre {
     ? [
       { chemin: '/', libelle: 'Accueil', icone: 'bi-house-heart' },
       { chemin: '/bien/calendrier', libelle: 'Calendrier', icone: 'bi-calendar3' },
-      { chemin: '/bien/demandes', libelle: 'Demandes', icone: 'bi-envelope-paper', badge: true },
+      ...(this.etat.roleIci() !== 'invite' ? [
+        { chemin: '/bien/demandes', libelle: 'Demandes', icone: 'bi-envelope-paper', badge: true },
+      ] : [{ chemin: '/bien/coffre', libelle: 'Coffre', icone: 'bi-shield-lock' }]),
       { chemin: '/compte', libelle: 'Compte', icone: 'bi-person' },
     ]
     : [

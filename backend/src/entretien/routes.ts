@@ -23,7 +23,7 @@ import { parametre } from '../parametres/repo';
 import { deposer as deposerFichier } from '../stockage/fichiers';
 import { deposer } from '../notifications/file';
 import { checklistDepart } from '../notifications/gabarits';
-import { biensVisibles } from '../acces/roles';
+import { biensAuMoins } from '../acces/roles';
 import type { Db } from '../noyau/db';
 import type { Config } from '../noyau/config';
 import { rappelerClotures } from '../decisions/routes';
@@ -202,9 +202,13 @@ export function routesEntretien(deps: Deps): Routeur {
   });
 
   /** Les échéances proches, tous biens visibles : la tuile du tableau de bord. */
+  // Le carnet d'un bien demande `membre_foyer` ; ses échéances consolidées
+  // doivent demander la même chose. Un locataire n'a pas à lire « purger les
+  // radiateurs, en retard depuis le 3 septembre » sur son tableau de bord, et
+  // il n'a de toute façon pas l'écran pour y donner suite.
   r.get('/entretien/echeances', { acces: 'authentifie' }, (ctx) => {
     const t = aujourdhui();
-    return echeancesProches(ctx.db, biensVisibles(ctx.portee))
+    return echeancesProches(ctx.db, biensAuMoins(ctx.portee, 'membre_foyer'))
       .map((x) => ({ ...x, urgence: urgence(x.echeance, t) }));
   });
 

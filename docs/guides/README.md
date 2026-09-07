@@ -41,7 +41,7 @@ quoi vous avez droit.** Comparez avec le tableau ci-dessous.
 - Vous ne voyez **pas** de groupe Argent, mais vous voyez Carnet d'entretien et
   Décisions : vous êtes membre de foyer.
 - Vous ne voyez que Calendrier, Fiche du bien et Coffre-fort : vous êtes invité
-  pour un séjour.
+  pour un séjour, et les séjours des autres vous apparaissent comme « Occupé ».
 
 Une même personne peut être gérante d'une maison et simple membre d'une autre.
 Dans ce cas, une barre en haut de l'écran permet de passer de l'une à l'autre, et
@@ -54,7 +54,7 @@ La règle générale, du plus large au plus étroit :
 | **Gérant** | Tout, sur les maisons qu'il gère | Tout, sur les maisons qu'il gère |
 | **Détenteur** (indivisaire, associé) | Le calendrier, l'argent, l'entretien, les papiers | Ses demandes de séjour, ses votes, ses remboursements |
 | **Membre de foyer** | Le calendrier, l'entretien, les papiers. **Pas l'argent** par défaut | Ses demandes de séjour |
-| **Invité par lien** | La fiche pratique, et les codes de son séjour | Rien |
+| **Invité par lien** | Les jours occupés (sans savoir par qui), la fiche pratique, et les codes de son séjour | Rien |
 
 ## Trois choses qui surprennent au début
 

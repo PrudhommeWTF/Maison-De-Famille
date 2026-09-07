@@ -93,16 +93,23 @@ Prenez une minute pour la lire en arrivant, plutôt qu'à 23 heures avec une fui
 Vous voyez les périodes occupées de la maison, dont la vôtre. Cela sert à situer
 votre séjour, et à comprendre si quelqu'un part le matin de votre arrivée.
 
+**Votre séjour est nommé, les autres sont marqués « Occupé ».** Vous savez donc
+quand la maison est prise, pour quel usage et par combien de personnes, mais pas
+par qui : les noms de la famille et ses échanges internes ne vous sont pas
+montrés. C'est délibéré, dans les deux sens. Vous n'avez pas à connaître leurs
+allées et venues, et ils n'ont pas à s'inquiéter de ce que vous lisez.
+
 Rappel de la convention utilisée partout dans l'application : **la nuit d'arrivée
 est comptée, la nuit de départ ne l'est pas.** Un séjour du 14 au 21 fait sept
 nuits, et quelqu'un peut arriver le jour même où un autre s'en va.
 
 ## Ce que vous ne pouvez pas faire
 
-- **Demander un séjour.** L'écran « Demandes de séjour » est en lecture seule pour
-  vous : seuls les gérants arbitrent, et vous n'avez pas de demande à déposer.
+- **Demander un séjour.** Vous en avez un, c'est la raison de votre accès. Il n'y
+  a pas d'écran de demande dans votre menu.
 - **Voir l'argent, l'entretien, les décisions de la famille.** Ces écrans
-  n'existent pas dans votre menu.
+  n'existent pas pour vous, et les listes qui les résument non plus.
+- **Savoir qui occupe la maison** en dehors de votre propre séjour.
 - **Voir un autre bien.** Votre lien ne concerne que cette maison.
 - **Modifier quoi que ce soit.**
 
