@@ -98,7 +98,9 @@ const RESULTAT: Record<string, string> = {
                     @if (s.creeParNom) { · ouvert par {{ s.creeParNom }} }
                   </div>
                   <h2 class="h4 mt-2 mb-2">{{ s.titre }}</h2>
-                  <span class="badge rounded-pill text-bg-light border fw-medium">
+                  <!-- Une puce Bootstrap ne se coupe jamais, et celle-ci porte
+                       une phrase entière : elle se replie. -->
+                  <span class="badge rounded-pill text-bg-light border fw-medium text-wrap text-start">
                     {{ l.structure.nom }} · {{ s.regle }}
                     @if (s.montantCents !== null) { · {{ euros(s.montantCents) }} }
                   </span>

@@ -90,7 +90,7 @@ interface Coffre {
                 @if (c.documents.length) {
                   <ul class="list-group list-group-flush">
                     @for (d of c.documents; track d.id) {
-                      <li class="list-group-item d-flex align-items-center gap-3 px-0">
+                      <li class="list-group-item d-flex align-items-center gap-3 flex-wrap px-0">
                         <span class="d-flex align-items-center justify-content-center bg-secondary-subtle border rounded-1
                                      text-body-secondary flex-shrink-0 fw-semibold"
                               style="width:32px;height:36px;font-size:.6rem">{{ extension(d) }}</span>

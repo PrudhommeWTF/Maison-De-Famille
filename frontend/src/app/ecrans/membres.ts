@@ -35,7 +35,7 @@ import type { LigneDetention, Personne, Structure } from '../core/modeles';
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
               <h2 class="h5 card-title mb-0">{{ majuscule(etat.vocabulaire().detenteurs) }}</h2>
-              <span class="badge rounded-pill text-bg-light border fw-medium flex-shrink-0">{{ s.regles[0]?.libelle }}</span>
+              <span class="badge rounded-pill text-bg-light border fw-medium text-wrap text-start">{{ s.regles[0]?.libelle }}</span>
             </div>
 
             @if (s.detenteurs.length) {
