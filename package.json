@@ -1,6 +1,6 @@
 {
   "name": "maison-de-famille",
-  "version": "0.0.0",
+  "version": "0.0.5",
   "description": "Maison de Famille, application auto-hebergee de gestion de biens familiaux (Angular + Node/SQLite).",
   "private": true,
   "license": "MIT",

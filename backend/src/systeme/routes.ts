@@ -19,7 +19,7 @@ import { etat } from '../notifications/file';
 import { orphelins } from '../stockage/fichiers';
 import { VerificationImpossible, depotParDefaut, derniereRelease } from './depot';
 import { declencher, enCours, statut } from './maj';
-import { estPlusRecente } from './versions';
+import { estPlusRecente, versionConnue } from './versions';
 
 export function routesSysteme(deps: Deps): Routeur {
   const r = new Routeur('systeme', deps);
@@ -48,6 +48,7 @@ export function routesSysteme(deps: Deps): Routeur {
         // rend l'installation possible. L'un sans l'autre ne sert à rien.
         verificationAutorisee: parametre<boolean>(ctx.db, 'majVerification'),
         installationPossible: ctx.config.majAuto,
+        versionConnue: versionConnue(ctx.config.version),
         depot: depotParDefaut(),
         statut: statut(ctx.config.dataDir),
       },
@@ -72,7 +73,7 @@ export function routesSysteme(deps: Deps): Routeur {
     if (!parametre<boolean>(ctx.db, 'majVerification')) {
       throw etatInvalide(
         "La vérification des versions n'est pas autorisée sur cette instance. "
-        + 'Un gérant peut l\'activer dans les Réglages, section « Exploitation ».',
+        + 'Un gérant peut l\'activer dans l\'Administration, Réglages, section « Exploitation ».',
       );
     }
     const installee = ctx.config.version;
@@ -86,7 +87,12 @@ export function routesSysteme(deps: Deps): Routeur {
         notes: release.notes,
         url: release.url,
         publieeLe: release.publieeLe,
-        misAJourDisponible: estPlusRecente(release.tag, installee),
+        // Une version installée inconnue ne permet aucune comparaison. On
+        // propose quand même, sinon les instances déjà posées avec cette
+        // version fantôme resteraient enfermées ; l'interface, elle, dit qu'elle
+        // ne sait pas plutôt que d'afficher « 0.0.0 ».
+        misAJourDisponible: !versionConnue(installee) || estPlusRecente(release.tag, installee),
+        versionConnue: versionConnue(installee),
         installationPossible: ctx.config.majAuto,
       };
     } catch (e) {
@@ -100,6 +106,7 @@ export function routesSysteme(deps: Deps): Routeur {
 
   r.get('/systeme/maj', { acces: 'gerant' }, (ctx) => ({
     installee: ctx.config.version,
+    versionConnue: versionConnue(ctx.config.version),
     verificationAutorisee: parametre<boolean>(ctx.db, 'majVerification'),
     installationPossible: ctx.config.majAuto,
     depot: depotParDefaut(),

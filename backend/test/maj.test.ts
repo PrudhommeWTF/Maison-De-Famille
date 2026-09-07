@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import fs from 'fs';
 import path from 'path';
 import {
-  SANS_NOUVELLES_MS, comparer, depuisLisible, estPlusRecente, fraichir, lireStatut,
+  SANS_NOUVELLES_MS, comparer, depuisLisible, estPlusRecente, fraichir, lireStatut, versionConnue,
 } from '../src/systeme/versions';
 import {
   FICHIER_DECLENCHEUR, FICHIER_ETAT, declencher, enCours, statut,
@@ -39,6 +39,35 @@ test('les versions se comparent par nombre, pas par texte', () => {
   // Une version incomplète ou farfelue ne doit pas faire exploser la comparaison.
   assert.equal(comparer('1.2', '1.2.0'), 0);
   assert.ok(comparer('abc', '0.0.1') < 0);
+});
+
+test('« 0.0.0 » n\'est pas une version installée, c\'est une absence de réponse', () => {
+  // Une installation fraîche depuis le tag 0.0.5 se croyait en 0.0.0 et
+  // proposait de se mettre à jour vers elle-même. La comparaison était juste ;
+  // c'est la donnée d'entrée qui mentait, et l'interface doit pouvoir le dire.
+  assert.equal(versionConnue('0.0.0'), false);
+  assert.equal(versionConnue('v0.0.0'), false);
+  assert.equal(versionConnue(''), false);
+  assert.equal(versionConnue('   '), false);
+  assert.ok(versionConnue('0.0.5'));
+  assert.ok(versionConnue('1.0.0'));
+});
+
+test('la version du dépôt est publiable, et la même des trois côtés', async () => {
+  // Le service lit `backend/package.json` quand `MDF_VERSION` est absent. Un
+  // « 0.0.0 » oublié là redonne exactement la panne ci-dessus, sur toutes les
+  // installations à venir : ce test est le garde-fou de la publication.
+  const fs = await import('fs');
+  const path = await import('path');
+  const racine = path.join(__dirname, '..', '..');
+  const lu = (p: string): string =>
+    JSON.parse(fs.readFileSync(path.join(racine, p, 'package.json'), 'utf8')).version;
+
+  const versions = ['.', 'backend', 'frontend'].map(lu);
+  assert.ok(versionConnue(versions[1]),
+    'backend/package.json porte encore 0.0.0 : le service se croira éternellement en retard');
+  assert.deepEqual(new Set(versions).size, 1,
+    `les trois package.json divergent : ${versions.join(', ')}`);
 });
 
 test('une mise à jour sans nouvelles cesse d\'être « en cours »', () => {

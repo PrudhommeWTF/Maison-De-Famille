@@ -53,6 +53,22 @@ export const estPlusRecente = (candidate: string, installee: string): boolean =>
   comparer(candidate, installee) > 0;
 
 /**
+ * La version installée est-elle réellement connue ?
+ *
+ * `0.0.0` n'est pas une version : c'est ce que le service répond quand rien ne
+ * la lui a dite, ni `MDF_VERSION` ni un `package.json` publié. Une installation
+ * fraîche depuis le tag 0.0.5 se croyait donc en 0.0.0 et proposait de se mettre
+ * à jour **vers elle-même**, ce qui est le genre de proposition qui fait perdre
+ * confiance dans tout le reste.
+ *
+ * On continue de proposer la mise à jour dans ce cas, parce que refuser
+ * enfermerait les instances déjà installées avec cette version fantôme. Mais on
+ * cesse d'annoncer « 0.0.0 » comme un fait, et l'interface le dit.
+ */
+export const versionConnue = (installee: string): boolean =>
+  !!installee.trim() && comparer(installee, '0.0.0') !== 0;
+
+/**
  * L'état à servir à l'interface.
  *
  * Une mise à jour sans nouvelles est déclarée interrompue, avec le chemin du

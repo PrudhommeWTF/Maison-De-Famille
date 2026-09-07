@@ -1,6 +1,6 @@
 {
   "name": "mdf-frontend",
-  "version": "0.0.0",
+  "version": "0.0.5",
   "private": true,
   "scripts": {
     "ng": "ng",
