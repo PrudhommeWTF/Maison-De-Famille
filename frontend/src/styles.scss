@@ -22,9 +22,20 @@
 // 2. La palette du paquet de transmission. Chaque valeur porte son rôle en nom
 //    dans le tableau du handoff : on la reprend, on ne la réinvente pas.
 $primary: #b0603f;
-$success: #7a8b5c;
+// Deux couleurs sont assombries par rapport au prototype, et c'est délibéré.
+// Sur l'olive (#7a8b5c) et l'ambre (#a5813f) d'origine, *aucune* couleur de
+// libellé n'atteignait 4,5:1 : le blanc de la maquette donnait 3,64 et 3,56, et
+// l'encre 4,37 et 4,48. Les boutons « Pour » d'un vote et les alertes étaient
+// donc sous le seuil quoi qu'on écrive dessus.
+//
+// L'olive prend la teinte de survol que le handoff nomme déjà (#68784c, 4,72:1)
+// plutôt qu'une couleur inventée ; l'ambre est assombri de 14 % (4,62:1). Les
+// deux restent la palette du projet, et le blanc de la maquette est conservé
+// partout : c'est Bootstrap qui le choisit maintenant tout seul, par son propre
+// calcul de contraste, sans qu'on ait à forcer quoi que ce soit.
+$success: #68784c;
 $info: #4a6572;
-$warning: #a5813f;
+$warning: #8e6f36;
 
 $body-bg: #f2ede5;
 $body-color: #24201b;
@@ -53,9 +64,9 @@ $nav-pills-link-active-bg: $body-color;
 // maquette veut un brun chaud (#8d4a2e). Les deux passent le contraste ; seul
 // le second est le design demandé.
 $primary-text-emphasis: #8d4a2e;
-$success-text-emphasis: #4c5836;
+$success-text-emphasis: #414b2e;
 $info-text-emphasis: #33454f;
-$warning-text-emphasis: #6f5527;
+$warning-text-emphasis: #5f4a24;
 $secondary-text-emphasis: #4a443c;
 
 // Ce que Bootstrap pose sur un fond coloré : l'encre et le papier du projet,
@@ -63,18 +74,6 @@ $secondary-text-emphasis: #4a443c;
 $color-contrast-light: #fffdf9;
 $color-contrast-dark: #24201b;
 
-// **Un compromis qu'il faut connaître.** Bootstrap choisit la couleur d'un
-// libellé de bouton par calcul de contraste, avec un seuil de 4,5. Sur le vert
-// olive (#7a8b5c) et l'ambre (#a5813f) du projet, *aucune* des deux encres
-// n'atteint 4,5 : blanc donne 3,64 et 3,56, encre donne 4,37 et 4,48. Bootstrap
-// choisirait donc l'encre, et les boutons « Pour » et d'alerte deviendraient
-// noirs sur fond clair, ce que la maquette ne montre nulle part.
-//
-// Le seuil est abaissé à 3 pour retrouver le blanc de la maquette, qui est
-// contractuelle. Ce n'est pas une victoire : ces deux fonds resteront sous
-// 4,5:1 quoi qu'on écrive dessus. Les assombrir (#68784c donnerait 4,72 avec du
-// blanc) est la seule vraie correction, et c'est une décision de design.
-$min-contrast-ratio: 3;
 
 // 3. Le reste de Bootstrap, qui recalcule tout à partir de ce qui précède.
 @import 'bootstrap/scss/variables';
