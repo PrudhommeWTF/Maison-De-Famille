@@ -10,11 +10,14 @@
 
 /* TRANSITION VERS BOOTSTRAP. Ce fichier est l'ancien système de design, gardé
  * le temps que les écrans passent un à un aux composants Bootstrap. Il est
- * chargé APRÈS `styles.scss`, donc il gagne partout où les deux se croisent, et
- * l'application reste identique à elle-même sur les écrans pas encore repris.
+ * chargé AVANT `styles.scss` : là où les deux se croisent (`body`, `h1`-`h3`,
+ * `a`, `.btn`), c'est Bootstrap qui gagne, pour que les écrans déjà convertis
+ * se voient tels qu'ils seront. Les écrans pas encore repris gardent leurs
+ * classes propres (`.carte`, `.champ`, `.pastille`) et restent utilisables,
+ * avec des boutons plus sobres le temps de la reprise.
  *
- * Il rétrécit à chaque écran converti, et disparaît avec le dernier. Les
- * polices et les icônes sont désormais déclarées dans `angular.json`.
+ * Il disparaît avec le dernier écran converti. Les polices et les icônes sont
+ * désormais déclarées dans `angular.json`.
  */
 
 :root {

@@ -59,6 +59,12 @@ $headings-font-weight: 500;
 // je peux cliquer ».
 $nav-pills-link-active-bg: $body-color;
 
+// Un lien de navigation n'est pas un lien de texte : il porte l'encre, et ne
+// prend l'accent qu'au survol. Sans cela, les onze entrées de la latérale
+// s'affichent en orange et l'écran n'a plus de hiérarchie.
+$nav-link-color: #4a443c;
+$nav-link-hover-color: $primary;
+
 // Les encres du handoff. Sans elles, Bootstrap dérive `-text-emphasis` par un
 // assombrissement de 60 %, qui donne un brun presque noir (#46261a) là où la
 // maquette veut un brun chaud (#8d4a2e). Les deux passent le contraste ; seul
@@ -75,12 +81,17 @@ $color-contrast-light: #fffdf9;
 $color-contrast-dark: #24201b;
 
 
-// 3. Le reste de Bootstrap, qui recalcule tout à partir de ce qui précède.
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/variables-dark';
+// Le gris de Bootstrap est froid (#6c757d) et jure avec la palette : le second
+// rôle prend le gris chaud du handoff. Il porte les boutons secondaires, qui
+// sont les plus nombreux de l'application.
+$secondary: #6b6157;
 
-// 4. Les surfaces que le handoff distingue du fond : une carte est plus claire
-//    que la page, et les séparateurs de liste sont plus doux que les bordures.
+// Les surfaces que le handoff distingue du fond : une carte est plus claire que
+// la page, et les séparateurs de liste sont plus doux que les bordures. Elles
+// se posent **avant** l'import des variables : plusieurs valeurs de Bootstrap
+// en dérivent au moment de cet import (le fond d'une liste déroulante vient de
+// celui d'un champ), et les poser après laissait des composants sur l'ancienne
+// valeur.
 $card-bg: #fffdf9;
 $card-cap-bg: transparent;
 $list-group-bg: transparent;
@@ -93,13 +104,18 @@ $input-bg: #fffdf9;
 $input-border-color: #d9cfc2;
 $btn-border-radius: $border-radius;
 
+
+// 3. Le reste de Bootstrap, qui recalcule tout à partir de ce qui précède.
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+
 @import 'bootstrap/scss/maps';
 @import 'bootstrap/scss/mixins';
 @import 'bootstrap/scss/utilities';
 @import 'bootstrap/scss/bootstrap';
 
 // ---------------------------------------------------------------------------
-// Les trois seules classes maison, et chacune se justifie.
+// Les seules classes maison, et chacune se justifie.
 // ---------------------------------------------------------------------------
 
 // Le libellé de section en petites capitales, répété une trentaine de fois dans
@@ -120,6 +136,36 @@ $btn-border-radius: $border-radius;
 // demande en attente. Ni l'une ni l'autre n'existe en utilitaire.
 .cal-cell { min-height: 76px; }
 .cal-dashed { border-style: dashed !important; }
+
+// Les initiales d'une personne dans un rond. Bootstrap n'a pas de composant
+// d'avatar, et la combinaison (taille fixe, rond, centrage, ne rétrécit pas)
+// revient sur quatre écrans.
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 50%;
+  background: var(--#{$prefix}secondary-bg);
+  color: var(--#{$prefix}secondary-color);
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+// La navigation latérale marque l'entrée courante autrement que la barre de
+// contexte : celle-ci dit « quel bien », en encre pleine, tandis que celle-là
+// dit « quel écran », en fond doux. Le même `.active` de Bootstrap ne peut pas
+// porter les deux sens, d'où cette variante, qui est celle de la maquette.
+.nav-pills .nav-link.side-link.active {
+  background: var(--#{$prefix}secondary-bg);
+  color: var(--#{$prefix}body-color);
+}
+
+// Les deux barres collantes s'empilent : la hauteur de l'une est le décalage de
+// l'autre. Les valeurs vivent ici pour que le cadre n'en pose aucune en dur.
+:root { --mdf-entete: 57px; --mdf-contexte: 48px; }
 
 // Les titres suivent la famille d'affichage, y compris ceux des cartes, que
 // Bootstrap ne compte pas parmi les `h1`-`h6`.

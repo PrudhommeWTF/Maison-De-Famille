@@ -33,179 +33,157 @@ interface Groupe { titre: string; entrees: Entree[] }
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
-    :host { display: block; min-height: 100vh; }
+    /* Presque rien : la mise en page vient entièrement de Bootstrap. Ne restent
+       que les trois choses qu'aucun utilitaire n'exprime. */
 
-    header {
-      position: sticky; top: 0; z-index: 30; height: var(--hauteur-entete);
-      display: flex; align-items: center; justify-content: space-between; gap: 14px;
-      padding: 0 20px; background: var(--surface); border-bottom: 1px solid var(--bordure-carte);
-    }
-    .marque { display: flex; align-items: center; gap: 9px; font-family: var(--titre); font-size: 16px; font-weight: 500; }
-    .marque i { color: var(--accent); font-size: 18px; }
+    /* Les deux barres collantes s'empilent, et la latérale se cale sous elles. */
+    .barre-contexte { top: var(--mdf-entete); z-index: 1020; }
+    .laterale { top: calc(var(--mdf-entete) + var(--mdf-contexte)); width: 230px; max-width: 100%; }
 
-    .barre-contexte {
-      position: sticky; top: var(--hauteur-entete); z-index: 25;
-      display: flex; align-items: center; gap: 8px; overflow-x: auto;
-      padding: 9px 20px; min-height: var(--hauteur-contexte);
-      background: var(--fond-contexte); border-bottom: 1px solid var(--bordure-contexte);
+    /* La barre d'onglets du pouce : fixée en bas, hors du flux, et respectant
+       la zone sûre des téléphones à encoche. */
+    .onglets {
+      position: fixed; inset: auto 0 0 0; z-index: 1040;
+      padding-bottom: env(safe-area-inset-bottom);
     }
-    .pilule {
-      display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
-      padding: 7px 14px; min-height: 36px; border-radius: 20px; border: none;
-      background: transparent; color: var(--encre-2); font-size: 13px; cursor: pointer;
-      font-family: inherit; transition: background 140ms, color 140ms;
-    }
-    .pilule:hover { background: rgba(36, 32, 27, .06); }
-    .pilule[aria-current="true"] { background: var(--encre); color: var(--surface); }
-    .pilule[aria-current="true"]:hover { background: var(--encre); }
+    .onglets .nav-link.active { color: var(--bs-primary); }
 
-    .grille { display: grid; grid-template-columns: var(--nav) minmax(0, 1fr); align-items: start; }
-
-    /* La navigation latérale et la barre d'onglets sont toutes deux des <nav> :
-       chacune porte sa classe, sinon la seconde hérite du positionnement
-       collant de la première et s'étire sur toute la hauteur de l'écran. */
-    .laterale {
-      position: sticky; top: calc(var(--hauteur-entete) + var(--hauteur-contexte));
-      max-height: calc(100vh - var(--hauteur-entete) - var(--hauteur-contexte));
-      overflow-y: auto; padding: 20px 14px 40px;
-    }
-    .laterale .libelle-section { margin: 16px 8px 7px; display: block; }
-    /* Le nom du bien porte son icône, comme dans la maquette : c'est le seul
-       intertitre qui désigne une chose et non une catégorie. */
-    .laterale .titre-bien { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
-    /* Le lieu et la structure sous le nom : ils disent dans quel dossier on est
-       sans avoir à remonter à la barre de contexte. */
-    .laterale .contexte-bien {
-      display: block; margin: 0 8px 6px; font-size: 11.5px; color: var(--encre-3);
-    }
-    /* Les quatre groupes. Plus discrets que le nom du bien, sinon la navigation
-       compte cinq titres de même poids et n'a plus de hiérarchie. */
-    .laterale .libelle-groupe {
-      display: block; margin: 13px 10px 4px; font-size: 11px; font-weight: 500;
-      color: var(--encre-3);
-    }
-    .laterale .libelle-groupe:first-of-type { margin-top: 8px; }
-    /* Le pied : ce que l'application est, et quand elle a été sauvegardée. */
-    .laterale .pied {
-      margin: 26px 8px 0; padding-top: 14px; border-top: 1px solid var(--separateur);
-      font-size: 11px; color: var(--encre-3); line-height: 1.5;
-    }
-    .laterale a {
-      display: flex; align-items: center; gap: 10px; padding: 9px 10px; min-height: 40px;
-      border-radius: 8px; color: var(--encre-2); text-decoration: none; font-size: 13.5px;
-    }
-    .laterale a:hover { background: var(--survol-liste); }
-    .laterale a.actif { background: var(--actif); color: var(--encre); font-weight: 500; }
-    .laterale i { width: 18px; text-align: center; color: var(--encre-3); }
-    .laterale a.actif i { color: var(--accent); }
-    .badge {
-      margin-left: auto; min-width: 20px; padding: 1px 6px; border-radius: 20px;
-      background: var(--accent); color: var(--surface); font-size: 11.5px; text-align: center;
-    }
-
-    main { padding: 26px 30px 70px; max-width: var(--contenu-max); }
-
-    .compte {
-      display: flex; align-items: center; gap: 9px; border: none; background: none;
-      cursor: pointer; font-family: inherit; padding: 6px; border-radius: 9px; min-height: 40px;
-    }
-    .compte:hover { background: var(--survol-liste); }
-    .compte .nom { font-size: 13px; color: var(--encre-2); }
-
-    .onglets { display: none; }
-
-    @media (max-width: 900px) {
-      .grille { grid-template-columns: minmax(0, 1fr); }
-      .laterale { display: none; }
-      main { padding: 18px 16px 90px; }
-      .compte .nom { display: none; }
-      .onglets {
-        display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-        position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 40;
-        background: var(--surface); border-top: 1px solid var(--bordure-carte);
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-      .onglets a {
-        display: flex; flex-direction: column; align-items: center; gap: 3px;
-        padding: 9px 4px; min-height: 56px; text-decoration: none;
-        color: var(--libelle-section); font-size: 11px;
-      }
-      .onglets a i { font-size: 17px; }
-      .onglets a.actif { color: var(--accent); }
-      .onglets a .badge { position: absolute; margin: 0; transform: translate(14px, -4px); }
-    }
+    @media (max-width: 767.98px) { main { padding-bottom: 5rem; } }
   `],
   template: `
-    <header>
-      <div class="marque"><i class="bi bi-houses" aria-hidden="true"></i>{{ etat.moi()?.instanceNom || 'Maison de Famille' }}</div>
-      <button class="compte" routerLink="/compte" [attr.aria-label]="'Mon compte, ' + (etat.moi()?.personne?.nom || '')">
-        <span class="nom">{{ etat.moi()?.personne?.nom }}</span>
-        <span class="avatar">{{ initiales(etat.moi()?.personne?.nom || '') }}</span>
-      </button>
-    </header>
+    <nav class="navbar bg-body border-bottom sticky-top px-3 py-2" style="z-index:1040">
+      <div class="d-flex align-items-center gap-3 w-100">
+        <span class="navbar-brand d-flex align-items-center gap-2 me-0">
+          <span class="d-grid bg-primary text-white rounded-3" style="width:32px;height:32px;place-items:center">
+            <i class="bi bi-houses" aria-hidden="true"></i>
+          </span>
+          <span class="d-flex flex-column lh-sm">
+            <span class="fs-6">{{ etat.moi()?.instanceNom || 'Maison de Famille' }}</span>
+            @if (etat.biens().length) {
+              <span class="text-body-secondary" style="font-size:.7rem">{{ sousTitre() }}</span>
+            }
+          </span>
+        </span>
+        <div class="flex-grow-1"></div>
+        <a class="btn btn-sm btn-link text-body text-decoration-none d-flex align-items-center gap-2"
+           routerLink="/compte" [attr.aria-label]="'Mon compte, ' + (etat.moi()?.personne?.nom || '')">
+          <span class="text-end lh-sm d-none d-sm-block">
+            <span class="d-block small">{{ etat.moi()?.personne?.nom }}</span>
+            @if (etat.estGerant()) { <span class="d-block text-body-secondary" style="font-size:.7rem">Gérant</span> }
+          </span>
+          <span class="d-grid rounded-circle bg-secondary-subtle text-body-secondary"
+                style="width:30px;height:30px;place-items:center;font-size:.7rem">{{ initiales(etat.moi()?.personne?.nom || '') }}</span>
+        </a>
+      </div>
+    </nav>
 
     @if (etat.sessionLimitee()) {
-      <div class="encart" style="margin:16px 20px 0">
+      <div class="alert alert-primary rounded-0 border-start-0 border-end-0 mb-0">
         Le second facteur est obligatoire pour les gérants sur cette instance.
-        <a routerLink="/compte">Activez-le pour retrouver l'accès complet.</a>
+        <a routerLink="/compte" class="alert-link">Activez-le pour retrouver l'accès complet.</a>
       </div>
     }
 
     <!-- La barre de contexte : le pivot de toute l'application. -->
     @if (etat.biens().length > 1) {
-      <div class="barre-contexte" role="group" aria-label="Bien affiché">
-        <button class="pilule" [attr.aria-current]="etat.contexte() === TOUS" (click)="choisir(TOUS)">
-          <i class="bi bi-houses" aria-hidden="true"></i> Tous les biens
-        </button>
-        @for (b of etat.biens(); track b.id) {
-          <button class="pilule" [attr.aria-current]="etat.contexte() === b.id" (click)="choisir(b.id)">
-            <i class="bi" [class]="icoBien(b.type)" aria-hidden="true"></i> {{ b.nom }}
-          </button>
-        }
+      <div class="bg-body-tertiary border-bottom px-3 py-2 position-sticky barre-contexte">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <ul class="nav nav-pills gap-1 bg-body rounded-3 p-1" role="group" aria-label="Bien affiché">
+            <li class="nav-item">
+              <button class="nav-link py-1 px-3 d-flex align-items-center gap-2"
+                      [class.active]="etat.contexte() === TOUS"
+                      [attr.aria-current]="etat.contexte() === TOUS" (click)="choisir(TOUS)">
+                <i class="bi bi-houses" aria-hidden="true"></i>Tous les biens
+              </button>
+            </li>
+            @for (b of etat.biens(); track b.id) {
+              <li class="nav-item">
+                <button class="nav-link py-1 px-3 d-flex align-items-center gap-2"
+                        [class.active]="etat.contexte() === b.id"
+                        [attr.aria-current]="etat.contexte() === b.id" (click)="choisir(b.id)">
+                  <i class="bi" [class]="icoBien(b.type)" aria-hidden="true"></i>{{ b.nom }}
+                </button>
+              </li>
+            }
+          </ul>
+          @if (etat.contexte() === TOUS) {
+            <div class="small text-secondary-emphasis d-none d-lg-flex align-items-center">
+              <i class="bi bi-diagram-3 me-2 text-body-secondary" aria-hidden="true"></i>{{ sousTitre() }}
+            </div>
+          }
+        </div>
       </div>
     }
 
-    <div class="grille">
-      <nav class="laterale" aria-label="Navigation principale">
-        <span class="libelle-section">Portefeuille</span>
-        @for (e of entreesPortefeuille(); track e.chemin) {
-          <a [routerLink]="e.chemin" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: e.chemin === '/' }">
-            <i class="bi" [class]="e.icone" aria-hidden="true"></i>{{ e.libelle }}
-          </a>
-        }
+    <div class="container-fluid px-0">
+      <div class="row g-0">
+        <div class="col-12 col-sm-auto d-none d-md-block">
+          <nav class="position-sticky p-3 laterale overflow-auto" aria-label="Navigation principale">
+            <div class="eyebrow px-2 pb-2">Portefeuille</div>
+            <ul class="nav nav-pills flex-column gap-1 mb-4">
+              @for (e of entreesPortefeuille(); track e.chemin) {
+                <li class="nav-item">
+                  <a class="nav-link side-link text-start w-100 d-flex align-items-center gap-2"
+                     [routerLink]="e.chemin" routerLinkActive="active"
+                     [routerLinkActiveOptions]="{ exact: e.chemin === '/' }">
+                    <i class="bi text-body-secondary" [class]="e.icone" aria-hidden="true"></i>{{ e.libelle }}
+                  </a>
+                </li>
+              }
+            </ul>
 
-        @if (etat.bien(); as b) {
-          <span class="libelle-section titre-bien">
-            <i class="bi bi-house-door" aria-hidden="true"></i>{{ b.nom }}
-          </span>
-          <span class="contexte-bien">{{ b.commune }} · {{ b.structureNom }}</span>
-          @for (g of groupesBien(); track g.titre) {
-            <span class="libelle-groupe">{{ g.titre }}</span>
-            @for (e of g.entrees; track e.chemin) {
-              <a [routerLink]="e.chemin" routerLinkActive="actif">
-                <i class="bi" [class]="e.icone" aria-hidden="true"></i>{{ e.libelle }}
-                @if (e.badge && etat.demandesEnAttente() > 0) {
-                  <span class="badge">{{ etat.demandesEnAttente() }}</span>
-                }
-              </a>
+            @if (etat.bien(); as b) {
+              <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-3 px-3 py-2 mb-1">
+                <i class="bi bi-house-door text-secondary-emphasis" aria-hidden="true"></i>
+                <span class="fw-medium text-truncate">{{ b.nom }}</span>
+              </div>
+              <div class="small text-body-secondary px-3 mb-3">{{ b.commune }} · {{ b.structureNom }}</div>
+
+              @for (g of groupesBien(); track g.titre) {
+                <div class="eyebrow px-2 pb-2">{{ g.titre }}</div>
+                <ul class="nav nav-pills flex-column gap-1 mb-4">
+                  @for (e of g.entrees; track e.chemin) {
+                    <li class="nav-item">
+                      <a class="nav-link side-link text-start w-100 d-flex align-items-center gap-2"
+                         [routerLink]="e.chemin" routerLinkActive="active">
+                        <i class="bi text-body-secondary" [class]="e.icone" aria-hidden="true"></i>
+                        <span class="flex-grow-1">{{ e.libelle }}</span>
+                        @if (e.badge && etat.demandesEnAttente() > 0) {
+                          <span class="badge rounded-pill text-bg-primary">{{ etat.demandesEnAttente() }}</span>
+                        }
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
             }
-          }
-        }
-        <!-- La maquette met aussi « Dernière sauvegarde : hier 03:00 ». Le
-             serveur n'expose pas encore cette date : l'écrire en dur serait
-             une promesse que rien ne tient. La ligne viendra avec le champ. -->
-        <div class="pied">Auto-hébergé · vos données ne sortent pas d'ici</div>
-      </nav>
 
-      <main><router-outlet /></main>
+            <!-- La maquette met aussi « Dernière sauvegarde : hier 03:00 ». Le
+                 serveur n'expose pas encore cette date : l'écrire en dur serait
+                 une promesse que rien ne tient. La ligne viendra avec le champ. -->
+            <div class="small text-body-secondary border-top pt-3 mt-4 px-2 lh-sm">
+              Auto-hébergé · vos données ne sortent pas d'ici
+            </div>
+          </nav>
+        </div>
+
+        <div class="col">
+          <main class="p-3 p-lg-4"><router-outlet /></main>
+        </div>
+      </div>
     </div>
 
-    <nav class="onglets" aria-label="Navigation">
+    <nav class="nav nav-justified bg-body border-top d-md-none onglets" aria-label="Navigation">
       @for (e of onglets(); track e.chemin) {
-        <a [routerLink]="e.chemin" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: e.chemin === '/' }">
-          <i class="bi" [class]="e.icone" aria-hidden="true"></i>
-          <span>{{ e.libelle }}</span>
-          @if (e.badge && etat.demandesEnAttente() > 0) { <span class="badge">{{ etat.demandesEnAttente() }}</span> }
+        <a class="nav-link d-flex flex-column align-items-center gap-1 py-2 small position-relative"
+           [routerLink]="e.chemin" routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: e.chemin === '/' }">
+          <i class="bi fs-5" [class]="e.icone" aria-hidden="true"></i>
+          <span style="font-size:.7rem">{{ e.libelle }}</span>
+          @if (e.badge && etat.demandesEnAttente() > 0) {
+            <span class="badge rounded-pill text-bg-primary position-absolute top-0 end-50 translate-middle-x"
+                  style="margin-left:1.4rem">{{ etat.demandesEnAttente() }}</span>
+          }
         </a>
       }
     </nav>
@@ -216,6 +194,14 @@ export class Cadre {
   private readonly router = inject(Router);
   readonly TOUS = TOUS;
   readonly initiales = initiales;
+
+  /** « 2 biens, 2 structures » : dérivé, jamais saisi. */
+  readonly sousTitre = computed(() => {
+    const biens = this.etat.biens();
+    const structures = new Set(biens.map((b) => b.structureId)).size;
+    return `${biens.length} bien${biens.length > 1 ? 's' : ''} · `
+      + `${structures} structure${structures > 1 ? 's' : ''}`;
+  });
 
   readonly entreesPortefeuille = computed<Entree[]>(() => {
     const e: Entree[] = [{ chemin: '/', libelle: 'Tableau de bord', icone: 'bi-house-heart' }];

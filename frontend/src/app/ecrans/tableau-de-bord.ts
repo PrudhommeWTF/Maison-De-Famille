@@ -24,48 +24,12 @@ interface Gouvernance { alertes: { structureNom: string }[] }
   standalone: true,
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    .cartes-biens { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-    .carte-bien { padding: 0; overflow: hidden; text-align: left; background: var(--surface);
-                  border: 1px solid var(--bordure-carte); border-radius: 16px; width: 100%; font-family: inherit; }
-    .bandeau { height: 110px; background: var(--actif); display: grid; place-items: center; color: var(--encre-3); }
-    .bandeau i { font-size: 26px; }
-    .corps { padding: 16px 18px 18px; }
-    .nom-bien { font-family: var(--titre); font-size: 18px; font-weight: 500; }
-    .stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--separateur); }
-    /* Le libellé passe au-dessus de la valeur : la maquette met « Prochain
-       séjour » puis « Claire, 4 juil. », et une date de quinze caractères ne
-       peut pas jouer le rôle du grand chiffre qu'on lisait avant. */
-    .stat .valeur { font-family: var(--titre); font-size: 13.5px; font-weight: 500; margin-top: 3px; }
-    .stat .quoi { font-size: 11px; color: var(--encre-3); }
-    /* Le type du bien, coloré comme la maquette : la couleur porte
-       l'information aussi vite que le mot. */
-    .type-bien { font-size: 12.5px; font-weight: 500; margin-top: 3px; }
-    .type-mer { color: #7a8b5c; }
-    .type-montagne { color: #4a6572; }
-    .type-campagne { color: #7a8b5c; }
-    .type-ville { color: #6b6157; }
-    .trois { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-    .resume { display: flex; gap: 30px; flex-wrap: wrap; }
-    .resume .valeur { font-family: var(--titre); font-size: 25px; font-weight: 500; }
-    .acces-rapide { display: flex; gap: 8px; flex-wrap: wrap; }
-    .plage { width: 78px; flex: none; font-size: 12px; color: var(--encre-3); }
-    .demarrage { border-left: 3px solid var(--accent); }
-    .etape { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--separateur); }
-    .etape:first-of-type { border-top: none; }
-    .etape .puce { width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center;
-                   background: var(--actif); color: var(--encre-3); font-size: 11px; margin-top: 2px; }
-    .etape .puce.urgent { background: var(--accent); color: #fff; }
-    .etape .quoi { flex: 1; min-width: 200px; }
-    .etape .titre-e { font-size: 14px; display: block; }
-    .etape .pourquoi { font-size: 12.5px; color: var(--encre-3); margin: 2px 0 0; }
-  `],
   template: `
-    <div class="colonne">
+    <div class="d-flex flex-column gap-4">
       @if (etat.bien(); as b) {
         <div>
-          <h1>{{ b.nom }}</h1>
-          <p class="secondaire" style="margin:6px 0 0">
+          <h1 class="h2 mb-2">{{ b.nom }}</h1>
+          <p class="text-body-secondary mb-0">
             {{ b.commune }} · {{ b.couchages }} couchages
             @if (etat.roleIci() !== 'invite') {
               ·
@@ -77,62 +41,77 @@ interface Gouvernance { alertes: { structureNom: string }[] }
         </div>
 
         @if (demarrage().length) {
-          <section class="carte demarrage">
-            <h2>Pour démarrer</h2>
-            <p class="secondaire" style="margin:4px 0 10px">
+          <!-- L'alerte plutôt que la carte : cette liste est une consigne, pas
+               une donnée du bien, et elle s'efface d'elle-même une fois faite. -->
+          <section class="alert alert-primary mb-0" role="status">
+            <h2 class="h5 alert-heading">Pour démarrer</h2>
+            <p class="small mb-0">
               Ce qu'il reste à faire pour que la famille puisse s'en servir. Cette carte
               disparaît d'elle-même, étape par étape.
             </p>
             @for (e of demarrage(); track e.cle) {
-              <div class="etape">
-                <span class="puce" [class.urgent]="e.bloquante" aria-hidden="true">
-                  <i class="bi" [class.bi-exclamation]="e.bloquante" [class.bi-arrow-right]="!e.bloquante"></i>
-                </span>
-                <span class="quoi">
-                  <span class="titre-e">{{ e.titre }}</span>
-                  <p class="pourquoi">{{ e.pourquoi }}</p>
+              <div class="d-flex gap-3 align-items-start border-top border-primary-subtle mt-3 pt-3">
+                <i class="bi mt-1 flex-shrink-0" aria-hidden="true"
+                   [class.bi-exclamation-circle]="e.bloquante" [class.bi-arrow-right-circle]="!e.bloquante"></i>
+                <span class="flex-grow-1">
+                  <span class="d-block small fw-medium">{{ e.titre }}</span>
+                  <span class="d-block small">{{ e.pourquoi }}</span>
                 </span>
                 @if (e.lien) {
-                  <a class="btn" [routerLink]="e.lien">Y aller</a>
+                  <a class="btn btn-sm btn-outline-primary flex-shrink-0" [routerLink]="e.lien">Y aller</a>
                 }
               </div>
             }
           </section>
         }
 
-        <div class="carte entre">
-          <div class="resume">
-            <div class="stat">
-              <div class="valeur">{{ prochain() ? plage(prochain()!.arrivee, prochain()!.depart) : 'Aucun' }}</div>
-              <div class="quoi">Prochain séjour</div>
-            </div>
-            <div class="stat">
-              <div class="valeur chiffres">{{ nuitsAVenir() }}</div>
-              <div class="quoi">Nuits réservées à venir</div>
-            </div>
-            <!-- L'arbitrage est une affaire de famille : un invité n'a ni le
-                 chiffre, ni l'écran qui va avec, ni rien à en faire. -->
-            @if (etat.roleIci() !== 'invite') {
-              <div class="stat">
-                <div class="valeur chiffres">{{ etat.demandesEnAttente() }}</div>
-                <div class="quoi">À traiter</div>
+        <section class="card">
+          <div class="card-body d-flex flex-wrap gap-4 align-items-start">
+            <div class="d-flex flex-wrap gap-4 flex-grow-1">
+              <div>
+                <div class="text-body-secondary small">Prochain séjour</div>
+                <div class="fs-6 fw-medium mt-1">{{ prochain() ? plage(prochain()!.arrivee, prochain()!.depart) : 'Aucun' }}</div>
               </div>
-            }
+              <div>
+                <div class="text-body-secondary small">{{ b.occupationLibelle }}</div>
+                <div class="fs-6 fw-medium mt-1 tnum">{{ b.occupationPourcent }} %</div>
+              </div>
+              <!-- L'arbitrage est une affaire de famille : un invité n'a ni le
+                   chiffre, ni l'écran qui va avec, ni rien à en faire. -->
+              @if (etat.roleIci() !== 'invite') {
+                <div>
+                  <div class="text-body-secondary small">À traiter</div>
+                  <div class="fs-6 fw-medium mt-1 text-primary">{{ aTraiter(etat.demandesEnAttente()) }}</div>
+                </div>
+              }
+              <div>
+                <div class="text-body-secondary small">Nuits réservées à venir</div>
+                <div class="fs-6 fw-medium mt-1 tnum">{{ nuitsAVenir() }}</div>
+              </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <a class="btn btn-sm btn-outline-secondary" routerLink="/bien/calendrier">
+                <i class="bi bi-calendar3 me-1"></i>Calendrier
+              </a>
+              @if (etat.roleIci() !== 'invite') {
+                <a class="btn btn-sm btn-outline-secondary" routerLink="/bien/demandes">
+                  <i class="bi bi-envelope-paper me-1"></i>Demandes
+                </a>
+              } @else {
+                <a class="btn btn-sm btn-outline-secondary" routerLink="/bien/coffre">
+                  <i class="bi bi-safe me-1"></i>Coffre-fort
+                </a>
+              }
+              <a class="btn btn-sm btn-outline-secondary" routerLink="/bien/fiche">
+                <i class="bi bi-journal-bookmark me-1"></i>Fiche
+              </a>
+            </div>
           </div>
-          <div class="acces-rapide">
-            <a class="btn" routerLink="/bien/calendrier">Calendrier</a>
-            @if (etat.roleIci() !== 'invite') {
-              <a class="btn" routerLink="/bien/demandes">Demandes</a>
-            } @else {
-              <a class="btn" routerLink="/bien/coffre">Coffre-fort</a>
-            }
-            <a class="btn" routerLink="/bien/fiche">Fiche</a>
-          </div>
-        </div>
+        </section>
       } @else {
         <div>
-          <h1>Bonjour {{ prenom() }}</h1>
-          <p class="secondaire" style="margin:6px 0 0">
+          <h1 class="h2 mb-2">Bonjour {{ prenom() }}</h1>
+          <p class="text-body-secondary mb-0">
             @if (etat.biens().length) {
               Vos biens et ce qui vous attend. Choisissez un bien pour entrer dans son dossier.
             } @else {
@@ -142,113 +121,149 @@ interface Gouvernance { alertes: { structureNom: string }[] }
         </div>
 
         @if (etat.biens().length) {
-          <div class="grille cartes-biens">
+          <div class="row row-cols-1 row-cols-md-2 g-3">
             @for (b of etat.biens(); track b.id) {
-              <button class="carte-bien carte-cliquable" (click)="ouvrir(b)">
-                <div class="bandeau"><i class="bi" [class]="ico(b.type)" aria-hidden="true"></i></div>
-                <div class="corps">
-                  <div class="nom-bien">{{ b.nom }}</div>
-                  <div class="type-bien" [class]="'type-' + b.type">{{ typeLisible(b.type) }}</div>
-                  <div class="meta" style="margin-top:2px">
-                    {{ b.commune }} · {{ b.couchages }} couchages@if (b.locationActivee) { · louée en saison }
+              <div class="col">
+                <div class="card h-100 overflow-hidden" role="button" tabindex="0"
+                     (click)="ouvrir(b)" (keydown.enter)="ouvrir(b)" (keydown.space)="ouvrir(b)">
+                  <!-- Le bandeau garde la proportion de la maquette sans photo :
+                       l'application n'en stocke pas pour un bien, et un cadre vide
+                       serait un mensonge de plus qu'une icône franche. -->
+                  <div class="ratio bg-body-tertiary" style="--bs-aspect-ratio:38%">
+                    <div class="d-flex align-items-center justify-content-center text-body-secondary fs-3">
+                      <i class="bi" [class]="ico(b.type)" aria-hidden="true"></i>
+                    </div>
                   </div>
-                  <div style="margin-top:10px"><span class="pastille">{{ libelleStructure(b) }}</span></div>
-                  <div class="stats">
-                    <div class="stat">
-                      <div class="quoi">Prochain séjour</div>
-                      <div class="valeur">{{ prochainDe(b.id) }}</div>
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-baseline gap-2">
+                      <h2 class="h5 card-title mb-0">{{ b.nom }}</h2>
+                      <span class="small fw-medium flex-shrink-0" [class]="teinte(b.type)">
+                        <i class="bi me-1" [class]="ico(b.type)" aria-hidden="true"></i>{{ typeLisible(b.type) }}
+                      </span>
                     </div>
-                    <div class="stat">
-                      <div class="quoi">{{ b.occupationLibelle }}</div>
-                      <div class="valeur chiffres">{{ b.occupationPourcent }} %</div>
-                    </div>
-                    <div class="stat">
-                      <div class="quoi">À traiter</div>
-                      <div class="valeur">{{ aTraiter(b.demandesEnAttente) }}</div>
+                    <p class="text-body-secondary small mb-2">
+                      {{ b.commune }} · {{ b.couchages }} couchages@if (b.locationActivee) { · louée en saison }
+                    </p>
+                    <span class="badge rounded-pill text-bg-light border">{{ libelleStructure(b) }}</span>
+                    <div class="d-flex gap-4 flex-wrap border-top mt-3 pt-3">
+                      <div>
+                        <div class="text-body-secondary" style="font-size:.7rem">Prochain séjour</div>
+                        <div class="small fw-medium">{{ prochainDe(b.id) }}</div>
+                      </div>
+                      <div>
+                        <div class="text-body-secondary" style="font-size:.7rem">{{ b.occupationLibelle }}</div>
+                        <div class="small fw-medium tnum">{{ b.occupationPourcent }} %</div>
+                      </div>
+                      <div>
+                        <div class="text-body-secondary" style="font-size:.7rem">À traiter</div>
+                        <div class="small fw-medium" [class.text-primary]="b.demandesEnAttente > 0">
+                          {{ aTraiter(b.demandesEnAttente) }}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </button>
+              </div>
             }
           </div>
         }
       }
 
-      <div class="grille trois">
+      <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
         <!-- Ce qui vous attend : agrège les demandes et les échéances, triées
-             par date limite. Chaque ligne mène droit à l'écran concerné.
-             Un invité n'a ni demande à arbitrer ni carnet d'entretien : la
-             carte serait vide à jamais, et une carte vide se retire. -->
-        @if (etat.roleIci() !== 'invite') {
-        <section class="carte">
-          <h2>Ce qui vous attend</h2>
-          @if (attentes().length) {
-            <div style="margin-top:12px">
-              @for (a of attentes(); track a.lien + a.titre) {
-                <button class="ligne" (click)="aller(a.lien)">
-                  <i class="bi" [class]="a.icone" aria-hidden="true" style="color:var(--accent)"></i>
-                  <span>
-                    <span style="display:block;font-size:13.5px">{{ a.titre }}</span>
-                    <span class="meta">{{ a.sous }}</span>
-                  </span>
-                </button>
-              }
-            </div>
-          } @else {
-            <p class="vide">Rien à traiter pour le moment.</p>
-          }
-        </section>
+             par date limite. Chaque ligne mène droit à l'écran concerné. -->
+        @if (montreAttentes()) {
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2"><i class="bi bi-bell me-2"></i>Ce qui vous attend</div>
+                @if (attentes().length) {
+                  <div class="list-group list-group-flush">
+                    @for (a of attentes(); track a.lien + a.titre) {
+                      <button class="list-group-item list-group-item-action d-flex gap-3 px-0 border-0"
+                              (click)="aller(a.lien)">
+                        <i class="bi text-primary" [class]="a.icone" aria-hidden="true"></i>
+                        <span class="text-start">
+                          <span class="d-block small fw-medium">{{ a.titre }}</span>
+                          <span class="d-block text-body-secondary" style="font-size:.78rem">{{ a.sous }}</span>
+                        </span>
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-body-secondary small mb-0">Rien à traiter pour le moment.</p>
+                }
+              </div>
+            </section>
+          </div>
         }
 
         <!-- La trésorerie. Le tableau de bord ne calcule rien : il compose ce
              que le module argent lui rend, et n'affiche la carte que s'il a
              quelque chose à dire. -->
         @if (tresorerie(); as t) {
-          <section class="carte">
-            <h2>{{ t.titre }}</h2>
-            <div style="font-family:var(--titre);font-size:30px;font-weight:500;margin:10px 0 2px"
-                 class="chiffres">{{ euros(t.montantCents) }}</div>
-            <p class="meta" style="margin:0 0 12px">{{ t.sousTitre }}</p>
-            @for (l of t.lignes; track l.cle) {
-              <div class="ligne" style="justify-content:space-between">
-                <span>{{ l.cle }}</span>
-                <span class="chiffres">{{ l.valeur }}</span>
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow"><i class="bi bi-wallet2 me-2"></i>Trésorerie</div>
+                <div class="fs-6 fw-medium mt-2 card-title">{{ t.titre }}</div>
+                <div class="display-6 mt-2 tnum">{{ euros(t.montantCents) }}</div>
+                <p class="text-body-secondary small mt-2 mb-0">{{ t.sousTitre }}</p>
+                <ul class="list-group list-group-flush mt-3">
+                  @for (l of t.lignes; track l.cle) {
+                    <li class="list-group-item d-flex justify-content-between gap-2 px-0 small">
+                      <span class="text-body-secondary">{{ l.cle }}</span>
+                      <span class="fw-medium tnum">{{ l.valeur }}</span>
+                    </li>
+                  }
+                </ul>
+                <a class="btn btn-sm btn-outline-secondary w-100 mt-3" routerLink="/bien/soldes">Voir les soldes</a>
               </div>
-            }
-            <a class="btn" routerLink="/bien/soldes" style="margin-top:10px">Voir les soldes</a>
-          </section>
+            </section>
+          </div>
         }
 
-        <section class="carte">
-          <h2>Prochains séjours</h2>
-          @if (aVenir().length) {
-            <div style="margin-top:12px">
-              @for (s of aVenir(); track s.id) {
-                <div class="ligne">
-                  <span class="plage chiffres">{{ plage(s.arrivee, s.depart) }}</span>
-                  <span>
-                    <span style="display:block;font-size:13.5px">{{ s.titre }}</span>
-                    <span class="meta">{{ s.bienNom }} · {{ nuitsLisible(s.nuits) }}</span>
-                  </span>
-                </div>
+        <div class="col">
+          <section class="card h-100">
+            <div class="card-body">
+              <div class="eyebrow mb-2"><i class="bi bi-suitcase-lg me-2"></i>Prochains séjours</div>
+              @if (aVenir().length) {
+                <ul class="list-group list-group-flush">
+                  @for (s of aVenir(); track s.id) {
+                    <li class="list-group-item d-flex gap-3 px-0">
+                      <span class="text-body-secondary tnum flex-shrink-0"
+                            style="font-size:.78rem;width:96px">{{ plage(s.arrivee, s.depart) }}</span>
+                      <span>
+                        <span class="d-block small fw-medium">{{ s.titre }}</span>
+                        <span class="d-block text-body-secondary" style="font-size:.72rem">
+                          {{ s.bienNom }} · {{ nuitsLisible(s.nuits) }}
+                        </span>
+                      </span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="text-body-secondary small mb-0">Aucun séjour prévu.</p>
               }
             </div>
-          } @else {
-            <p class="vide">Aucun séjour prévu.</p>
-          }
-        </section>
+          </section>
+        </div>
 
         @if (monSejour(); as s) {
-          <section class="carte">
-            <h2>Votre séjour</h2>
-            <p class="secondaire" style="margin:10px 0 2px">{{ s.bienNom }}</p>
-            <div style="font-family:var(--titre);font-size:20px">{{ plage(s.arrivee, s.depart) }}</div>
-            <p class="meta" style="margin:4px 0 14px">
-              {{ nuitsLisible(s.nuits) }} · {{ personnesLisible(s.occupants) }} ·
-              {{ s.statut === 'valide' ? 'validé' : 'en attente de validation' }}
-            </p>
-            <a class="btn" routerLink="/bien/calendrier">Voir le calendrier</a>
-          </section>
+          <div class="col">
+            <section class="card h-100">
+              <div class="card-body">
+                <div class="eyebrow mb-2"><i class="bi bi-person-check me-2"></i>Votre séjour</div>
+                <div class="text-body-secondary small">{{ s.bienNom }}</div>
+                <div class="fs-5 fw-medium mt-1 card-title">{{ plage(s.arrivee, s.depart) }}</div>
+                <p class="text-body-secondary small mt-1 mb-3">
+                  {{ nuitsLisible(s.nuits) }} · {{ personnesLisible(s.occupants) }} ·
+                  {{ s.statut === 'valide' ? 'validé' : 'en attente de validation' }}
+                </p>
+                <a class="btn btn-sm btn-outline-secondary" routerLink="/bien/calendrier">Voir le calendrier</a>
+              </div>
+            </section>
+          </div>
         }
       </div>
     </div>
@@ -306,6 +321,18 @@ export class TableauDeBord {
     };
   });
 
+  /**
+   * Un invité n'a ni demande à arbitrer ni carnet d'entretien : la carte serait
+   * vide à jamais, et une carte vide se retire. En vue consolidée aucun bien
+   * n'est ouvert, et `roleIci()` répond « invité » par défaut : c'est donc le
+   * rôle le plus large qui décide, sinon la gérante perdait sa file d'attente
+   * dès qu'elle sortait d'un dossier.
+   */
+  readonly montreAttentes = computed(() => {
+    const b = this.etat.bien();
+    return b ? b.role !== 'invite' : this.etat.biens().some((x) => x.role !== 'invite');
+  });
+
   readonly prenom = computed(() => (this.etat.moi()?.personne.nom ?? '').split(' ')[0]);
 
   /** Filtré sur le bien courant : la vue consolidée montre tout. */
@@ -322,14 +349,6 @@ export class TableauDeBord {
   readonly monSejour = computed(() => {
     const moi = this.etat.moi()?.personne.id;
     return this.sejours().find((s) => s.demandeurId === moi) ?? null;
-  });
-
-  readonly compteurs = computed<Record<number, { aVenir: number }>>(() => {
-    const out: Record<number, { aVenir: number }> = {};
-    for (const s of this.sejours()) {
-      out[s.bienId] = { aVenir: (out[s.bienId]?.aVenir ?? 0) + 1 };
-    }
-    return out;
   });
 
   readonly attentes = computed(() => {
@@ -452,6 +471,12 @@ export class TableauDeBord {
     if (!b.detenteurs) return nom;
     const qui = b.structureMode === 'sci' ? 'associé' : b.structureMode === 'nom_propre' ? 'propriétaire' : 'indivisaire';
     return `${nom} · ${b.detenteurs} ${qui}${b.detenteurs > 1 ? 's' : ''}`;
+  }
+
+  /** La couleur porte le type aussi vite que le mot, comme dans la maquette. */
+  teinte(t: string): string {
+    return t === 'montagne' ? 'text-info-emphasis' : t === 'ville' ? 'text-secondary-emphasis'
+      : 'text-success-emphasis';
   }
 
   typeLisible(t: string): string {
