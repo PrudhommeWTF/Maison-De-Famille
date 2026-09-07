@@ -100,18 +100,11 @@ export function routesCalendrier(deps: Deps): Routeur {
    * Le même aperçu, mais les octets viennent du portail de l'Éducation
    * nationale au lieu du disque de la famille.
    *
-   * **C'est le seul appel réseau sortant de l'application**, en dehors du relais
-   * SMTP, et il n'existe que si un gérant l'a explicitement allumé. Il n'écrit
-   * rien : comme un dépôt de fichier, il rend un aperçu qu'il faut confirmer.
+   * Ce chemin n'écrit rien : comme un dépôt de fichier, il rend un aperçu qu'il
+   * faut confirmer. Il sert à remplacer une année déjà en base, ou à devancer
+   * le rafraîchissement automatique, qui, lui, n'ajoute que ce qui manque.
    */
   r.post('/calendrier/vacances/telechargement', { acces: 'gerant' }, async (ctx) => {
-    if (!parametre<boolean>(ctx.db, 'vacancesTelechargement')) {
-      throw etatInvalide(
-        "Le téléchargement du calendrier scolaire n'est pas autorisé sur cette instance. "
-        + 'Un gérant peut l\'activer dans l\'Administration, Réglages, section « Général ». '
-        + 'En attendant, téléchargez le fichier vous-même et déposez-le ici.',
-      );
-    }
     let octets: Buffer;
     try {
       octets = await telecharger();

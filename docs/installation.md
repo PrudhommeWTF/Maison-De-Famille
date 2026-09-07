@@ -192,9 +192,11 @@ sans ouvrir de terminal. Il faut deux choses, et elles sont indépendantes :
    Il pose `/usr/local/sbin/maison-de-famille-maj.sh` et deux unités systemd.
    Sans lui, le bouton n'apparaît pas, parce qu'il ne mènerait à rien.
 
-2. **Le réglage** « Vérifier les nouvelles versions sur GitHub », dans Administration, Réglages,
-   section Exploitation. C'est un appel réseau sortant, donc il est éteint par
-   défaut et le serveur doit avoir le droit de sortir sur Internet.
+Il n'y a plus de second interrupteur : le service demande à GitHub s'il existe
+une version plus récente au démarrage, puis toutes les six heures, et affiche ce
+qu'il a vu. Un serveur sans sortie Internet le dit à l'écran au lieu de rester
+muet, et le bouton « Vérifier maintenant » sert à ne pas attendre le prochain
+passage.
 
 Le service **n'exécute jamais la mise à jour lui-même** : il écrit un fichier
 déclencheur dans son répertoire de données, et une unité systemd appartenant à

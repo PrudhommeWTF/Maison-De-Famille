@@ -1,5 +1,5 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 8
+-- Version du schéma : 9
 -- Régénérer : cd backend && npm run docs:schema
 
 CREATE TABLE acces_temporaire (

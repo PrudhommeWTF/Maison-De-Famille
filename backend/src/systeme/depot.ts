@@ -1,8 +1,7 @@
 // La dernière version publiée sur GitHub.
 //
-// **C'est le second appel réseau sortant de l'application**, avec le
-// téléchargement du calendrier scolaire. Comme lui, il est éteint par défaut,
-// et il obéit aux mêmes règles : un seul hôte, en dur, revérifié après
+// Comme le téléchargement du calendrier scolaire, cet appel obéit aux règles du
+// projet pour toute sortie réseau : un seul hôte, en dur, revérifié après
 // redirection, une temporisation courte, une taille plafonnée, et le transport
 // injecté pour que tout se teste sans réseau.
 //

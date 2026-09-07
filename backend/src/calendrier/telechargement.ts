@@ -1,11 +1,13 @@
 // Le téléchargement du calendrier scolaire officiel.
 //
-// **C'est le seul appel réseau sortant de l'application, en dehors du relais
-// SMTP.** Il n'existe que parce qu'un gérant l'a explicitement autorisé, et il
-// reste éteint tant que personne ne l'allume. Tout ce fichier est écrit pour
-// que cette phrase reste vraie et vérifiable.
+// Ces dates sont fixées par arrêté et ne se déduisent d'aucune règle : il faut
+// bien qu'elles entrent quelque part. Les faire recopier à la main une fois par
+// an était une corvée que personne ne pensait à faire avant de buter dessus.
 //
-// Cinq garde-fous, et chacun a sa raison :
+// L'appel est permis, mais **il reste enfermé**. Les cinq garde-fous ci-dessous
+// ne dépendent pas de l'interdiction qui a disparu : ils disent que ce module
+// ne peut joindre qu'un seul portail public, ne rapporte que des octets, et
+// n'écrit rien. Chacun a sa raison :
 //
 //   1. **Une seule adresse, en dur.** Aucun réglage ne permet de la changer :
 //      une URL configurable ferait de ce module un moyen d'exfiltration pour
@@ -16,8 +18,9 @@
 //      immobiliser une requête de la famille.
 //   4. **Une taille plafonnée.** On lit un calendrier scolaire, pas un flux.
 //   5. **Aucune écriture.** Ce module rend des octets. Ce qui les interprète et
-//      ce qui les enregistre sont deux étapes séparées, et l'enregistrement
-//      demande une confirmation humaine.
+//      ce qui les enregistre sont deux étapes séparées : voir `import.ts` pour
+//      la lecture, et `rafraichissement.ts` pour la seule écriture qui se passe
+//      d'un humain, bornée aux années absentes de la base.
 //
 // **Le transport est injecté** pour que tout cela se teste sans réseau. Les
 // tests passent un faux qui répond ce qu'ils veulent, y compris une redirection

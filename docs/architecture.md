@@ -344,8 +344,9 @@ page de connexion et l'écran d'accueil sont conçus pour être compris sans exp
 
 | Sujet | Conflit | Arbitrage |
 | --- | --- | --- |
-| Polices et icônes | La maquette charge Google Fonts et Bootstrap Icons depuis un CDN. « Aucun appel réseau sortant ». | Polices et icônes **embarquées dans le dépôt**. L'apparence est identique, la politique de sécurité de contenu devient stricte. |
-| Courriel | « Aucun appel réseau sortant » contre « le canal par défaut doit être le courriel ». | Vous avez déjà tranché : le SMTP que vous configurez est la seule sortie autorisée. Rien d'autre ne sort, jamais. |
+| Polices et icônes | La maquette charge Google Fonts et Bootstrap Icons depuis un CDN. « Aucun appel réseau sortant ». | Polices et icônes **embarquées dans le dépôt**. L'apparence est identique, la politique de sécurité de contenu reste stricte, et la levée de l'interdiction n'y change rien : elle vaut pour le serveur, pas pour la page. |
+| Courriel | « Aucun appel réseau sortant » contre « le canal par défaut doit être le courriel ». | Le SMTP que vous configurez a été la première sortie autorisée, longtemps la seule. |
+| Sorties réseau du serveur | L'interdiction rendait le calendrier scolaire manuel une fois par an et la version installée invérifiable. | Interdiction **levée**, garde-fous conservés : adresse en dur, hôte revérifié après redirection, temporisation, taille plafonnée, transport injecté. Trois adresses au total, aucune donnée sortante, et la seule écriture automatique n'ajoute que les années de vacances absentes. |
 | Rôle global | Le modèle suggéré porte `Personne(role_app)` unique, les données de la maquette montrent deux gérants différents. | Le rôle est porté par le rattachement à une structure ou à un bien. L'écran ne change pas. |
 | Table `Solde` | Le modèle suggéré la liste, en la marquant « dérivé ». | Pas de table. Le solde est calculé, donc toujours juste. |
 | `Depense(bien_id \| 'both')` | Valeur magique qui casse au troisième bien. | Table de jonction avec un poids. Comportement affiché identique. |

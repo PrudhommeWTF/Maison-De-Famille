@@ -380,18 +380,18 @@ Les plus utiles :
 
 ![La section des vacances scolaires](images/gerant-reglages-vacances.png)
 
-Les dates de vacances sont fixées par arrêté et ne se calculent pas. Elles se
-mettent à jour une fois par an, ici, en déposant le fichier officiel.
+Les dates de vacances sont fixées par arrêté et ne se calculent pas. **Le
+service va les chercher tout seul** sur data.education.gouv.fr quand l'année en
+cours ou la suivante manque : le plus souvent, vous n'avez rien à faire, et la
+colonne « Origine » du tableau dit ce qui est arrivé de cette façon.
 
-Par défaut, **l'application ne va pas le chercher en ligne** : c'est vous qui le
-téléchargez sur data.education.gouv.fr, et vous qui le déposez. Un réglage
-« Télécharger le calendrier scolaire » ajoute un bouton **Récupérer en ligne**
-qui s'en charge, au prix du seul appel réseau sortant de l'application. Il est
-éteint par défaut ; allumez-le si votre serveur a le droit de sortir sur
-Internet et que la commodité vous intéresse.
+Il ne touche jamais à une année déjà enregistrée. Vous reprenez donc la main
+dans deux cas : un arrêté modifie des dates déjà en base, ou votre serveur n'a
+pas le droit de sortir sur Internet.
 
-1. Cliquez sur **Déposer un calendrier** et choisissez le fichier, ou sur
-   **Récupérer en ligne** si vous avez activé le réglage.
+1. Cliquez sur **Déposer un calendrier** et choisissez le fichier que vous avez
+   téléchargé, ou sur **Récupérer maintenant** pour que le serveur aille le
+   chercher.
 2. Relisez l'aperçu.
 
 ![L'aperçu avant enregistrement](images/gerant-vacances-apercu.png)
@@ -479,15 +479,15 @@ vous dit lesquels et où.
 
 ![Une version disponible, et la confirmation par mot de passe](images/gerant-maj-disponible.png)
 
-**Vue d'ensemble** dit la version installée et va demander à GitHub s'il en
-existe une plus récente.
+**Vue d'ensemble** dit la version installée, et ce que le service a vu la
+dernière fois qu'il a demandé à GitHub. Il le demande de lui-même au démarrage
+puis toutes les six heures : l'information est là quand vous ouvrez l'écran, sans
+que vous ayez cliqué. « Vérifier maintenant » sert à ne pas attendre le prochain
+passage.
 
-Deux verrous commandent cette carte, et l'écran vous dit lequel manque :
-
-- la **vérification** est un appel réseau sortant, autorisée par un réglage dans
-  Administration, Réglages, section Exploitation ;
-- l'**installation** demande un assistant installé sur le serveur. S'il n'y est
-  pas, l'écran le dit et donne la commande qui le pose.
+**Regarder n'est pas installer.** Rien ne se met à jour tout seul, et
+l'installation depuis l'écran demande un assistant posé sur le serveur. S'il n'y
+est pas, l'écran le dit et donne la commande qui le pose.
 
 Si la version installée s'affiche comme **inconnue**, le service n'a pas su la
 déterminer. Toute comparaison est alors fausse, l'écran le dit et refuse de

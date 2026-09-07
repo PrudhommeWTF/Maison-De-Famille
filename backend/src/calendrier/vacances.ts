@@ -12,9 +12,9 @@
 // toujours : le découpage en zones, la notion d'année scolaire, et la façon de
 // lire un intervalle. Il ne sait pas d'où viennent les périodes.
 //
-// **L'application ne va rien chercher en ligne.** Le brief interdit tout appel
-// réseau sortant. C'est la famille qui télécharge le fichier officiel et le
-// dépose ; l'application ne le fait jamais à sa place.
+// **D'où viennent les périodes.** Du portail de l'Éducation nationale, que le
+// service va chercher lui-même quand l'année en cours manque, ou d'un fichier
+// déposé par la famille. Ce module ne le sait pas et n'a pas à le savoir.
 //
 // Source à vérifier à chaque mise à jour :
 // https://www.education.gouv.fr/le-calendrier-scolaire

@@ -117,8 +117,15 @@ export interface StatutMaj {
   ts?: number;
 }
 
-/** Ce que le serveur répond quand on lui demande s'il existe mieux. */
-export interface Maj {
+/**
+ * Ce que le serveur a vu la dernière fois qu'il a regardé GitHub.
+ *
+ * Le service regarde de lui-même toutes les six heures : l'écran affiche ce
+ * souvenir sans rien demander, et le bouton ne sert qu'à ne pas attendre le
+ * prochain passage.
+ */
+export interface Veille {
+  verifieLe: string;
   installee: string;
   derniere: string;
   tag: string;
@@ -129,20 +136,26 @@ export interface Maj {
   misAJourDisponible: boolean;
   /** Faux quand le serveur ne sait pas quelle version il exécute (« 0.0.0 »). */
   versionConnue: boolean;
+  /** Vide quand la dernière vérification a abouti. */
+  erreur: string;
+}
+
+/** La réponse d'une vérification demandée : la veille, plus ce qui dépend du serveur. */
+export interface Maj extends Veille {
   installationPossible: boolean;
 }
 
 export interface Etat {
   version: string;
   maj: {
-    /** Le réglage autorise-t-il l'appel à GitHub ? */
-    verificationAutorisee: boolean;
     /** L'assistant root est-il installé ? Sans lui, le bouton ne mènerait à rien. */
     installationPossible: boolean;
     /** Faux quand le serveur ne sait pas quelle version il exécute (« 0.0.0 »). */
     versionConnue: boolean;
     depot: string;
     statut: StatutMaj;
+    /** Ce que le service a vu tout seul, ou `null` avant son premier passage. */
+    veille: Veille | null;
   };
   schema: { applique: number; cible: number; migrations: { version: number; libelle: string; appliqueLe: string; dureeMs: number }[] };
   courriel: {

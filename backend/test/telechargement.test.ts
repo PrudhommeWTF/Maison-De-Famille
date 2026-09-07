@@ -1,10 +1,11 @@
-// Le seul appel réseau sortant de l'application.
+// Le téléchargement du calendrier scolaire, et ce qui l'encadre.
 //
-// Il n'existe que parce qu'un gérant l'a explicitement autorisé, et tout ce
-// fichier sert à ce que cette phrase reste vraie. Le transport est injecté :
-// ces tests ne touchent jamais Internet, et vérifient donc aussi les cas qu'on
-// ne sait pas provoquer en vrai (une redirection vers un autre domaine, un
-// fichier de dix mégaoctets, un portail muet).
+// L'interdiction de sortir sur le réseau a été levée, les garde-fous non : une
+// seule adresse, un hôte revérifié après redirection, une taille plafonnée, un
+// délai court. Tout ce fichier sert à ce que cette phrase reste vraie. Le
+// transport est injecté : ces tests ne touchent jamais Internet, et vérifient
+// donc aussi les cas qu'on ne sait pas provoquer en vrai (une redirection vers
+// un autre domaine, un fichier de dix mégaoctets, un portail muet).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -102,29 +103,24 @@ test('une réponse vide est refusée', async () => {
 // La route, et le garde-fou qui compte le plus : elle est éteinte par défaut.
 // ---------------------------------------------------------------------------
 
-test('le téléchargement est refusé tant que personne ne l\'a autorisé', async (t) => {
+test('les deux interrupteurs de sortie réseau ont disparu du registre', async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
   await amorcer(i);
 
-  const r = await i.post<{ message: string }>('/api/calendrier/vacances/telechargement', {});
-  assert.equal(r.statut, 422, JSON.stringify(r.corps));
-  assert.match(r.corps.message, /n'est pas autorisé sur cette instance/);
-  assert.match(r.corps.message, /Réglages/, 'le message doit dire où l\'activer');
-  assert.match(r.corps.message, /déposez-le ici/, 'et rappeler qu\'il existe une autre voie');
-
-  // Le réglage existe, il est éteint, et c'est la valeur livrée.
-  const p = await i.get<{ parametres: { cle: string; valeur: unknown; parDefaut: boolean }[] }>('/api/parametres');
-  const reglage = p.corps.parametres.find((x) => x.cle === 'vacancesTelechargement');
-  assert.equal(reglage?.valeur, false);
-  assert.equal(reglage?.parDefaut, true);
+  // Ils n'existaient que pour tenir une interdiction qui n'existe plus. Les
+  // laisser éteints par défaut aurait gardé le vrai défaut de l'époque : un
+  // bouton absent, sans que rien à l'écran dise pourquoi.
+  const p = await i.get<{ parametres: { cle: string }[] }>('/api/parametres');
+  const cles = p.corps.parametres.map((x) => x.cle);
+  assert.equal(cles.includes('vacancesTelechargement'), false);
+  assert.equal(cles.includes('majVerification'), false);
 });
 
-test('et il reste refusé à qui n\'est pas gérant, même une fois autorisé', async (t) => {
+test('le téléchargement reste refusé à qui n\'est pas gérant', async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
   const { bienId, structureId } = await amorcer(i);
-  await i.post('/api/parametres', { cle: 'vacancesTelechargement', valeur: true });
 
   const claire = await creerCompte(i, 'Claire Prudhomme', 'claire@exemple.fr');
   assert.equal((await i.post(`/api/structures/${structureId}/roles`,
@@ -135,14 +131,14 @@ test('et il reste refusé à qui n\'est pas gérant, même une fois autorisé', 
   assert.equal((await i.post('/api/calendrier/vacances/telechargement', {})).statut, 403);
 });
 
-test('autorisé, il ne fait toujours rien tout seul', async (t) => {
+test('ouvrir l\'application n\'écrit rien dans le calendrier', async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
   await amorcer(i);
-  await i.post('/api/parametres', { cle: 'vacancesTelechargement', valeur: true });
 
-  // Le réglage allumé ne déclenche rien : aucune écriture n'a lieu sans qu'un
-  // gérant demande le téléchargement, puis confirme l'aperçu.
+  // La route de téléchargement n'écrit jamais : elle rend un aperçu qu'il faut
+  // confirmer. Le seul chemin qui écrit sans humain est le rafraîchissement
+  // périodique, démarré par le service et non par la construction de l'app.
   const avant = i.db.prepare('SELECT COUNT(*) AS n FROM vacance_scolaire').get() as { n: number };
   assert.equal(avant.n, 15, 'la table livrée avec l\'application, et rien de plus');
 });

@@ -14,12 +14,12 @@ import { etatInvalide, invalide, refuse } from '../noyau/erreurs';
 import { log } from '../noyau/log';
 import { lire } from '../noyau/valider';
 import { verifier } from '../auth/mots-de-passe';
-import { parametre } from '../parametres/repo';
 import { etat } from '../notifications/file';
 import { orphelins } from '../stockage/fichiers';
-import { VerificationImpossible, depotParDefaut, derniereRelease } from './depot';
+import { VerificationImpossible, depotParDefaut } from './depot';
 import { declencher, enCours, statut } from './maj';
-import { estPlusRecente, versionConnue } from './versions';
+import { lireVeille, verifier as veiller } from './veille';
+import { versionConnue } from './versions';
 
 export function routesSysteme(deps: Deps): Routeur {
   const r = new Routeur('systeme', deps);
@@ -43,14 +43,14 @@ export function routesSysteme(deps: Deps): Routeur {
         file: etat(ctx.db),
       },
       maj: {
-        // Deux verrous distincts, et l'interface doit pouvoir dire lequel
-        // manque : le réglage autorise l'appel à GitHub, l'assistant root
-        // rend l'installation possible. L'un sans l'autre ne sert à rien.
-        verificationAutorisee: parametre<boolean>(ctx.db, 'majVerification'),
+        // Le service regarde de lui-même : l'écran affiche ce qu'il a vu sans
+        // qu'on lui demande. Reste le seul verrou qui compte encore, l'assistant
+        // root, sans lequel le bouton d'installation ne mènerait à rien.
         installationPossible: ctx.config.majAuto,
         versionConnue: versionConnue(ctx.config.version),
         depot: depotParDefaut(),
         statut: statut(ctx.config.dataDir),
+        veille: lireVeille(ctx.config.dataDir),
       },
       donnees: {
         repertoire: ctx.config.dataDir,
@@ -64,37 +64,16 @@ export function routesSysteme(deps: Deps): Routeur {
   });
 
   /**
-   * Y a-t-il une version plus récente ?
+   * Y a-t-il une version plus récente, maintenant ?
    *
-   * Rien n'est installé ici, et rien ne part tout seul : la vérification a lieu
-   * quand un gérant la demande, et seulement si le réglage l'autorise.
+   * Le service regarde déjà tout seul et garde ce qu'il a vu ; ce bouton sert à
+   * ne pas attendre le prochain passage. Les deux chemins passent par la même
+   * fonction, sinon l'un des deux finirait par répondre autre chose que l'autre.
+   * Rien n'est installé ici.
    */
   r.post('/systeme/maj/verification', { acces: 'gerant' }, async (ctx) => {
-    if (!parametre<boolean>(ctx.db, 'majVerification')) {
-      throw etatInvalide(
-        "La vérification des versions n'est pas autorisée sur cette instance. "
-        + 'Un gérant peut l\'activer dans l\'Administration, Réglages, section « Exploitation ».',
-      );
-    }
-    const installee = ctx.config.version;
     try {
-      const release = await derniereRelease();
-      return {
-        installee,
-        derniere: release.tag.replace(/^v/i, ''),
-        tag: release.tag,
-        nom: release.nom,
-        notes: release.notes,
-        url: release.url,
-        publieeLe: release.publieeLe,
-        // Une version installée inconnue ne permet aucune comparaison. On
-        // propose quand même, sinon les instances déjà posées avec cette
-        // version fantôme resteraient enfermées ; l'interface, elle, dit qu'elle
-        // ne sait pas plutôt que d'afficher « 0.0.0 ».
-        misAJourDisponible: !versionConnue(installee) || estPlusRecente(release.tag, installee),
-        versionConnue: versionConnue(installee),
-        installationPossible: ctx.config.majAuto,
-      };
+      return { ...await veiller(ctx.config.dataDir, ctx.config.version), installationPossible: ctx.config.majAuto };
     } catch (e) {
       if (e instanceof VerificationImpossible) {
         log.attention(`Vérification des versions impossible : ${e.message}`, e.cause);
@@ -107,10 +86,10 @@ export function routesSysteme(deps: Deps): Routeur {
   r.get('/systeme/maj', { acces: 'gerant' }, (ctx) => ({
     installee: ctx.config.version,
     versionConnue: versionConnue(ctx.config.version),
-    verificationAutorisee: parametre<boolean>(ctx.db, 'majVerification'),
     installationPossible: ctx.config.majAuto,
     depot: depotParDefaut(),
     statut: statut(ctx.config.dataDir),
+    veille: lireVeille(ctx.config.dataDir),
   }));
 
   /**

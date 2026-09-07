@@ -6,10 +6,10 @@
 // toucher au code pour que février s'affiche : elle téléverse le fichier de
 // l'Éducation nationale depuis l'écran Réglages, et c'est fini.
 //
-// **L'application ne va toujours rien chercher en ligne.** Le brief interdit
-// tout appel réseau sortant, et cette règle ne se contourne pas pour un confort
-// d'affichage : c'est la famille qui télécharge le fichier officiel et qui le
-// dépose. Rien dans cette table n'arrive autrement.
+// **Cette graine est un point de départ, pas la source.** Elle porte l'année
+// qui vivait dans le code au moment de la migration, pour qu'une instance
+// fraîche ne s'ouvre pas sur un calendrier muet. La suite arrive par le fichier
+// officiel, déposé ou téléchargé.
 //
 // **Une ligne par zone, même quand les trois partagent les mêmes dates.** La
 // Toussaint est nationale, mais la stocker une fois avec « zone : toutes »

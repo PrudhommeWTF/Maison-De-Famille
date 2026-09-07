@@ -21,12 +21,10 @@ ferait rater un jour de travail.
 Elles ne se déduisent de rien. Elles sont fixées par arrêté ministériel, et
 l'ordre des zones tourne d'une année sur l'autre. Aucune formule ne les donne.
 
-Par défaut, l'application **ne va pas les chercher en ligne** : c'est vous qui
-téléchargez le fichier officiel, et vous qui le déposez. C'est le mode livré, et
-c'est celui qui garde l'instance entièrement muette vis-à-vis d'Internet.
-
-Un réglage permet de changer cela, en connaissance de cause : voir
-[Récupérer en ligne](#récupérer-en-ligne-facultatif) plus bas.
+L'application **va les chercher elle-même** sur le portail de l'Éducation
+nationale quand une année attendue manque, et sinon ne sort pas. Le dépôt d'un
+fichier reste possible et reste nécessaire sur un serveur sans accès à Internet :
+voir [Le rafraîchissement automatique](#le-rafraîchissement-automatique) plus bas.
 
 La table vit en base, dans `vacance_scolaire`, et se met à jour depuis l'écran
 **Administration**, section « Vacances scolaires ». Toucher au code n'est plus
@@ -48,27 +46,42 @@ remplacées, et quelles lignes ont été écartées avec leur raison.
 Un import **remplace les années qu'il apporte** et ne touche à aucune autre :
 déposer un fichier 2027-2028 ne fait rien perdre de 2026-2027.
 
-### Récupérer en ligne, facultatif
+### Le rafraîchissement automatique
 
-Le réglage **« Télécharger le calendrier scolaire »**, dans Administration, Réglages, section
-Général, ajoute un bouton **Récupérer en ligne** à côté de « Déposer un
-calendrier ». Il évite d'aller chercher le fichier soi-même une fois par an.
+Le service va chercher le fichier officiel **tout seul**, au démarrage puis
+toutes les six heures, et seulement si une année attendue manque. Les années
+attendues sont celle en cours et la suivante : une famille arrête les dates de
+son été en janvier.
 
-Il est **éteint par défaut**, et il faut savoir ce qu'on allume :
+**C'est la seule écriture de l'application que personne ne demande, et elle est
+bornée :**
 
-- c'est le **seul appel réseau sortant** de l'application en dehors du relais de
-  courriel, donc le conteneur doit avoir le droit de sortir sur Internet ;
-- l'instance **signale son existence** au portail à chaque récupération ;
-- si le portail change d'adresse ou de format, le bouton cesse de fonctionner, et
-  il faudra revenir au dépôt manuel en attendant une mise à jour.
+- elle n'ajoute que les années **absentes** de la base ;
+- elle ne réécrit **jamais** une année déjà enregistrée, même si le portail la
+  publie autrement. Ce qu'un gérant a relu et validé reste tel quel ;
+- l'origine est écrite en clair dans la table de l'écran, sans nom de personne :
+  on voit d'un coup d'oeil ce qui est arrivé tout seul.
 
-Ce que le réglage ne change pas :
+Si rien n'arrive, c'est que le portail ne publie pas encore l'année demandée, ou
+que ce serveur ne sort pas sur Internet. Le journal le dit une fois, pas quatre
+fois par jour, et l'écran continue d'annoncer l'année manquante. Le dépôt manuel
+reste toujours possible.
+
+### Récupérer maintenant
+
+Le bouton **Récupérer maintenant**, à côté de « Déposer un calendrier », fait ce
+que le rafraîchissement automatique ne fera jamais : rapporter une année **déjà
+en base** pour la remplacer, par exemple quand un arrêté modifie des dates
+publiées. Il remplit le même aperçu qu'un dépôt de fichier, et **rien n'est
+enregistré sans confirmation.**
+
+Les garde-fous valent pour les deux chemins :
 
 - l'adresse est **en dur dans le code**, aucun réglage ne permet de la changer ;
 - l'hôte est **revérifié après les redirections** ;
 - la réponse est plafonnée à 8 Mo et abandonnée au bout de 20 secondes ;
-- **rien n'est enregistré sans confirmation.** Le bouton remplit le même aperçu
-  que le dépôt d'un fichier, et il faut toujours cliquer sur « Enregistrer ».
+- l'instance **signale son existence** au portail à chaque récupération, et rien
+  d'autre : aucune donnée de la famille ne part.
 
 Le navigateur, lui, ne parle jamais au portail : c'est le serveur qui va
 chercher le fichier, et la politique de sécurité de contenu reste fermée.

@@ -21,6 +21,7 @@ import {
   FICHIER_DECLENCHEUR, FICHIER_ETAT, declencher, enCours, statut,
 } from '../src/systeme/maj';
 import { Transport, VerificationImpossible, derniereRelease, depotParDefaut } from '../src/systeme/depot';
+import { FICHIER_VEILLE, lireVeille, verifier as veiller } from '../src/systeme/veille';
 import { MOT_DE_PASSE, amorcer, creerCompte, demarrer } from './aide';
 
 // ---------------------------------------------------------------------------
@@ -181,6 +182,56 @@ test('une limite de débit est distinguée d\'une panne', async () => {
 });
 
 // ---------------------------------------------------------------------------
+// La veille : le service regarde tout seul, et se souvient de ce qu'il a vu.
+// ---------------------------------------------------------------------------
+
+const dossierTemporaire = (prefixe: string): string =>
+  fs.mkdtempSync(path.join(process.env.TMPDIR || '/tmp', prefixe));
+
+test('la veille garde ce que GitHub a répondu', async () => {
+  const dossier = dossierTemporaire('mdf-veille-');
+  assert.equal(lireVeille(dossier), null, 'avant le premier regard, on ne prétend rien');
+
+  const t = faux([{ corps: JSON.stringify({ tag_name: 'v0.0.9', name: 'Neuf', body: 'Des notes.' }) }]);
+  const v = await veiller(dossier, '0.0.5', t, {});
+  assert.equal(v.misAJourDisponible, true);
+  assert.equal(v.erreur, '');
+
+  // Et le souvenir survit au redémarrage : l'écran a quelque chose à dire tout
+  // de suite, sans attendre le premier passage du service.
+  const relu = lireVeille(dossier);
+  assert.equal(relu?.tag, 'v0.0.9');
+  assert.equal(relu?.derniere, '0.0.9');
+  assert.equal(relu?.versionConnue, true);
+  assert.ok(fs.existsSync(path.join(dossier, FICHIER_VEILLE)));
+});
+
+test('une panne de réseau ne fait pas oublier ce qu\'on savait', async () => {
+  const dossier = dossierTemporaire('mdf-veille-');
+  await veiller(dossier, '0.0.5', faux([{ corps: '{"tag_name":"v0.0.9"}' }]), {});
+
+  const e = await erreurDe(() => veiller(dossier, '0.0.5', faux([{ status: 403, corps: '{}' }]), {}));
+  assert.ok(e instanceof VerificationImpossible);
+
+  const v = lireVeille(dossier);
+  assert.equal(v?.tag, 'v0.0.9', 'la dernière version connue reste affichable');
+  assert.match(String(v?.erreur), /limite de débit ou pare-feu/);
+});
+
+test('une version installée inconnue est dite, pas comparée', async () => {
+  const dossier = dossierTemporaire('mdf-veille-');
+  const v = await veiller(dossier, '0.0.0', faux([{ corps: '{"tag_name":"v0.0.9"}' }]), {});
+  assert.equal(v.versionConnue, false);
+  assert.equal(v.misAJourDisponible, true, 'sinon une instance fantôme resterait enfermée');
+});
+
+test('un fichier de veille abîmé vaut « on n\'a pas regardé »', () => {
+  const dossier = dossierTemporaire('mdf-veille-');
+  fs.writeFileSync(path.join(dossier, FICHIER_VEILLE), '{ ceci n\'est pas du json');
+  assert.equal(lireVeille(dossier), null);
+});
+
+// ---------------------------------------------------------------------------
 // Le déclenchement : deux fichiers, et rien d'autre.
 // ---------------------------------------------------------------------------
 
@@ -211,15 +262,18 @@ test('un fichier d\'état illisible vaut « rien en cours »', () => {
 // Les routes.
 // ---------------------------------------------------------------------------
 
-test('la vérification est refusée tant que personne ne l\'a autorisée', async (t) => {
+test('la vérification reste réservée au gérant', async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
-  await amorcer(i);
+  const { structureId } = await amorcer(i);
 
-  const r = await i.post<{ message: string }>('/api/systeme/maj/verification', {});
-  assert.equal(r.statut, 422, JSON.stringify(r.corps));
-  assert.match(r.corps.message, /n'est pas autorisée sur cette instance/);
-  assert.match(r.corps.message, /Exploitation/, 'le message doit dire où l\'activer');
+  // Plus aucun réglage ne commande cet appel : ce qui l'encadre encore, c'est
+  // le rôle. Le refus tombe avant le handler, donc sans toucher au réseau.
+  const claire = await creerCompte(i, 'Claire Prudhomme', 'claire@exemple.fr');
+  assert.equal((await i.post(`/api/structures/${structureId}/roles`,
+    { personneId: claire, role: 'membre_foyer' })).statut, 204);
+  await i.connexion('claire@exemple.fr', MOT_DE_PASSE);
+  assert.equal((await i.post('/api/systeme/maj/verification', {})).statut, 403);
 });
 
 test('sans assistant root, le bouton d\'installation n\'existe pas', async (t) => {
@@ -227,9 +281,11 @@ test('sans assistant root, le bouton d\'installation n\'existe pas', async (t) =
   t.after(() => i.fermer());
   await amorcer(i);
 
-  const etat = await i.get<{ maj: { installationPossible: boolean; verificationAutorisee: boolean } }>('/api/etat');
+  const etat = await i.get<{ maj: { installationPossible: boolean; veille: unknown } }>('/api/etat');
   assert.equal(etat.corps.maj.installationPossible, false);
-  assert.equal(etat.corps.maj.verificationAutorisee, false);
+  // Avant le premier passage de la veille, l'écran n'a rien à dire, et il le
+  // dit : « null » n'est pas « vous êtes à jour ».
+  assert.equal(etat.corps.maj.veille, null);
 
   const r = await i.post<{ message: string }>('/api/systeme/maj', { motDePasse: MOT_DE_PASSE });
   assert.equal(r.statut, 422, JSON.stringify(r.corps));

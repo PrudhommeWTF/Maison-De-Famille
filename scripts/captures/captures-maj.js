@@ -25,6 +25,9 @@ const MAJ = {
   // afficher « version installée inconnue » sur une instance qui la connaît
   // très bien, et la capture mentirait sur le comportement réel.
   misAJourDisponible: true, versionConnue: true, installationPossible: true,
+  // La veille horodate ce qu'elle a vu : sans cette date, la capture perdrait
+  // la ligne qui dit que le service regarde de lui-même.
+  verifieLe: '2026-09-06T20:12:00.000Z', erreur: '',
 };
 
 (async () => {
@@ -38,19 +41,13 @@ const MAJ = {
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1400);
 
-  // Le réglage se pose par l'interface, comme un gérant le ferait.
-  await page.goto(`${RACINE}/administration/reglages`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(900);
-  await page.locator('#r-majVerification').check();
-  await page.waitForTimeout(900);
-
   // La seule simulation : ce que la vérification rend.
   await page.route('**/api/systeme/maj/verification', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MAJ) }));
 
   await page.goto(`${RACINE}/administration`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(900);
-  await page.getByRole('button', { name: /Vérifier les mises à jour/ }).click();
+  await page.getByRole('button', { name: /Vérifier maintenant/ }).click();
   await page.waitForTimeout(1200);
   // Aucun défilement avant la photo : une capture pleine page pose les barres
   // collantes là où le défilement les a laissées, et `window.scrollTo` ne

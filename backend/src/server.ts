@@ -32,7 +32,9 @@ import { routesParametres } from './parametres/routes';
 import { routesFichiers } from './stockage/routes';
 import { routesExport } from './export/routes';
 import { routesCalendrier } from './calendrier/routes';
+import { demarrerRafraichissementVacances } from './calendrier/rafraichissement';
 import { routesSysteme } from './systeme/routes';
+import { demarrerVeilleVersions } from './systeme/veille';
 
 export function construireApp(deps: Deps): express.Express {
   const app = express();
@@ -45,9 +47,11 @@ export function construireApp(deps: Deps): express.Express {
   app.disable('x-powered-by');
 
   app.use(helmet({
-    // La politique peut être stricte parce que l'application ne charge rien de
+    // La politique peut être stricte parce que **la page** ne charge rien de
     // l'extérieur : les polices et les icônes sont dans le dépôt, il n'y a aucun
-    // CDN, et aucun appel réseau sortant en dehors du relais SMTP.
+    // CDN. Ce que le service joint depuis le serveur (relais SMTP, portail du
+    // calendrier scolaire, GitHub) ne passe pas par le navigateur et ne desserre
+    // donc rien ici.
     contentSecurityPolicy: {
       directives: {
         // `upgrade-insecure-requests` vient des défauts de helmet, qui les
@@ -158,6 +162,11 @@ function demarrer(): void {
   const app = construireApp(deps);
   const arreterOrdonnanceur = demarrerOrdonnanceur(db, config);
   const arreterEntretien = demarrerEntretien(db, config);
+  // Les deux tâches qui sortent sur le réseau. Elles regardent, elles
+  // n'installent rien : le calendrier ne complète que les années absentes, et
+  // une version publiée reste à installer à la main, mot de passe compris.
+  const arreterVacances = demarrerRafraichissementVacances(db);
+  const arreterVeille = demarrerVeilleVersions(config.dataDir, config.version);
 
   const serveur = app.listen(config.port, config.host, () => {
     log.info(`Maison de Famille ${config.version} écoute sur ${config.host}:${config.port}.`);
@@ -174,6 +183,8 @@ function demarrer(): void {
     log.info(`${signal} reçu, arrêt en cours.`);
     arreterOrdonnanceur();
     arreterEntretien();
+    arreterVacances();
+    arreterVeille();
     serveur.close(() => { db.close(); process.exit(0); });
     // Si une connexion pend, on ne reste pas bloqué indéfiniment.
     setTimeout(() => { db.close(); process.exit(0); }, 10_000).unref();
