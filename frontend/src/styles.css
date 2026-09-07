@@ -8,12 +8,14 @@
  * l'application ne fait aucun appel réseau sortant, et c'est ce qui permet une
  * politique de sécurité de contenu stricte côté serveur. */
 
-@import '@fontsource/bricolage-grotesque/400.css';
-@import '@fontsource/bricolage-grotesque/500.css';
-@import '@fontsource/instrument-sans/400.css';
-@import '@fontsource/instrument-sans/500.css';
-@import '@fontsource/instrument-sans/600.css';
-@import 'bootstrap-icons/font/bootstrap-icons.css';
+/* TRANSITION VERS BOOTSTRAP. Ce fichier est l'ancien système de design, gardé
+ * le temps que les écrans passent un à un aux composants Bootstrap. Il est
+ * chargé APRÈS `styles.scss`, donc il gagne partout où les deux se croisent, et
+ * l'application reste identique à elle-même sur les écrans pas encore repris.
+ *
+ * Il rétrécit à chaque écran converti, et disparaît avec le dernier. Les
+ * polices et les icônes sont désormais déclarées dans `angular.json`.
+ */
 
 :root {
   --fond-app: #f2ede5;
