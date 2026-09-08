@@ -181,6 +181,32 @@ else
   sed -i "s#^MDF_STATIC_DIR=.*#MDF_STATIC_DIR=${APP_DIR}/frontend/dist/frontend/browser#" "${ENV_FILE}"
 fi
 
+# --- Version déployée ---
+#
+# Sans cette ligne, le service retombe sur le « 0.0.0 » du package.json, se croit
+# éternellement en retard, et propose de se mettre à jour vers la version qu'il
+# exécute déjà. C'est arrivé sur une installation fraîche depuis le tag 0.0.5.
+#
+# Le tag exact d'abord (installation depuis une version publiée), le package.json
+# ensuite (installation depuis une branche). Écrit à chaque passage, même sur une
+# configuration existante : c'est le seul endroit qui sait ce qui vient d'être
+# posé, et maj.sh réécrira la ligne à la prochaine mise à jour.
+VERSION="$(git -C "${MDF_SRC}" describe --tags --exact-match 2>/dev/null || true)"
+if [[ -z "${VERSION}" ]]; then
+  VERSION="$(node -p "require('${MDF_SRC}/backend/package.json').version" 2>/dev/null || true)"
+fi
+VERSION="${VERSION#v}"
+if [[ -n "${VERSION}" && "${VERSION}" != "0.0.0" ]]; then
+  if grep -q '^MDF_VERSION=' "${ENV_FILE}"; then
+    sed -i "s|^MDF_VERSION=.*|MDF_VERSION=${VERSION}|" "${ENV_FILE}"
+  else
+    echo "MDF_VERSION=${VERSION}" >> "${ENV_FILE}"
+  fi
+  log "Version déployée : ${VERSION}"
+else
+  err "Version indéterminable : le service l'affichera comme inconnue."
+fi
+
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "${DATA_DIR}"
 chown -R root:root "${APP_DIR}"
 

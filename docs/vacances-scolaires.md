@@ -29,7 +29,7 @@ Un réglage permet de changer cela, en connaissance de cause : voir
 [Récupérer en ligne](#récupérer-en-ligne-facultatif) plus bas.
 
 La table vit en base, dans `vacance_scolaire`, et se met à jour depuis l'écran
-**Réglages**, section « Vacances scolaires ». Toucher au code n'est plus
+**Administration**, section « Vacances scolaires ». Toucher au code n'est plus
 nécessaire. L'installation part avec l'année 2025-2026 déjà renseignée.
 
 ### Mettre à jour, une fois par an
@@ -37,7 +37,7 @@ nécessaire. L'installation part avec l'année 2025-2026 déjà renseignée.
 1. Télécharger le calendrier scolaire sur
    <https://data.education.gouv.fr/explore/dataset/fr-en-calendrier-scolaire/export/>,
    au format CSV. Le fichier couvre plusieurs années d'un coup.
-2. Ouvrir **Réglages**, section « Vacances scolaires », puis « Déposer un
+2. Ouvrir **Administration**, section « Vacances scolaires », puis « Déposer un
    calendrier ».
 3. Relire l'aperçu, et seulement alors enregistrer.
 
@@ -50,7 +50,7 @@ déposer un fichier 2027-2028 ne fait rien perdre de 2026-2027.
 
 ### Récupérer en ligne, facultatif
 
-Le réglage **« Télécharger le calendrier scolaire »**, dans Réglages, section
+Le réglage **« Télécharger le calendrier scolaire »**, dans Administration, Réglages, section
 Général, ajoute un bouton **Récupérer en ligne** à côté de « Déposer un
 calendrier ». Il évite d'aller chercher le fichier soi-même une fois par an.
 

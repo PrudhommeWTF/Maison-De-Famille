@@ -91,7 +91,7 @@ code.
 - [ ] **Le lendemain du départ : il ne l'est plus**, et le refus explique
       pourquoi au lieu de prétendre que le code n'existe pas
 
-La fenêtre se règle dans **Réglages**, section Sécurité : « Jours d'avance sur
+La fenêtre se règle dans **Administration**, Réglages, section Sécurité : « Jours d'avance sur
 un code de séjour » et « Jours de grâce après un départ ». Le second vaut zéro
 par défaut, et c'est le point.
 

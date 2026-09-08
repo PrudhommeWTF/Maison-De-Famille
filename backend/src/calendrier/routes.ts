@@ -108,7 +108,7 @@ export function routesCalendrier(deps: Deps): Routeur {
     if (!parametre<boolean>(ctx.db, 'vacancesTelechargement')) {
       throw etatInvalide(
         "Le téléchargement du calendrier scolaire n'est pas autorisé sur cette instance. "
-        + 'Un gérant peut l\'activer dans les Réglages, section « Général ». '
+        + 'Un gérant peut l\'activer dans l\'Administration, Réglages, section « Général ». '
         + 'En attendant, téléchargez le fichier vous-même et déposez-le ici.',
       );
     }

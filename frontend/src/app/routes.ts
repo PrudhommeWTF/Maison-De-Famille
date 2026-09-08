@@ -97,9 +97,24 @@ export const ROUTES: Routes = [
         ],
       },
       { path: 'personnes', canActivate: [gerant], loadComponent: () => import('./ecrans/personnes').then((m) => m.Personnes), title: 'Personnes et rôles' },
-      { path: 'reglages', canActivate: [gerant], loadComponent: () => import('./ecrans/reglages').then((m) => m.Reglages), title: 'Réglages' },
       { path: 'import', canActivate: [gerant], loadComponent: () => import('./ecrans/import').then((m) => m.Import), title: 'Import du planning' },
-      { path: 'etat', canActivate: [gerant], loadComponent: () => import('./ecrans/etat').then((m) => m.EtatSysteme), title: 'État du service' },
+      {
+        path: 'administration', canActivate: [gerant],
+        loadComponent: () => import('./ecrans/administration').then((m) => m.Administration),
+        children: [
+          { path: '', loadComponent: () => import('./ecrans/administration/apercu').then((m) => m.AdministrationApercu), title: 'Administration' },
+          { path: 'reglages', loadComponent: () => import('./ecrans/administration/reglages').then((m) => m.AdministrationReglages), title: 'Réglages' },
+          { path: 'vacances', loadComponent: () => import('./ecrans/administration/vacances').then((m) => m.AdministrationVacances), title: 'Vacances scolaires' },
+          { path: 'courriel', loadComponent: () => import('./ecrans/administration/courriel').then((m) => m.AdministrationCourriel), title: 'Courriel' },
+          { path: 'donnees', loadComponent: () => import('./ecrans/administration/donnees').then((m) => m.AdministrationDonnees), title: 'Données' },
+          { path: 'serveur', loadComponent: () => import('./ecrans/administration/serveur').then((m) => m.AdministrationServeur), title: 'Serveur' },
+        ],
+      },
+      // Les deux anciennes adresses vivent encore dans des favoris, dans les
+      // guides imprimés, et dans les courriels déjà partis. Elles mènent
+      // désormais à la section qui a repris leur contenu.
+      { path: 'reglages', redirectTo: 'administration/reglages' },
+      { path: 'etat', redirectTo: 'administration' },
       { path: '**', redirectTo: '' },
     ],
   },

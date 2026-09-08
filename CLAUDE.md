@@ -115,6 +115,22 @@ gestion de biens familiaux. À lire avant toute modification.
 - **Messages de commit en français** : une ligne à l'impératif, puis un corps
   qui explique le **quoi et le pourquoi**.
 
+## Publier une version
+
+La version affichée par le service vient de `MDF_VERSION` (écrit par
+`install.sh` et `maj.sh`), et à défaut de `backend/package.json`. **Un
+`package.json` resté à `0.0.0` fait croire au service qu'il est éternellement en
+retard**, et lui fait proposer une mise à jour vers la version qu'il exécute
+déjà. C'est arrivé sur le tag 0.0.5, et un test l'interdit désormais.
+
+Avant de poser un tag :
+
+1. porter la même version dans les **trois** `package.json` (racine, `backend`,
+   `frontend`) ;
+2. `cd backend && npm test` : le test « la version du dépôt est publiable »
+   refuse `0.0.0` et refuse que les trois divergent ;
+3. commiter, puis taguer avec **exactement** cette version.
+
 ## Vérification
 
 ```bash

@@ -134,7 +134,7 @@ Interrupteur général. Désactivé, les notifications continuent d'être enregi
 - **Par défaut** : `5`
 - **Bornes** : de 1 à 20
 
-Nombre d'essais d'envoi avant qu'une notification soit marquée abandonnée. Chaque échec double l'attente avant l'essai suivant. Une notification abandonnée reste visible dans l'écran d'état, avec l'erreur exacte du relais.
+Nombre d'essais d'envoi avant qu'une notification soit marquée abandonnée. Chaque échec double l'attente avant l'essai suivant. Une notification abandonnée reste visible dans l'Administration, section « Courriel », avec l'erreur exacte du relais.
 
 ## Fichiers
 
@@ -159,7 +159,7 @@ Journalisation et diagnostic.
 - **Portée** : Instance
 - **Par défaut** : Non
 
-Ajoute à l'écran « État du service » un bouton qui demande à GitHub s'il existe une version plus récente. C'est un appel réseau sortant : il faut que ce serveur ait le droit de sortir sur Internet. Rien ne s'installe tout seul, et l'installation demande en plus votre mot de passe.
+Ajoute à l'Administration, section « Vue d'ensemble », un bouton qui demande à GitHub s'il existe une version plus récente. C'est un appel réseau sortant : il faut que ce serveur ait le droit de sortir sur Internet. Rien ne s'installe tout seul, et l'installation demande en plus votre mot de passe.
 
 ### Niveau de journalisation
 

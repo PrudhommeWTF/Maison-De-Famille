@@ -10,7 +10,13 @@ bootstrapApplication(Racine, {
     // détection de changement suit les signals. C'est plus rapide et plus
     // prévisible qu'une détection déclenchée par chaque minuterie du navigateur.
     provideZonelessChangeDetection(),
-    provideRouter(ROUTES, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+    // `anchorScrolling` : « Activer dans les Réglages », depuis la vue
+    // d'ensemble de l'administration, vise la section Exploitation par son
+    // ancre. Sans cette option, le lien ouvre la page en haut et laisse
+    // chercher.
+    provideRouter(ROUTES, withInMemoryScrolling({
+      scrollPositionRestoration: 'top', anchorScrolling: 'enabled',
+    })),
   ],
 }).catch((e) => {
   // Une panne au démarrage laisserait une page blanche sans explication : mieux

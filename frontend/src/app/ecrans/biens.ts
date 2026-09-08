@@ -138,7 +138,7 @@ const MODES = [
                       <strong>Retirer ce bien l'archive, cela n'efface rien.</strong>
                       Les séjours, les documents et l'historique restent consultables en lecture seule,
                       et vous pouvez le réactiver à tout moment. Pour supprimer définitivement, exportez
-                      d'abord l'instance depuis l'écran d'état.
+                      d'abord l'instance depuis l'Administration, section Données.
                     </p>
                     <div class="d-flex gap-2">
                       <button class="btn btn-sm btn-primary flex-fill" (click)="archiver(b, true)"

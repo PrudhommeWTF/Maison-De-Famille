@@ -1,6 +1,6 @@
 {
   "name": "mdf-backend",
-  "version": "0.0.0",
+  "version": "0.0.5",
   "description": "Maison de Famille, API (Express + SQLite relationnel)",
   "license": "MIT",
   "type": "commonjs",

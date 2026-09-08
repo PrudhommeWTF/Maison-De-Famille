@@ -127,6 +127,8 @@ export interface Maj {
   url: string;
   publieeLe: string;
   misAJourDisponible: boolean;
+  /** Faux quand le serveur ne sait pas quelle version il exécute (« 0.0.0 »). */
+  versionConnue: boolean;
   installationPossible: boolean;
 }
 
@@ -137,6 +139,8 @@ export interface Etat {
     verificationAutorisee: boolean;
     /** L'assistant root est-il installé ? Sans lui, le bouton ne mènerait à rien. */
     installationPossible: boolean;
+    /** Faux quand le serveur ne sait pas quelle version il exécute (« 0.0.0 »). */
+    versionConnue: boolean;
     depot: string;
     statut: StatutMaj;
   };

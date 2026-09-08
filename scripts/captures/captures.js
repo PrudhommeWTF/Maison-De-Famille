@@ -100,9 +100,14 @@ async function cliquer(selecteur, quoi) {
   await aller('/biens');
   await capture('gerant-biens');
 
-  await aller('/reglages');
+  await aller('/administration');
+  await capture('gerant-administration', { full: true });
+
+  await aller('/administration/reglages');
   await capture('gerant-reglages', { full: true });
-  await capture('gerant-reglages-vacances', { scrollTo: 'h2:has-text("Vacances scolaires")' });
+
+  await aller('/administration/vacances');
+  await capture('gerant-reglages-vacances');
   if (FICHIER_VACANCES) {
     await page.setInputFiles('input[type=file][accept*=csv]', FICHIER_VACANCES);
     await page.waitForSelector('h3:has-text("Ce qui a été lu")', { timeout: 15000 })
@@ -111,15 +116,15 @@ async function cliquer(selecteur, quoi) {
     await capture('gerant-vacances-apercu', { scrollTo: 'h3:has-text("Ce qui a été lu")' });
     if (await cliquer('button:has-text("Enregistrer ces")', 'bouton enregistrer les vacances')) {
       await attendre(900);
-      await capture('gerant-vacances-enregistre', { scrollTo: 'h2:has-text("Vacances scolaires")' });
+      await capture('gerant-vacances-enregistre');
     }
   }
 
+  await aller('/administration/courriel');
+  await capture('gerant-administration-courriel', { full: true });
+
   await aller('/import');
   await capture('gerant-import-planning');
-
-  await aller('/etat');
-  await capture('gerant-etat', { full: true });
 
   await aller('/');
   await ouvrirBien("Maison de Kerloc'h");

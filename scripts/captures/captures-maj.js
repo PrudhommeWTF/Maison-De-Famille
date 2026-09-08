@@ -21,7 +21,10 @@ const MAJ = {
     + '- Correction : le calendrier ne servait plus de page blanche après une mise à jour',
   url: 'https://github.com/PrudhommeWTF/Maison-De-Famille/releases/tag/v0.1.0',
   publieeLe: '2026-09-01T10:00:00Z',
-  misAJourDisponible: true, installationPossible: true,
+  // `versionConnue` fait partie de la réponse du serveur : l'omettre ferait
+  // afficher « version installée inconnue » sur une instance qui la connaît
+  // très bien, et la capture mentirait sur le comportement réel.
+  misAJourDisponible: true, versionConnue: true, installationPossible: true,
 };
 
 (async () => {
@@ -36,7 +39,7 @@ const MAJ = {
   await page.waitForTimeout(1400);
 
   // Le réglage se pose par l'interface, comme un gérant le ferait.
-  await page.goto(`${RACINE}/reglages`, { waitUntil: 'networkidle' });
+  await page.goto(`${RACINE}/administration/reglages`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(900);
   await page.locator('#r-majVerification').check();
   await page.waitForTimeout(900);
@@ -45,7 +48,7 @@ const MAJ = {
   await page.route('**/api/systeme/maj/verification', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MAJ) }));
 
-  await page.goto(`${RACINE}/etat`, { waitUntil: 'networkidle' });
+  await page.goto(`${RACINE}/administration`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(900);
   await page.getByRole('button', { name: /Vérifier les mises à jour/ }).click();
   await page.waitForTimeout(1200);
