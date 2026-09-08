@@ -13,7 +13,8 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api, ErreurAppel } from '../../core/api';
-import type { Etat as EtatModele, Maj, StatutMaj } from '../../core/modeles';
+import { horodatageLisible } from '../../core/format';
+import type { Etat as EtatModele, StatutMaj, Veille } from '../../core/modeles';
 
 @Component({
   selector: 'app-administration-apercu',
@@ -98,22 +99,11 @@ import type { Etat as EtatModele, Maj, StatutMaj } from '../../core/modeles';
               }
               @if (erreur()) { <div class="alert alert-primary">{{ erreur() }}</div> }
 
-              <!-- Les deux verrous sont distincts, et l'écran doit dire lequel
-                   manque : le réglage autorise l'appel à GitHub, l'assistant
-                   root rend l'installation possible. L'un sans l'autre ne sert
-                   à rien, et se taire sur le manquant est ce qui donnait
-                   l'impression d'un bouton absent sans raison. -->
-              @if (!e.maj.verificationAutorisee) {
-                <p class="text-body-secondary small mb-2">
-                  La vérification des versions est désactivée. C'est un appel réseau sortant, le seul
-                  avec le calendrier scolaire, et il ne s'allume pas tout seul.
-                </p>
-                <a class="btn btn-outline-secondary" routerLink="/administration/reglages"
-                   fragment="exploitation">
-                  <i class="bi bi-sliders me-1" aria-hidden="true"></i>Activer dans les Réglages
-                </a>
-              } @else {
-                @if (maj(); as m) {
+              <!-- Ce bloc s'affiche sans qu'on ait rien demandé : le service
+                   interroge GitHub tout seul et garde ce qu'il a vu. Le bouton
+                   ne sert qu'à ne pas attendre le prochain passage. -->
+              @if (maj(); as m) {
+                @if (m.tag) {
                   @if (!m.versionConnue) {
                     <div class="alert alert-primary">
                       <strong>Dernière version publiée : {{ m.tag }}.</strong>
@@ -136,52 +126,70 @@ import type { Etat as EtatModele, Maj, StatutMaj } from '../../core/modeles';
                     <pre style="max-height:220px;overflow:auto">{{ m.notes }}</pre>
                   }
                 }
+                @if (m.erreur) {
+                  <div class="alert alert-primary">
+                    <strong>La dernière vérification n'a pas abouti.</strong> {{ m.erreur }}
+                    @if (m.tag) { Ce qui est affiché ci-dessus date d'avant. }
+                  </div>
+                }
+                @if (m.verifieLe) {
+                  <p class="text-body-secondary small mb-0">
+                    Dernier regard le {{ horodatageLisible(m.verifieLe) }}, sur {{ e.maj.depot }}.
+                    Le service regarde de lui-même toutes les six heures et n'installe jamais rien.
+                  </p>
+                }
+              } @else {
+                <p class="text-body-secondary small mb-0">
+                  Le service interroge GitHub toutes les six heures pour savoir s'il existe une
+                  version plus récente. Il n'a pas encore eu l'occasion de le faire depuis son
+                  dernier démarrage.
+                </p>
+              }
 
-                <button class="btn btn-outline-secondary mt-2" (click)="verifier()" [disabled]="occupe()">
-                  <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>
-                  {{ occupe() ? 'Vérification...' : 'Vérifier les mises à jour' }}
-                </button>
+              <button class="btn btn-outline-secondary mt-2" (click)="verifier()" [disabled]="occupe()">
+                <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>
+                {{ occupe() ? 'Vérification...' : 'Vérifier maintenant' }}
+              </button>
 
-                @if (maj()?.misAJourDisponible) {
-                  @if (maj()!.installationPossible) {
-                    <!-- La confirmation par mot de passe, en page et non dans une
-                         invite du navigateur : elle doit dire ce qu'elle engage, et
-                         une invite native ne met rien en forme. -->
-                    <div class="border-top mt-4 pt-3">
-                      <h3 class="h6">Installer la version {{ maj()!.tag }}</h3>
-                      <p class="text-body-secondary small" style="max-width:640px">
-                        Le serveur va télécharger cette version, la recompiler et redémarrer. Comptez
-                        une à deux minutes pendant lesquelles l'application ne répondra pas. Une
-                        sauvegarde de la base est prise automatiquement avant toute migration.
-                      </p>
-                      <p class="text-body-secondary small" style="max-width:640px">
-                        <strong>Cette opération installe et exécute du code sur votre serveur.</strong>
-                        Elle se confirme par votre mot de passe, comme une connexion.
-                      </p>
-                      <form (ngSubmit)="installer()">
-                        <div class="mb-3" style="max-width:340px">
-                          <label class="form-label small text-body-secondary" for="maj-mdp">Votre mot de passe</label>
-                          <input class="form-control" id="maj-mdp" name="motDePasse" type="password"
-                                 autocomplete="current-password" [(ngModel)]="motDePasse" required>
-                        </div>
-                        <button class="btn btn-primary" type="submit" [disabled]="occupe() || !motDePasse">
-                          Installer maintenant
-                        </button>
-                      </form>
-                    </div>
-                  } @else {
-                    <div class="border-top mt-4 pt-3">
-                      <h3 class="h6">L'installation depuis l'interface n'est pas en place</h3>
-                      <p class="text-body-secondary small mb-0" style="max-width:640px">
-                        Le service tourne sans privilège : il ne peut pas remplacer son propre code,
-                        et c'est voulu. L'installation depuis cet écran demande un assistant root,
-                        posé par l'installateur uniquement si vous le lui demandez. Relancez-le dans
-                        le conteneur avec
-                        <code>MAJ_AUTO=true bash /opt/maison-de-famille/deploy/lxc/install.sh</code>,
-                        ou mettez à jour à la main en le relançant sans cette variable.
-                      </p>
-                    </div>
-                  }
+              @if (maj()?.misAJourDisponible) {
+                @if (e.maj.installationPossible) {
+                  <!-- La confirmation par mot de passe, en page et non dans une
+                       invite du navigateur : elle doit dire ce qu'elle engage, et
+                       une invite native ne met rien en forme. -->
+                  <div class="border-top mt-4 pt-3">
+                    <h3 class="h6">Installer la version {{ maj()!.tag }}</h3>
+                    <p class="text-body-secondary small" style="max-width:640px">
+                      Le serveur va télécharger cette version, la recompiler et redémarrer. Comptez
+                      une à deux minutes pendant lesquelles l'application ne répondra pas. Une
+                      sauvegarde de la base est prise automatiquement avant toute migration.
+                    </p>
+                    <p class="text-body-secondary small" style="max-width:640px">
+                      <strong>Cette opération installe et exécute du code sur votre serveur.</strong>
+                      Elle se confirme par votre mot de passe, comme une connexion.
+                    </p>
+                    <form (ngSubmit)="installer()">
+                      <div class="mb-3" style="max-width:340px">
+                        <label class="form-label small text-body-secondary" for="maj-mdp">Votre mot de passe</label>
+                        <input class="form-control" id="maj-mdp" name="motDePasse" type="password"
+                               autocomplete="current-password" [(ngModel)]="motDePasse" required>
+                      </div>
+                      <button class="btn btn-primary" type="submit" [disabled]="occupe() || !motDePasse">
+                        Installer maintenant
+                      </button>
+                    </form>
+                  </div>
+                } @else {
+                  <div class="border-top mt-4 pt-3">
+                    <h3 class="h6">L'installation depuis l'interface n'est pas en place</h3>
+                    <p class="text-body-secondary small mb-0" style="max-width:640px">
+                      Le service tourne sans privilège : il ne peut pas remplacer son propre code,
+                      et c'est voulu. L'installation depuis cet écran demande un assistant root,
+                      posé par l'installateur uniquement si vous le lui demandez. Relancez-le dans
+                      le conteneur avec
+                      <code>MAJ_AUTO=true bash /opt/maison-de-famille/deploy/lxc/install.sh</code>,
+                      ou mettez à jour à la main en le relançant sans cette variable.
+                    </p>
+                  </div>
                 }
               }
             }
@@ -198,9 +206,10 @@ import type { Etat as EtatModele, Maj, StatutMaj } from '../../core/modeles';
 export class AdministrationApercu implements OnDestroy {
   private readonly api = inject(Api);
   readonly etat = signal<EtatModele | null>(null);
-  readonly maj = signal<Maj | null>(null);
+  readonly maj = signal<Veille | null>(null);
   readonly occupe = signal(false);
   readonly erreur = signal('');
+  readonly horodatageLisible = horodatageLisible;
   motDePasse = '';
   private minuteur: ReturnType<typeof setInterval> | null = null;
 
@@ -212,6 +221,9 @@ export class AdministrationApercu implements OnDestroy {
   private async charger(): Promise<void> {
     const e = await this.api.get<EtatModele>('/etat').catch(() => null);
     this.etat.set(e);
+    // Ce que le service a vu tout seul s'affiche sans attendre un clic. Une
+    // vérification demandée à la main, elle, prime : c'est la plus fraîche.
+    if (e?.maj.veille && !this.maj()) this.maj.set(e.maj.veille);
     // Pendant une mise à jour, le service s'arrête puis revient : on interroge
     // régulièrement, et un appel qui échoue pendant ce temps est normal. Le
     // service, lui, débloque tout seul un état qui cesse de progresser.
@@ -238,7 +250,7 @@ export class AdministrationApercu implements OnDestroy {
     this.occupe.set(true);
     this.erreur.set('');
     try {
-      this.maj.set(await this.api.post<Maj>('/systeme/maj/verification', {}));
+      this.maj.set(await this.api.post<Veille>('/systeme/maj/verification', {}));
     } catch (e) {
       this.erreur.set(e instanceof ErreurAppel ? e.message : 'La vérification a échoué.');
     } finally {

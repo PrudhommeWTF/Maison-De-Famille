@@ -24,6 +24,7 @@ import { migration005 } from './005-maison';
 import { migration006 } from './006-famille';
 import { migration007 } from './007-location';
 import { migration008 } from './008-vacances';
+import { migration009 } from './009-sorties-reseau';
 
 export interface Migration {
   version: number;
@@ -32,7 +33,7 @@ export interface Migration {
 }
 
 /** Dans l'ordre. Ajouter une migration, c'est ajouter une ligne ici. */
-export const MIGRATIONS: readonly Migration[] = [migration001, migration002, migration003, migration004, migration005, migration006, migration007, migration008];
+export const MIGRATIONS: readonly Migration[] = [migration001, migration002, migration003, migration004, migration005, migration006, migration007, migration008, migration009];
 
 export const versionCible = (): number => Math.max(...MIGRATIONS.map((m) => m.version));
 

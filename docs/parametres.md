@@ -33,14 +33,6 @@ Apparaît dans l'objet des courriels et dans l'en-tête de l'application. Utile 
 
 Ajoute le Vendredi saint et le 26 décembre, fériés dans le Bas-Rhin, le Haut-Rhin et la Moselle. À laisser éteint ailleurs : afficher deux fériés qui n'en sont pas ferait rater un jour de travail.
 
-### Télécharger le calendrier scolaire depuis data.education.gouv.fr
-
-- **Clé** : `vacancesTelechargement`
-- **Portée** : Instance
-- **Par défaut** : Non
-
-Ajoute un bouton qui va chercher le calendrier officiel en ligne, au lieu de le déposer à la main. C'est le seul appel réseau sortant de l'application en dehors du relais de courriel : il faut que ce serveur ait le droit de sortir sur Internet, et l'instance signale alors son existence au portail. Rien n'est enregistré sans qu'un gérant relise l'aperçu.
-
 ### Commencer la semaine le dimanche
 
 - **Clé** : `semaineCommenceDimanche`
@@ -152,14 +144,6 @@ S'applique aux photos et aux pièces jointes. Une photo de téléphone récente 
 ## Exploitation
 
 Journalisation et diagnostic.
-
-### Vérifier les nouvelles versions sur GitHub
-
-- **Clé** : `majVerification`
-- **Portée** : Instance
-- **Par défaut** : Non
-
-Ajoute à l'Administration, section « Vue d'ensemble », un bouton qui demande à GitHub s'il existe une version plus récente. C'est un appel réseau sortant : il faut que ce serveur ait le droit de sortir sur Internet. Rien ne s'installe tout seul, et l'installation demande en plus votre mot de passe.
 
 ### Niveau de journalisation
 

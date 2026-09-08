@@ -93,21 +93,21 @@ Angular 21 (composants standalone, signals, zoneless), Node/Express en
 TypeScript, SQLite via `better-sqlite3`, authentification JWT et argon2id. Une
 seule image Docker, ou une installation LXC native sous systemd.
 
-Aucun service supplémentaire, aucune base externe, et **aucun appel réseau
-sortant** en dehors du relais SMTP que vous configurez : les polices et les
-icônes sont dans le dépôt.
+Aucun service supplémentaire, aucune base externe. Les polices et les icônes
+sont dans le dépôt : la **page** ne charge rien de l'extérieur, et l'application
+s'ouvre sur un réseau coupé.
 
-Deux exceptions, **éteintes par défaut**, allumées par un réglage chacune :
+Le serveur, lui, joint trois adresses, et seulement celles-là :
 
-- « Télécharger le calendrier scolaire » va chercher les dates de vacances sur
-  data.education.gouv.fr, pour éviter de déposer le fichier à la main une fois
-  par an ;
-- « Vérifier les nouvelles versions sur GitHub » demande à api.github.com s'il
-  existe une version plus récente, et permet de l'installer depuis l'écran
-  « État du service », après confirmation par mot de passe.
+- votre **relais SMTP**, pour les notifications ;
+- **data.education.gouv.fr**, pour compléter le calendrier scolaire quand
+  l'année en cours manque ;
+- **api.github.com**, pour savoir s'il existe une version plus récente.
 
-Tant que personne ne les allume, l'application ne parle qu'à votre relais de
-courriel.
+Chacune est écrite en dur dans le code, revérifiée après redirection, plafonnée
+en taille et en temps. **Aucune donnée de la famille ne part** : ces appels
+demandent, ils ne racontent rien. Aucune télémétrie, aucun compteur d'usage.
+Rien ne s'installe tout seul : une mise à jour se confirme par mot de passe.
 
 ## Documentation
 

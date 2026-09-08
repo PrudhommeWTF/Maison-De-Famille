@@ -2,14 +2,15 @@
 // sait pas calculer.
 //
 // Les jours fériés se déduisent d'une règle, ces dates non : elles sont fixées
-// par arrêté. Elles se mettent donc à jour une fois par an, en déposant le
-// fichier officiel ou, si un gérant l'a autorisé, en allant le chercher.
+// par arrêté. Le service va donc chercher lui-même l'année qui manque sur le
+// portail de l'Éducation nationale. Cet écran sert à voir ce qui est en base,
+// d'où ça vient, et à reprendre la main : remplacer une année, ou déposer un
+// fichier quand ce serveur ne sort pas sur Internet.
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Api, ErreurAppel } from '../../core/api';
 import { COULEURS_ZONE, anneeScolaireDe } from '../../core/calendrier';
 import type { AnneeVacances, ApercuVacances, ZoneVacances } from '../../core/calendrier';
 import { aujourdhui, plage } from '../../core/format';
-import type { ParametreExpose } from '../../core/modeles';
 
 @Component({
   selector: 'app-administration-vacances',
@@ -27,14 +28,17 @@ import type { ParametreExpose } from '../../core/modeles';
           <h2 class="h5 card-title">Vacances scolaires</h2>
           <p class="text-body-secondary small">
             Le calendrier fait ressortir les trois zones. Ces dates sont fixées par arrêté et ne se
-            déduisent d'aucune règle : elles se mettent à jour une fois par an, en déposant ici le
-            fichier officiel. L'application ne va jamais le chercher elle-même, rien ne sort d'ici.
+            déduisent d'aucune règle. Le service les récupère tout seul sur data.education.gouv.fr
+            quand une année manque, sans jamais toucher à une année déjà enregistrée : la colonne
+            « Origine » dit, pour chacune, si elle est venue toute seule ou par un dépôt.
           </p>
 
           @if (anneeManquante()) {
             <div class="alert alert-primary small">
-              L'année scolaire {{ anneeManquante() }} n'est pas renseignée. Le calendrier l'annonce
-              plutôt que d'afficher un mois sans vacances qu'on prendrait pour un mois de classe.
+              L'année scolaire {{ anneeManquante() }} n'est pas renseignée. Le service réessaie
+              toutes les six heures ; si elle ne vient pas, c'est que le portail ne la publie pas
+              encore ou que ce serveur ne sort pas sur Internet. Le bouton ci-dessous force un
+              essai, et le dépôt d'un fichier marche toujours.
             </div>
           }
 
@@ -70,26 +74,20 @@ import type { ParametreExpose } from '../../core/modeles';
                 <input type="file" accept=".xlsx,.xls,.csv,.txt,text/csv" hidden
                        [disabled]="occupe()" (change)="analyserCalendrier($event)">
               </label>
-              <!-- Le seul appel réseau sortant de l'application. Le bouton
-                   n'apparaît que si un gérant l'a autorisé, et il ne fait que
-                   remplir l'aperçu : l'enregistrement reste un second clic. -->
-              @if (telechargementAutorise()) {
-                <button class="btn btn-outline-secondary" (click)="telechargerCalendrier()" [disabled]="occupe()">
-                  <i class="bi bi-cloud-arrow-down me-1" aria-hidden="true"></i>Récupérer en ligne
-                </button>
-              }
+              <!-- Le rafraîchissement automatique n'ajoute que les années
+                   absentes. Ce bouton fait la seule chose qu'il ne fera jamais :
+                   rapporter une année déjà en base pour la remplacer. Il ne
+                   remplit que l'aperçu, l'enregistrement reste un second clic. -->
+              <button class="btn btn-outline-secondary" (click)="telechargerCalendrier()" [disabled]="occupe()">
+                <i class="bi bi-cloud-arrow-down me-1" aria-hidden="true"></i>Récupérer maintenant
+              </button>
             </div>
             <p class="text-body-secondary small mt-2 mb-0" style="max-width:620px">
               Le fichier attendu est le calendrier scolaire publié sur data.education.gouv.fr
               (jeu de données « fr-en-calendrier-scolaire », export CSV). Un tableau tenu à la main
               convient aussi, avec cinq colonnes : période, zone, début, fin, année scolaire.
-              @if (telechargementAutorise()) {
-                « Récupérer en ligne » va le chercher pour vous : c'est le seul appel réseau
-                sortant de l'application, et il n'enregistre rien sans votre confirmation.
-              } @else {
-                Le réglage « Télécharger le calendrier scolaire » ajoute un bouton qui va le
-                chercher pour vous, au prix du seul appel réseau sortant de l'application.
-              }
+              « Récupérer maintenant » va chercher le fichier officiel et vous le montre : rien
+              n'est enregistré sans votre confirmation, y compris pour une année déjà connue.
             </p>
           } @else {
             <div class="border-top mt-4 pt-3">
@@ -182,9 +180,6 @@ export class AdministrationVacances {
   readonly message = signal('');
   private nomFichier = '';
 
-  /** Le réglage qui commande l'existence même du bouton de téléchargement. */
-  readonly telechargementAutorise = signal(false);
-
   plage = plage;
   couleurZone = (z: ZoneVacances): string => COULEURS_ZONE[z];
 
@@ -199,13 +194,7 @@ export class AdministrationVacances {
     return this.annees().some((a) => a.anneeScolaire === courante) ? '' : courante;
   });
 
-  constructor() {
-    void this.chargerVacances();
-    void this.api.get<{ parametres: ParametreExpose[] }>('/parametres')
-      .then((r) => this.telechargementAutorise.set(
-        r.parametres.find((p) => p.cle === 'vacancesTelechargement')?.valeur === true))
-      .catch(() => { /* sans le réglage, le bouton reste absent : c'est le défaut sûr */ });
-  }
+  constructor() { void this.chargerVacances(); }
 
   private async chargerVacances(): Promise<void> {
     const r = await this.api.get<{ annees: AnneeVacances[] }>('/calendrier/vacances').catch(() => ({ annees: [] }));
