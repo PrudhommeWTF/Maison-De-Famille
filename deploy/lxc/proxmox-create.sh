@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # ============================================================
-# Création du conteneur LXC, à lancer SUR L'HÔTE Proxmox VE.
+# Création du conteneur LXC ET installation, à lancer SUR L'HÔTE Proxmox VE.
 #
 #   bash deploy/lxc/proxmox-create.sh
 #
-# Puis, dans le conteneur :
-#   pct enter <ID>
-#   bash /opt/maison-de-famille/deploy/lxc/install.sh
+# Une seule commande : le conteneur est créé, puis l'installateur y est lancé.
+# Comptez cinq à dix minutes, la compilation de l'application n'est pas rapide.
+#
+#   INSTALLER=false   crée le conteneur et s'arrête là
+#   MDF_BRANCH=0.0.7  installe ce tag plutôt que « main »
+#   MAJ_AUTO=true     pose l'assistant de mise à jour depuis l'interface
 # ============================================================
 set -euo pipefail
 
@@ -28,6 +31,29 @@ DISK="${DISK:-8}"
 MEMOIRE="${MEMOIRE:-1024}"
 COEURS="${COEURS:-2}"
 PONT="${PONT:-vmbr0}"
+
+# --- Ce qui est passé à l'installateur, dans le conteneur ---
+#
+# L'installateur est téléchargé depuis **la même branche que celle qu'il
+# installera** : lancer ce script au tag 0.0.7 ne doit pas poser un conteneur
+# en « main », et l'inverse non plus.
+INSTALLER="${INSTALLER:-true}"
+MDF_REPO="${MDF_REPO:-https://github.com/PrudhommeWTF/Maison-De-Famille.git}"
+MDF_BRANCH="${MDF_BRANCH:-main}"
+MAJ_AUTO="${MAJ_AUTO:-false}"
+PORT="${PORT:-8099}"
+
+# Un dépôt qui n'est pas sur GitHub n'a pas d'adresse « raw » devinable : on le
+# dit plutôt que de fabriquer une URL au hasard qui échouerait en 404.
+if [[ -z "${MDF_INSTALL_URL:-}" ]]; then
+  depot="${MDF_REPO%.git}"
+  case "${depot}" in
+    https://github.com/*)
+      MDF_INSTALL_URL="https://raw.githubusercontent.com/${depot#https://github.com/}/${MDF_BRANCH}/deploy/lxc/install.sh"
+      ;;
+    *) MDF_INSTALL_URL="" ;;
+  esac
+fi
 
 log() { echo -e "\e[1;32m[mdf]\e[0m $*"; }
 err() { echo -e "\e[1;31m[mdf]\e[0m $*" >&2; }
@@ -163,15 +189,67 @@ else
 fi
 
 log "Conteneur ${CTID} démarré."
+
+# --- L'installation, dans la foulée ---
+#
+# Faire les deux d'affilée est le cas courant : ce script n'existe que pour
+# poser cette application, et laisser l'opérateur recopier une ligne de curl
+# était une étape de plus pour rien. « INSTALLER=false » rend le conteneur nu.
+#
+# L'installateur est le MÊME que celui qu'on lançait à la main, avec les mêmes
+# variables : rien n'est dupliqué ici, et un conteneur créé autrement s'installe
+# exactement pareil.
+#
+# La commande de repli est affichée mot pour mot à chaque échec possible : un
+# conteneur créé mais vide ne doit jamais laisser sans la marche à suivre.
+installe=0
+echec=0
+manuel="bash <(curl -fsSL ${MDF_INSTALL_URL:-<adresse de install.sh>})"
+
+if [[ "${INSTALLER}" =~ ^(1|true|yes|on)$ ]] && [[ "${prepare}" -eq 1 ]] && [[ -n "${MDF_INSTALL_URL}" ]]; then
+  log "Installation de l'application (branche ${MDF_BRANCH}). Comptez cinq à dix minutes."
+  if pct exec "${CTID}" -- curl -fsSL "${MDF_INSTALL_URL}" -o /root/install-mdf.sh \
+     && pct exec "${CTID}" -- env \
+          MDF_REPO="${MDF_REPO}" MDF_BRANCH="${MDF_BRANCH}" \
+          MAJ_AUTO="${MAJ_AUTO}" PORT="${PORT}" \
+          bash /root/install-mdf.sh; then
+    installe=1
+  else
+    err "L'installation a échoué. Le conteneur ${CTID} existe et reste utilisable ;"
+    err "le message d'erreur au-dessus dit sur quoi elle a buté."
+    echec=1
+  fi
+fi
+
 echo
-if [[ "${prepare}" -eq 1 ]]; then
+if [[ "${installe}" -eq 1 ]]; then
+  echo "  L'application tourne. Son adresse est indiquée juste au-dessus."
   echo "  Entrer dedans   :  pct enter ${CTID}"
-  echo "  Puis installer  :  bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)"
+elif [[ ! "${INSTALLER}" =~ ^(1|true|yes|on)$ ]]; then
+  echo "  Conteneur nu, comme demandé. Pour installer :"
+  echo "    pct enter ${CTID}"
+  echo "    ${manuel}"
+elif [[ -z "${MDF_INSTALL_URL}" ]]; then
+  err "Le dépôt « ${MDF_REPO} » n'est pas sur GitHub : impossible de deviner"
+  err "l'adresse de l'installateur. Indiquez-la par MDF_INSTALL_URL, ou installez"
+  err "à la main dans le conteneur."
+elif [[ "${echec}" -eq 1 ]]; then
+  echo "  Pour reprendre l'installation :"
+  echo "    pct enter ${CTID}"
+  echo "    ${manuel}"
 else
   err "La préparation a échoué. Dans le conteneur, avant d'installer :"
   echo "    pct enter ${CTID}"
   echo "    apt-get update && apt-get install -y curl ca-certificates"
-  echo "    bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)"
+  echo "    ${manuel}"
 fi
 echo "  Adresse obtenue :  pct exec ${CTID} -- hostname -I"
 echo
+
+# Une règle unique, quelle que soit l'étape qui a lâché : on a demandé une
+# application, elle ne tourne pas, donc c'est un échec. Sans cela, un script qui
+# enchaîne sur celui-ci croirait que tout est en place.
+if [[ "${INSTALLER}" =~ ^(1|true|yes|on)$ ]] && [[ "${installe}" -eq 0 ]]; then
+  exit 1
+fi
+exit 0

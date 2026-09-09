@@ -319,8 +319,8 @@ if systemctl is-active --quiet "${UNITE}"; then
   echo "    3. ouvrir l'application et créer le premier compte"
   if [[ "${MAJ_AUTO}" =~ ^(1|true|yes|on)$ ]]; then
     echo
-    echo "  Mise à jour depuis l'interface : activée. Reste à autoriser la"
-    echo "  vérification dans Réglages, section Exploitation."
+    echo "  Mise à jour depuis l'interface : activée. Le service regarde"
+    echo "  GitHub tout seul, rien de plus à activer."
   else
     echo
     echo "  Mise à jour depuis l'interface : désactivée. Pour l'activer,"
