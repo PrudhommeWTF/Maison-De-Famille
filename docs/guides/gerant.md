@@ -90,6 +90,30 @@ avoir le détail.
 Si un bandeau d'avertissement dit que les vacances ne sont pas renseignées pour
 la période affichée, allez les déposer : voir [Les réglages](#14-les-réglages).
 
+### Poser un séjour vous-même
+
+Le bouton **Ajouter un séjour**, en haut à droite, sert quand quelqu'un vous
+appelle plutôt que de passer par l'application. Le champ **Pour qui** vous laisse
+choisir :
+
+- **vous-même**, comme n'importe qui ;
+- **une personne de la maison** : le séjour est enregistré à son nom et compte
+  pour son foyer ;
+- **un invité** (des amis, la famille d'un conjoint) : vous tapez son nom, et
+  vous désignez qui le reçoit. L'invité n'a pas de compte, alors ces nuits sont
+  comptées pour le foyer de la personne qui l'accueille. Le calendrier affiche le
+  nom de l'invité, et la liste du mois précise « reçu par ».
+
+Ce que vous saisissez est **enregistré validé**, sans passer par la file des
+demandes : vous arbitrez, il n'y a personne au-dessus de vous. Un chevauchement
+vous est signalé, il ne vous bloque pas.
+
+Pour un **locataire qui paie**, ne passez pas par ici : allez dans
+[La location saisonnière](#12-la-location-saisonnière). Le loyer, l'acompte et le
+contact s'y saisissent en même temps que les dates, et le séjour bloque le
+calendrier de la même façon. Un séjour posé depuis le calendrier n'a pas de
+loyer, et il n'apparaîtrait dans aucun compte.
+
 ## 4. Les personnes et les rôles
 
 ![Personnes et rôles](images/gerant-personnes.png)
