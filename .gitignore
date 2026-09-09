@@ -10,3 +10,8 @@ package-lock.json.orig
 .env
 frontend/.angular/
 frontend/dist/
+
+# Les guides compilés depuis docs/guides par « npm run aide ».
+# Engendrés à chaque compilation : les versionner dupliquerait six méga-octets
+# de captures qui vivent déjà dans docs/guides/images.
+frontend/public/aide/

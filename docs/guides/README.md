@@ -7,6 +7,9 @@ Vous n'avez rien à installer et rien à savoir de technique. Vous recevez un
 lien, vous choisissez un mot de passe, et vous vous en servez depuis un
 téléphone, une tablette ou un ordinateur.
 
+Ces guides sont lisibles dans l'application, rubrique **Aide** dans le menu de
+gauche, aussi bien que sur le dépôt : c'est le même texte.
+
 ## Quel guide est pour vous
 
 Tout le monde commence par le même :
