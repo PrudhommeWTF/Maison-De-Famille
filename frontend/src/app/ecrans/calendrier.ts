@@ -69,7 +69,8 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
              c'est même la raison de son accès. Le bouton le mènerait à un refus. -->
         @if (etat.roleIci() !== 'invite') {
           <button class="btn btn-primary" (click)="ouvrirDemande()">
-            <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Demander un séjour
+            <i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>
+            {{ etat.estGeranteIci() ? 'Ajouter un séjour' : 'Demander un séjour' }}
           </button>
         }
       </div>
@@ -106,12 +107,61 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
       @if (formulaire()) {
         <section class="card">
           <div class="card-body">
-            <h2 class="h5 card-title">Demander un séjour</h2>
-            <p class="text-body-secondary small">
-              Les dates sont vérifiées avant l'envoi. Un chevauchement n'empêche pas de demander :
-              la gérante arbitre.
-            </p>
+            <h2 class="h5 card-title">{{ etat.estGeranteIci() ? 'Ajouter un séjour' : 'Demander un séjour' }}</h2>
+            @if (etat.estGeranteIci()) {
+              <p class="text-body-secondary small">
+                Ce séjour est enregistré validé : vous arbitrez, il n'y a personne au-dessus de vous.
+                Un chevauchement est signalé, jamais bloquant.
+              </p>
+            } @else {
+              <p class="text-body-secondary small">
+                Les dates sont vérifiées avant l'envoi. Un chevauchement n'empêche pas de demander :
+                la gérante arbitre.
+              </p>
+            }
             <form class="row g-3" (ngSubmit)="envoyer()">
+              @if (etat.estGeranteIci()) {
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-body-secondary" for="d-pourqui">Pour qui</label>
+                  <select class="form-select" id="d-pourqui" name="pourQui" [(ngModel)]="f.pourQui">
+                    <option value="">Moi-même</option>
+                    @for (p of occupants(); track p.id) {
+                      @if (p.id !== etat.moi()?.personne?.id) {
+                        <option [value]="p.id">{{ p.nom }}@if (p.foyerNom) { <span> ({{ p.foyerNom }})</span> }</option>
+                      }
+                    }
+                    <option value="invite">Un invité (ami de la famille)</option>
+                  </select>
+                </div>
+                @if (f.pourQui === 'invite') {
+                  <div class="col-12 col-md-6">
+                    <label class="form-label small text-body-secondary" for="d-invite">Nom de l'invité</label>
+                    <input class="form-control" id="d-invite" name="invite" type="text" maxlength="120"
+                           placeholder="Les Martin" [(ngModel)]="f.invite" required>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label small text-body-secondary" for="d-recupar">Reçu par</label>
+                    <select class="form-select" id="d-recupar" name="recuPar" [(ngModel)]="f.recuPar">
+                      @for (p of occupants(); track p.id) {
+                        <option [value]="p.id">{{ p.nom }}</option>
+                      }
+                    </select>
+                    <!-- Un invité n'a pas de compte : le séjour doit tenir à
+                         quelqu'un, sinon ces nuits ne se rattachent à aucun
+                         foyer et sortent de la répartition. -->
+                    <div class="form-text">Ces nuits sont comptées pour le foyer de cette personne.</div>
+                  </div>
+                }
+                @if (f.pourQui === 'invite' && etat.bien()?.locationActivee) {
+                  <div class="col-12">
+                    <div class="alert alert-primary mb-0 small">
+                      Pour un locataire qui paie, passez par
+                      <a routerLink="/bien/location">Location saisonnière</a> : le loyer, l'acompte et
+                      le contact y sont saisis en même temps, et le séjour se bloque pareil.
+                    </div>
+                  </div>
+                }
+              }
               <div class="col-12 col-md-4">
                 <label class="form-label small text-body-secondary" for="d-arrivee">Arrivée</label>
                 <input class="form-control" id="d-arrivee" name="arrivee" type="date"
@@ -130,7 +180,9 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
                        [(ngModel)]="f.occupants" (ngModelChange)="verifier()" required>
               </div>
               <div class="col-12">
-                <label class="form-label small text-body-secondary" for="d-note">Un mot pour la gérante (facultatif)</label>
+                <label class="form-label small text-body-secondary" for="d-note">
+                  {{ etat.estGeranteIci() ? 'Une note sur ce séjour (facultatif)' : 'Un mot pour la gérante (facultatif)' }}
+                </label>
                 <textarea class="form-control" id="d-note" name="note" rows="3"
                           [(ngModel)]="f.note" maxlength="1000"></textarea>
               </div>
@@ -154,7 +206,7 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
               @if (erreur()) { <div class="col-12"><div class="alert alert-primary mb-0 small">{{ erreur() }}</div></div> }
 
               <div class="col-12 d-flex gap-2 flex-wrap">
-                <button class="btn btn-primary" type="submit" [disabled]="occupe() || !envoiPossible()">
+                <button class="btn btn-primary" type="submit" [disabled]="occupe() || !envoiPossible() || !inviteNomme()">
                   {{ etat.estGeranteIci() ? 'Enregistrer le séjour' : 'Envoyer la demande' }}
                 </button>
                 <button class="btn btn-outline-secondary" type="button" (click)="formulaire.set(false)">Annuler</button>
@@ -261,7 +313,16 @@ import type { Conflit, Sejour, Verification } from '../core/modeles';
                   @for (s of duMois(); track s.id) {
                     <tr>
                       <td class="tnum small text-body-secondary">{{ plage(s.arrivee, s.depart) }}</td>
-                      <td class="small fw-medium">{{ s.titre }}</td>
+                      <td class="small fw-medium">
+                        {{ s.titre }}
+                        <!-- Un séjour d'invité porte le nom de l'invité : sans
+                             cette ligne, personne ne saurait qui l'a reçu. -->
+                        @if (s.demandeurNom && s.demandeurNom !== s.titre) {
+                          <span class="d-block fw-normal text-body-secondary" style="font-size:.78rem">
+                            reçu par {{ s.demandeurNom }}
+                          </span>
+                        }
+                      </td>
                       <td class="small text-body-secondary">
                         {{ nuitsLisible(s.nuits) }} · {{ personnesLisible(s.occupants) }}
                       </td>
@@ -298,7 +359,15 @@ export class Calendrier {
   readonly occupe = signal(false);
   readonly erreur = signal('');
 
-  f = { arrivee: '', depart: '', occupants: 2, note: '' };
+  /**
+   * `pourQui` : « » pour soi-même, « invite » pour un ami, sinon l'identifiant
+   * de la personne. Un seul champ plutôt qu'un booléen et un identifiant : les
+   * trois cas s'excluent, et deux champs auraient fini par se contredire.
+   */
+  f = { arrivee: '', depart: '', occupants: 2, note: '', pourQui: '', invite: '', recuPar: '' };
+
+  /** Qui peut être nommé sur un séjour de ce bien. Vide hors gérance. */
+  readonly occupants = signal<{ id: number; nom: string; foyerNom: string | null }[]>([]);
 
   readonly enTetes = computed(() => enTetesJours(this.etat.moi()?.semaineCommenceDimanche ?? false));
 
@@ -319,6 +388,16 @@ export class Calendrier {
     const v = this.verification();
     return !!this.f.arrivee && !!this.f.depart && this.f.depart > this.f.arrivee && (!v || v.envoiPossible);
   });
+
+  /**
+   * Un séjour d'invité veut un nom.
+   *
+   * Méthode et non `computed` : `f` est un objet ordinaire, pas un signal. Un
+   * `computed` qui le lit ne se recalculerait jamais quand on tape dedans, et
+   * le bouton serait resté actif sur un nom vide. Le reste du formulaire s'en
+   * sortait par accident, chaque frappe rafraîchissant `verification()`.
+   */
+  inviteNomme(): boolean { return this.f.pourQui !== 'invite' || !!this.f.invite.trim(); }
 
   constructor() {
     // Le mois affiché et le bien courant pilotent le chargement : un seul effet,
@@ -359,9 +438,33 @@ export class Calendrier {
     this.formulaire.set(true);
     this.erreur.set('');
     this.verification.set(null);
+    if (this.etat.estGeranteIci() && !this.occupants().length) void this.chargerOccupants();
+    // La remise à zéro après un envoi vide « Reçu par » : sans cette ligne, le
+    // second séjour d'invité partait avec un demandeur vide et se faisait
+    // refuser, sans que rien à l'écran ne dise pourquoi.
+    if (!this.f.recuPar) this.f.recuPar = String(this.etat.moi()?.personne.id ?? '');
     if (!this.f.arrivee) {
       this.f.arrivee = aujourdhui();
       this.f.depart = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
+    }
+  }
+
+  /**
+   * La liste des personnes nommables, chargée à l'ouverture du formulaire et
+   * non au chargement de l'écran : la plupart des visites du calendrier ne
+   * saisissent rien, et cette requête n'a alors aucune raison de partir.
+   */
+  private async chargerOccupants(): Promise<void> {
+    const b = this.etat.bien();
+    if (!b) return;
+    try {
+      const r = await this.api.get<{ personnes: { id: number; nom: string; foyerNom: string | null }[] }>(
+        `/biens/${b.id}/occupants`);
+      this.occupants.set(r.personnes);
+      if (!this.f.recuPar) this.f.recuPar = String(this.etat.moi()?.personne.id ?? r.personnes[0]?.id ?? '');
+    } catch {
+      // La liste manque : le formulaire reste utilisable pour soi-même.
+      this.occupants.set([]);
     }
   }
 
@@ -385,12 +488,17 @@ export class Calendrier {
     this.occupe.set(true);
     this.erreur.set('');
     try {
+      const invite = this.f.pourQui === 'invite';
       await this.api.post(`/biens/${b.id}/sejours`, {
         arrivee: this.f.arrivee, depart: this.f.depart,
         occupants: Number(this.f.occupants), note: this.f.note,
+        // Un séjour d'invité porte son nom et reste rattaché à la personne qui
+        // le reçoit : c'est elle qui répond de ces nuits.
+        ...(invite ? { demandeurId: Number(this.f.recuPar), titre: this.f.invite.trim() }
+          : this.f.pourQui ? { demandeurId: Number(this.f.pourQui) } : {}),
       });
       this.formulaire.set(false);
-      this.f = { arrivee: '', depart: '', occupants: 2, note: '' };
+      this.f = { arrivee: '', depart: '', occupants: 2, note: '', pourQui: '', invite: '', recuPar: '' };
       this.verification.set(null);
       await this.charger(b.id);
       await this.etat.rafraichir();

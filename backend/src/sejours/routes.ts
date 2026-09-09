@@ -21,6 +21,7 @@ import { bien, personne } from '../patrimoine/repo';
 import { deposer } from '../notifications/file';
 import { demandeDecidee, demandeNouvelle } from '../notifications/gabarits';
 import { biensVisibles } from '../acces/roles';
+import { nommablesSurBien } from '../acces/repo';
 import { Conflit, detecter } from './conflits';
 import { masquerListe } from './discretion';
 import {
@@ -101,6 +102,17 @@ export function routesSejours(deps: Deps): Routeur {
     }
     return { du, au, sejours, conflits, couchages: b.couchages };
   });
+
+  /**
+   * Pour qui la gérante peut saisir un séjour sur ce bien.
+   *
+   * Réservée à la gérante parce qu'elle seule saisit pour autrui : ouvrir cette
+   * liste plus largement donnerait à un membre de foyer la composition de
+   * l'indivision, qu'il n'a pas à connaître.
+   */
+  r.get('/biens/:bienId/occupants', { acces: 'bien', role: 'gerant' }, (ctx) => ({
+    personnes: nommablesSurBien(ctx.db, ctx.bienId),
+  }));
 
   /**
    * La vérification des dates pendant la saisie, avant l'envoi. Elle ne crée

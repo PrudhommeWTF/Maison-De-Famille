@@ -6,7 +6,7 @@
 // celui d'un cache qui garde un accès révoqué.
 import type { Db } from '../noyau/db';
 import { aujourdhui } from '../noyau/dates';
-import { Entrees, Portee, Role, calculer } from './roles';
+import { Entrees, Portee, Role, auMoins, calculer } from './roles';
 import { TypeBien, taux } from '../sejours/occupation';
 
 /** Tout ce qui compose les portées, à une date donnée. */
@@ -47,6 +47,36 @@ export function porteeDe(db: Db, personneId: number, date = aujourdhui()): Porte
 }
 
 /** Les biens visibles, avec ce qu'il faut pour la barre de contexte. */
+/**
+ * Les personnes qu'un séjour peut nommer sur ce bien.
+ *
+ * Le calcul repasse par `calculer()`, personne par personne, plutôt que par une
+ * requête SQL qui rejouerait la règle. C'est plus lourd d'une boucle sur
+ * quelques dizaines de lignes, et cela évite la seule faute qui compte ici :
+ * une seconde définition de « qui a accès à ce bien », qui aurait divergé de la
+ * première au premier cas particulier (la détention qui donne « detenteur »
+ * sans rôle saisi, le conjoint qui suit son foyer).
+ *
+ * Deux exclusions : les comptes ouverts uniquement par un lien de séjour
+ * (`acces_lien_seul`), qui ne sont pas des membres de la famille, et les rôles
+ * « invite », qui désignent justement ces passages.
+ */
+export function nommablesSurBien(db: Db, bienId: number, date = aujourdhui()): {
+  id: number; nom: string; foyerNom: string | null;
+}[] {
+  const e = lireEntrees(db, date);
+  const lignes = db.prepare(
+    `SELECT p.id, p.nom, f.nom AS foyerNom
+     FROM personne p LEFT JOIN foyer f ON f.id = p.foyer_id
+     WHERE p.archive_le IS NULL AND p.acces_lien_seul = 0
+     ORDER BY p.nom`,
+  ).all() as { id: number; nom: string; foyerNom: string | null }[];
+  return lignes.filter((l) => {
+    const role = calculer(l.id, e).biens.get(bienId);
+    return !!role && auMoins(role, 'membre_foyer');
+  });
+}
+
 export interface BienVisible {
   id: number; nom: string; commune: string; type: string; couchages: number;
   locationActivee: boolean; structureId: number; structureMode: string; structureNom: string;
