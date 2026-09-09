@@ -1,5 +1,5 @@
 -- Schéma de la base, engendré par les migrations. Ne pas modifier à la main.
--- Version du schéma : 9
+-- Version du schéma : 10
 -- Régénérer : cd backend && npm run docs:schema
 
 CREATE TABLE acces_temporaire (
@@ -299,7 +299,7 @@ CREATE TABLE personne (
         cree_le           TEXT NOT NULL,
         cree_par          INTEGER REFERENCES personne(id),
         archive_le        TEXT
-      , totp_secret TEXT, totp_pending TEXT, totp_recovery TEXT NOT NULL DEFAULT '[]', totp_last_step INTEGER NOT NULL DEFAULT 0, totp_active_le TEXT, acces_lien_seul INTEGER NOT NULL DEFAULT 0);
+      , totp_secret TEXT, totp_pending TEXT, totp_recovery TEXT NOT NULL DEFAULT '[]', totp_last_step INTEGER NOT NULL DEFAULT 0, totp_active_le TEXT, acces_lien_seul INTEGER NOT NULL DEFAULT 0, admin_plateforme INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE photo (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         album_id     INTEGER NOT NULL REFERENCES album(id),

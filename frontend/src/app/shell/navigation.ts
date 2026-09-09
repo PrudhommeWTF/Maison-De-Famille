@@ -90,9 +90,11 @@ export class Navigation {
       e.push({ chemin: '/biens', libelle: 'Biens gérés', icone: 'bi-houses' });
       e.push({ chemin: '/personnes', libelle: 'Personnes et rôles', icone: 'bi-people' });
       e.push({ chemin: '/import', libelle: 'Import du planning', icone: 'bi-box-arrow-in-right' });
-      // Une seule entrée pour les réglages ET l'état du service : les deux
-      // écrans se renvoyaient l'un à l'autre, et on ne savait jamais lequel
-      // ouvrir pour trouver quoi.
+    }
+    // L'Administration suit un droit **distinct** de la gérance : celui qui
+    // tient le serveur n'arbitre pas forcément les séjours, et l'inverse est
+    // aussi vrai. Les deux listes ci-dessus et celle-ci ne se recouvrent pas.
+    if (this.etat.estAdminPlateforme()) {
       e.push({ chemin: '/administration', libelle: 'Administration', icone: 'bi-sliders' });
     }
     return e;

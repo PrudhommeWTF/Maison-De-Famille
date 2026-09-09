@@ -31,6 +31,7 @@ export class Etat {
 
   readonly biens = computed<BienResume[]>(() => this._moi()?.biens ?? []);
   readonly estGerant = computed(() => this._moi()?.estGerant ?? false);
+  readonly estAdminPlateforme = computed(() => this._moi()?.estAdminPlateforme ?? false);
   readonly sessionLimitee = computed(() => this._moi()?.sessionLimitee ?? false);
 
   /** Le bien ouvert, ou null en vue consolidée. */

@@ -7,11 +7,31 @@
 // Le découpage des routes suit les portées, pour que la garde d'accès reste
 // mécanique : les réglages d'un bien passent par `/api/biens/:bienId/…` et sont
 // donc protégés par le paramètre d'URL, comme tout le reste.
+import type { Db } from '../noyau/db';
 import { Deps, Routeur } from '../noyau/http';
+import { horodatage } from '../noyau/dates';
 import { invalide } from '../noyau/erreurs';
 import { log } from '../noyau/log';
 import { REGISTRE, SECTIONS } from './registre';
-import { exposer, poser, remettreParDefaut } from './repo';
+import { exposer, parametre, poser, remettreParDefaut } from './repo';
+
+/** La valeur effective, rendue lisible pour le journal. */
+const valeurLisible = (db: Db, cle: string): string =>
+  String(parametre<boolean | number | string>(db, cle));
+
+/**
+ * Un réglage d'instance qui change laisse une trace nominative.
+ *
+ * Ces réglages commandent qui voit les dépenses et combien de temps un code
+ * d'accès reste affiché : les modifier est un acte, pas un détail de confort.
+ */
+function tracer(db: Db, acteurId: number, cle: string, avant: string, apres: string): void {
+  if (avant === apres) return;
+  db.prepare(`
+    INSERT INTO journal_audit (acteur_id, action, objet_kind, objet_id, detail_json, fait_le)
+    VALUES (?, 'parametre.change', 'parametre', 0, ?, ?)
+  `).run(acteurId, JSON.stringify({ cle, avant, apres }), horodatage());
+}
 
 /** Lit un corps `{ cle, valeur }` et refuse une clé hors de la portée attendue. */
 function cleDePortee(corps: unknown, portees: readonly string[]): { cle: string; valeur: unknown } {
@@ -31,9 +51,21 @@ export function routesParametres(deps: Deps): Routeur {
     parametres: exposer(ctx.db, { personneId: ctx.personneId }),
   }));
 
-  r.post('/parametres', { acces: 'gerant' }, (ctx) => {
+  /**
+   * Les réglages d'instance : administrateur de la plateforme, pas gérant.
+   *
+   * La section « Sécurité » en fait partie, et c'est un choix assumé plutôt
+   * qu'un oubli : `membreFoyerVoitDepenses` et la durée d'affichage des codes
+   * y vivent, donc un administrateur peut s'ouvrir une vue qu'il n'avait pas.
+   * Le droit ne se donne qu'entre administrateurs, et **chaque changement est
+   * écrit au journal d'audit** avec son auteur et l'ancienne valeur : à défaut
+   * de l'empêcher, on peut le relire.
+   */
+  r.post('/parametres', { acces: 'plateforme' }, (ctx) => {
     const { cle, valeur } = cleDePortee(ctx.corps, ['instance']);
+    const avant = valeurLisible(ctx.db, cle);
     poser(ctx.db, cle, valeur, {}, ctx.personneId);
+    tracer(ctx.db, ctx.personneId, cle, avant, valeurLisible(ctx.db, cle));
     log.info(`Réglage « ${cle} » modifié par la personne ${ctx.personneId}.`);
     return undefined;
   });
@@ -54,9 +86,11 @@ export function routesParametres(deps: Deps): Routeur {
     return undefined;
   });
 
-  r.post('/parametres/defaut', { acces: 'gerant' }, (ctx) => {
+  r.post('/parametres/defaut', { acces: 'plateforme' }, (ctx) => {
     const { cle } = cleDePortee(ctx.corps, ['instance']);
+    const avant = valeurLisible(ctx.db, cle);
     remettreParDefaut(ctx.db, cle, {});
+    tracer(ctx.db, ctx.personneId, cle, avant, valeurLisible(ctx.db, cle));
     return undefined;
   });
 

@@ -22,6 +22,14 @@ export interface BienResume {
 export interface Moi {
   personne: { id: number; nom: string; email: string | null; foyerId: number | null; foyerNom: string | null };
   estGerant: boolean;
+  /**
+   * Administrer l'instance : version, mises à jour, réglages, courriel, journal.
+   *
+   * Sans rapport avec la gérance d'un bien. La personne qui héberge le service
+   * peut n'être qu'un membre de foyer, et une gérante peut n'avoir jamais
+   * ouvert un terminal.
+   */
+  estAdminPlateforme: boolean;
   sessionLimitee: boolean;
   secondFacteur: { actif: boolean; obligatoirePourGerant: boolean; codesDeSecoursRestants: number };
   instanceNom: string;

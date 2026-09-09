@@ -117,7 +117,7 @@ test('les deux interrupteurs de sortie réseau ont disparu du registre', async (
   assert.equal(cles.includes('majVerification'), false);
 });
 
-test('le téléchargement reste refusé à qui n\'est pas gérant', async (t) => {
+test("le téléchargement est réservé aux administrateurs de la plateforme", async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
   const { bienId, structureId } = await amorcer(i);

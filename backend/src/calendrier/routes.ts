@@ -52,7 +52,7 @@ export function routesCalendrier(deps: Deps): Routeur {
     };
   });
 
-  r.get('/calendrier/vacances', { acces: 'gerant' }, (ctx) => ({ annees: resume(ctx.db) }));
+  r.get('/calendrier/vacances', { acces: 'plateforme' }, (ctx) => ({ annees: resume(ctx.db) }));
 
   /**
    * L'aperçu, quelle que soit la provenance des octets.
@@ -90,7 +90,7 @@ export function routesCalendrier(deps: Deps): Routeur {
     };
   };
 
-  r.post('/calendrier/vacances/analyse', { acces: 'gerant' }, (ctx) => {
+  r.post('/calendrier/vacances/analyse', { acces: 'plateforme' }, (ctx) => {
     const contenu = ctx.req.body;
     if (!Buffer.isBuffer(contenu) || !contenu.length) throw invalide('Aucun fichier reçu.');
     return apercuDe(ctx.db, contenu, String(ctx.req.query.nom ?? 'fichier déposé').slice(0, 200));
@@ -104,7 +104,7 @@ export function routesCalendrier(deps: Deps): Routeur {
    * faut confirmer. Il sert à remplacer une année déjà en base, ou à devancer
    * le rafraîchissement automatique, qui, lui, n'ajoute que ce qui manque.
    */
-  r.post('/calendrier/vacances/telechargement', { acces: 'gerant' }, async (ctx) => {
+  r.post('/calendrier/vacances/telechargement', { acces: 'plateforme' }, async (ctx) => {
     let octets: Buffer;
     try {
       octets = await telecharger();
@@ -120,7 +120,7 @@ export function routesCalendrier(deps: Deps): Routeur {
     return apercuDe(ctx.db, octets, HOTE);
   });
 
-  r.post('/calendrier/vacances', { acces: 'gerant' }, (ctx) => {
+  r.post('/calendrier/vacances', { acces: 'plateforme' }, (ctx) => {
     const c = (ctx.corps ?? {}) as Record<string, unknown>;
     let periodes;
     try {

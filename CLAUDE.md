@@ -31,6 +31,13 @@ gestion de biens familiaux. À lire avant toute modification.
   deux utilisateurs simultanés.
 - **Mutations granulaires.** On écrit la ligne qui change, jamais l'état du
   monde. Deux personnes qui saisissent en même temps ne s'écrasent pas.
+- **Deux droits, et ils ne se recouvrent pas.** « Gérant » dit qui arbitre les
+  séjours et les dépenses d'une structure. `admin_plateforme` dit qui tient la
+  machine : version, mises à jour, réglages d'instance, courriel, journal,
+  calendrier scolaire. Le second est un **attribut de la personne**, pas un
+  rôle, et il **n'ouvre aucun bien** : un administrateur non rattaché ne voit
+  toujours rien. L'export complet reste au gérant. Le droit ne se donne
+  qu'entre administrateurs et on ne retire jamais le dernier.
 - **Chaque module est autonome** : son schéma, ses règles pures, son repo, ses
   routes, sa tuile. Le noyau ne connaît aucun module, les modules ne se
   connaissent pas entre eux.

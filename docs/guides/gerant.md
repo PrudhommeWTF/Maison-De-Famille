@@ -438,9 +438,45 @@ tableur anglais `8/8/2026`, et une cellule au format date sort parfois en numér
 Les trois sont reconnues, et ce qui ne l'est pas est refusé ligne par ligne avec
 sa raison, jamais deviné.
 
+## 15 bis. Qui administre la plateforme
+
+![La section des administrateurs de la plateforme](images/gerant-administrateurs.png)
+
+**Gérer un bien et tenir la machine sont deux choses différentes**, et depuis
+cette version ce sont deux droits différents.
+
+- **Gérant** : arbitrer les séjours, saisir les dépenses, tenir les papiers,
+  les personnes et les rôles. C'est le métier décrit par tout ce guide.
+- **Administrateur de la plateforme** : la version installée et les mises à
+  jour, les réglages de l'instance, le relais de courriel, le journal, le
+  calendrier scolaire. C'est l'entrée **Administration** du menu.
+
+Les deux se cumulent souvent sur la même personne, mais rien ne l'oblige. Celui
+qui héberge le service peut n'être qu'un membre de foyer, et une gérante qui n'a
+jamais ouvert un terminal n'a pas à se voir proposer d'installer une mise à jour.
+
+**Ce droit n'ouvre aucun bien.** Un administrateur qui n'est rattaché à rien ne
+voit toujours aucun calendrier, aucune dépense, aucun code. L'export complet,
+qui emporte toute la base, reste réservé aux gérants.
+
+Il se donne dans **Administration**, section « Administrateurs », par un
+administrateur en poste. Le dernier ne peut pas se retirer : sans personne pour
+administrer, il faudrait un accès au serveur pour rouvrir l'écran.
+
+Un point à connaître avant de l'accorder : les réglages de la section
+**Sécurité** en font partie, et ils commandent qui voit les dépenses et combien
+de temps un code d'accès reste affiché. Un administrateur peut donc s'ouvrir une
+vue qu'il n'avait pas. Chaque changement est écrit au journal avec son auteur et
+l'ancienne valeur, mais le droit ne s'accorde qu'à quelqu'un en qui la famille a
+confiance pour la machine.
+
 ## 16. Sortir vos données
 
-Dans **Administration**, section « Données » :
+Dans **Administration**, section « Données ». L'export est réservé aux gérants :
+il emporte toute la base, y compris ce qu'aucun rôle ne voit à l'écran. Un
+administrateur de la plateforme qui n'est pas gérant tient la machine, pas le
+contenu des dossiers.
+
 
 - **Séjours en CSV** : le planning, pour un tableur.
 - **Export complet de l'instance** : la base et toutes les pièces jointes, dans
