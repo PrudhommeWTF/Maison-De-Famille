@@ -185,3 +185,53 @@ $btn-border-radius: $border-radius;
 }
 
 h1, h2, h3, h4, h5, h6 { letter-spacing: -.015em; }
+
+// Le contenu des guides d'aide.
+//
+// **Pourquoi ces règles sont ici et non dans le composant.** Le HTML des guides
+// est injecté (`[innerHTML]`), donc il ne porte pas l'attribut d'encapsulation
+// du composant : un bloc `styles` de composant ne l'atteint pas. C'est le seul
+// contenu de l'application écrit ailleurs que dans un gabarit Angular.
+//
+// Tout ce que Bootstrap porte déjà (tableaux, images) reçoit ses classes à la
+// compilation des guides, dans core/aide/guides.ts. Ne restent ici que les
+// balises nues que le Markdown produit et qu'aucune classe ne peut atteindre.
+.guide {
+  > :first-child { margin-top: 0; }
+
+  h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 1rem; }
+  h3 { font-size: 1.05rem; margin-top: 2rem; margin-bottom: .5rem; }
+
+  // Sans cette marge, un titre atteint depuis le sommaire se range sous les
+  // barres collantes et on croit que le lien n'a rien fait.
+  h2, h3 { scroll-margin-top: calc(var(--mdf-entete) + var(--mdf-contexte) + 1rem); }
+
+  p, li { line-height: 1.65; }
+  ul, ol { padding-left: 1.25rem; }
+  li { margin-bottom: .35rem; }
+
+  blockquote {
+    border-left: 3px solid var(--bs-border-color);
+    padding: .25rem 0 .25rem 1rem;
+    margin: 1.25rem 0;
+    color: var(--bs-secondary-color);
+  }
+
+  code {
+    background: var(--bs-tertiary-bg);
+    padding: .1rem .3rem;
+    border-radius: var(--bs-border-radius-sm);
+  }
+
+  pre {
+    background: var(--bs-tertiary-bg);
+    border-radius: var(--bs-border-radius);
+    padding: 12px 14px;
+    font-size: .82rem;
+    overflow-x: auto;
+
+    code { background: none; padding: 0; }
+  }
+
+  hr { margin: 2.5rem 0; }
+}

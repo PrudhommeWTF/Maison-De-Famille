@@ -91,6 +91,11 @@ export const ROUTES: Routes = [
     children: [
       { path: '', loadComponent: () => import('./ecrans/tableau-de-bord').then((m) => m.TableauDeBord), title: 'Tableau de bord' },
       { path: 'biens', loadComponent: () => import('./ecrans/biens').then((m) => m.Biens), title: 'Biens gérés' },
+      // L'aide est ouverte à toute personne connectée : c'est de la
+      // documentation, pas une donnée de la famille. L'adresse sans guide
+      // ouvre la page qui dit lequel est pour vous.
+      { path: 'aide', loadComponent: () => import('./ecrans/aide').then((m) => m.Aide), title: 'Aide' },
+      { path: 'aide/:slug', loadComponent: () => import('./ecrans/aide').then((m) => m.Aide), title: 'Aide' },
       { path: 'compte', loadComponent: () => import('./ecrans/compte').then((m) => m.Compte), title: 'Mon compte' },
       {
         path: 'bien', canActivate: [bienOuvert],

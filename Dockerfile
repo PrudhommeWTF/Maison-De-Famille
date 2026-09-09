@@ -14,6 +14,10 @@ WORKDIR /build/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
+# Les guides d'aide sont compilés depuis leur Markdown au moment du « build ».
+# Le dépôt entier n'est pas dans cette étape : on lui donne juste ce dossier,
+# que `scripts/aide.ts` cherche ici quand `docs/guides` n'existe pas.
+COPY docs/guides ./docs-guides
 RUN npm run build
 
 # ---- 2. Le backend ----

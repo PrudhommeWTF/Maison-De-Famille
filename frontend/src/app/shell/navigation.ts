@@ -97,6 +97,9 @@ export class Navigation {
     if (this.etat.estAdminPlateforme()) {
       e.push({ chemin: '/administration', libelle: 'Administration', icone: 'bi-sliders' });
     }
+    // L'aide s'adresse à tout le monde, y compris à l'invité d'un séjour : son
+    // guide existe, et le lui cacher n'aurait servi personne.
+    e.push({ chemin: '/aide', libelle: 'Aide', icone: 'bi-question-circle' });
     return e;
   });
 

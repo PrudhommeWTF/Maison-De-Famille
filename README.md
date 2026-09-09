@@ -112,6 +112,10 @@ Rien ne s'installe tout seul : une mise à jour se confirme par mot de passe.
 
 ### Pour la famille qui s'en sert
 
+Ces guides sont aussi lisibles **dans l'application**, rubrique **Aide** : ils y
+sont compilés depuis ces mêmes fichiers, il n'y a donc pas de seconde version à
+tenir à jour.
+
 | Document | Contenu |
 | --- | --- |
 | [`docs/guides/`](docs/guides/README.md) | **Les guides d'utilisation, un par rôle, avec des captures d'écran** |
