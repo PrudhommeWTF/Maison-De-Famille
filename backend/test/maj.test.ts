@@ -262,13 +262,15 @@ test('un fichier d\'état illisible vaut « rien en cours »', () => {
 // Les routes.
 // ---------------------------------------------------------------------------
 
-test('la vérification reste réservée au gérant', async (t) => {
+test("la vérification est réservée aux administrateurs de la plateforme", async (t) => {
   const i = await demarrer();
   t.after(() => i.fermer());
   const { structureId } = await amorcer(i);
 
-  // Plus aucun réglage ne commande cet appel : ce qui l'encadre encore, c'est
-  // le rôle. Le refus tombe avant le handler, donc sans toucher au réseau.
+  // Ce qui encadre cet appel n'est plus la gérance mais le droit
+  // d'administration : mettre à jour le serveur n'a rien à voir avec
+  // l'arbitrage des séjours. Le refus tombe avant le handler, donc sans
+  // toucher au réseau.
   const claire = await creerCompte(i, 'Claire Prudhomme', 'claire@exemple.fr');
   assert.equal((await i.post(`/api/structures/${structureId}/roles`,
     { personneId: claire, role: 'membre_foyer' })).statut, 204);

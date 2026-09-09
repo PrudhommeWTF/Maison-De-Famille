@@ -91,5 +91,9 @@ export class Administration {
       chemin: '/administration/serveur', icone: 'bi-terminal', libelle: 'Serveur',
       quoi: 'Les commandes utiles sur la machine',
     },
+    {
+      chemin: '/administration/administrateurs', icone: 'bi-person-gear', libelle: 'Administrateurs',
+      quoi: 'Qui tient la plateforme, indépendamment des biens',
+    },
   ];
 }

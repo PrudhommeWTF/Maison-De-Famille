@@ -17,7 +17,7 @@ import {
   creerPersonne, creerStructure, instanceAmorcee, personne,
 } from '../patrimoine/repo';
 import { biensDeLaPortee } from './repo';
-import { estGerant } from './roles';
+import { estAdminPlateforme, estGerant } from './roles';
 import { compterEnAttente } from '../sejours/repo';
 
 export function routesAcces(deps: Deps): Routeur {
@@ -32,6 +32,10 @@ export function routesAcces(deps: Deps): Routeur {
     return {
       personne: { id: moi.id, nom: moi.nom, email: moi.email, foyerId: moi.foyerId, foyerNom: moi.foyerNom },
       estGerant: estGerant(ctx.portee),
+      // Deux droits distincts, et l'interface doit pouvoir les distinguer :
+      // la personne qui tient le serveur n'est pas forcément celle qui arbitre
+      // les séjours, et chacune ne doit voir que ses entrées de menu.
+      estAdminPlateforme: estAdminPlateforme(ctx.portee),
       // Une session limitée n'a le droit que d'activer son second facteur :
       // l'interface doit le dire clairement plutôt que d'afficher des écrans
       // qui répondront tous 403.
@@ -82,6 +86,10 @@ export function routesAcces(deps: Deps): Routeur {
         type, couchages, locationActivee: false, notes: '',
       }, personneId);
       attribuerRole(ctx.db, personneId, { structureId }, 'gerant', aujourdhui(), personneId);
+      // Le premier compte administre aussi la plateforme : sans cela, une
+      // instance neuve n'aurait personne pour ouvrir l'Administration, et le
+      // droit ne se donnant qu'entre administrateurs, personne pour l'accorder.
+      ctx.db.prepare('UPDATE personne SET admin_plateforme = 1 WHERE id = ?').run(personneId);
       // Aucune détention n'est inventée ici. La répartition réelle porte une
       // date d'effet (une succession, un acte notarié) qu'aucun amorçage ne
       // peut deviner, et une ligne « 100 % au premier compte, à partir

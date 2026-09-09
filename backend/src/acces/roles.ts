@@ -10,6 +10,12 @@
 // modules reçoivent la liste des biens autorisés en paramètre. Le serveur ne
 // lit jamais ce qu'il n'a pas le droit de rendre : il ne filtre pas après coup.
 //
+// **Le droit d'administrer la plateforme est à part**, et ce fichier ne le
+// calcule pas : il le transporte. Un rôle dit ce qu'on peut faire d'un bien,
+// pas ce qu'on peut faire de la machine. Confondre les deux obligeait la
+// personne qui tient le serveur à se faire gérante d'une indivision où elle
+// n'a rien à gérer, ou l'inverse. Voir `estAdminPlateforme` en bas de fichier.
+//
 // Trois sources de rôle, et elles se cumulent en gardant la plus large :
 //
 //   1. **La détention** : détenir des parts dans une structure à la date du jour
@@ -43,7 +49,12 @@ export interface LigneDetention { personneId: number; structureId: number }
 /** Un bien et la structure qui le porte. */
 export interface LigneBien { bienId: number; structureId: number }
 
-export interface LignePersonne { personneId: number; foyerId: number | null }
+export interface LignePersonne {
+  personneId: number;
+  foyerId: number | null;
+  /** Le droit d'administrer l'instance, indépendant de tout bien. */
+  adminPlateforme?: boolean;
+}
 
 export interface Entrees {
   biens: readonly LigneBien[];
@@ -57,9 +68,19 @@ export interface Portee {
   /** Bien vers rôle effectif. Un bien absent de cette table n'existe pas pour cette personne. */
   biens: Map<number, Role>;
   structures: Map<number, Role>;
+  /**
+   * Administrer l'instance : version, mises à jour, réglages, courriel, journal.
+   *
+   * Volontairement hors des deux tables ci-dessus, et non un quatrième rôle :
+   * ce droit ne se rapporte à aucun bien, il ne se compare à aucun autre, et
+   * l'ajouter au barème `RANG` aurait fait d'un administrateur un gérant de
+   * tout par simple comparaison numérique.
+   */
+  adminPlateforme: boolean;
 }
 
-const vide = (personneId: number | null): Portee => ({ personneId, biens: new Map(), structures: new Map() });
+const vide = (personneId: number | null): Portee =>
+  ({ personneId, biens: new Map(), structures: new Map(), adminPlateforme: false });
 
 /**
  * La portée effective d'une personne.
@@ -97,6 +118,8 @@ export function calculer(personneId: number, e: Entrees): Portee {
   //    foyer. Sans cette passe, il faudrait saisir chaque conjoint sur chaque
   //    bien, et l'oubli se traduirait par « je ne vois pas le calendrier ».
   const moi = e.personnes.find((x) => x.personneId === personneId);
+  p.adminPlateforme = moi?.adminPlateforme === true;
+
   if (moi?.foyerId != null) {
     const memeFoyer = new Set(
       e.personnes.filter((x) => x.foyerId === moi.foyerId && x.personneId !== personneId).map((x) => x.personneId),
@@ -145,3 +168,13 @@ export const biensAuMoins = (p: Portee, requis: Role): number[] =>
 
 /** Gérant d'au moins une structure : le droit de créer une structure ou un bien. */
 export const estGerant = (p: Portee): boolean => [...p.structures.values()].includes('gerant');
+
+/**
+ * Le droit d'administrer la plateforme.
+ *
+ * Il ne se déduit d'aucun rôle et n'en donne aucun : un administrateur qui
+ * n'est rattaché à aucun bien n'en voit toujours aucun. C'est ce qui permet à
+ * la personne qui héberge le service de le tenir sans entrer dans la gestion
+ * des biens, et à une gérante de gérer sans toucher à la machine.
+ */
+export const estAdminPlateforme = (p: Portee): boolean => p.adminPlateforme;

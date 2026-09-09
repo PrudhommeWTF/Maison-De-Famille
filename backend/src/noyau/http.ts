@@ -17,7 +17,7 @@ import type { Db } from './db';
 import type { Config } from './config';
 import { ErreurApp } from './erreurs';
 import { log } from './log';
-import { Portee, Role, auMoins, estGerant } from '../acces/roles';
+import { Portee, Role, auMoins, estAdminPlateforme, estGerant } from '../acces/roles';
 import { porteeDe } from '../acces/repo';
 import { verifierAcces } from '../auth/jetons';
 
@@ -28,6 +28,16 @@ export type Exigence =
   | { acces: 'authentifie' }
   /** Gérant d'au moins une structure : créer une structure, un bien, une personne. */
   | { acces: 'gerant' }
+  /**
+   * Administrer l'instance : version, mises à jour, réglages, courriel, journal.
+   *
+   * Distinct de « gerant » et sans recouvrement avec lui : tenir la machine et
+   * arbitrer les séjours d'une indivision sont deux métiers, et les confondre
+   * obligeait l'un des deux à se donner les droits de l'autre pour rien. Ce
+   * droit ne donne accès à **aucun bien** : les données de la famille restent
+   * derrière les portées de bien et de structure.
+   */
+  | { acces: 'plateforme' }
   /** Rôle minimal sur le bien désigné par le paramètre d'URL (`bienId` par défaut). */
   | { acces: 'bien'; role: Role; param?: string }
   /** Rôle minimal sur la structure désignée (`structureId` par défaut). */
@@ -139,6 +149,15 @@ function appliquerExigence(ctx: Contexte, exigence: Exigence): void {
       }
       return;
 
+    case 'plateforme':
+      if (!estAdminPlateforme(ctx.portee)) {
+        throw new ErreurApp(
+          'ACCES_REFUSE',
+          "Cette action est réservée aux administrateurs de la plateforme. Ce n'est pas le même droit que gérer un bien : un administrateur en poste peut vous l'accorder.",
+        );
+      }
+      return;
+
     case 'bien': {
       const brut = ctx.req.params[exigence.param ?? 'bienId'];
       const id = Number(brut);
@@ -191,7 +210,8 @@ export class Routeur {
         const personneId = auth.personneId;
         const ctx: Contexte = {
           db, config, req, res, personneId, limite: auth.limite,
-          portee: personneId ? porteeDe(db, personneId) : { personneId: null, biens: new Map(), structures: new Map() },
+          portee: personneId ? porteeDe(db, personneId)
+            : { personneId: null, biens: new Map(), structures: new Map(), adminPlateforme: false },
           bienId: 0, structureId: 0,
           corps: req.body,
           ip: ipDe(req),

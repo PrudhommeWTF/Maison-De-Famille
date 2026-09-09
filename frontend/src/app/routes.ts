@@ -55,6 +55,19 @@ const gerant = () => {
   return etat.estGerant() ? true : router.createUrlTree(['/']);
 };
 
+/**
+ * L'Administration suit le droit de plateforme, pas la gérance.
+ *
+ * Garde distincte et non un `||` ajouté à la précédente : les deux droits ne se
+ * recouvrent pas, et confondre les deux gardes aurait rouvert aux gérants un
+ * écran qu'on vient de leur retirer.
+ */
+const administrateur = () => {
+  const etat = inject(Etat);
+  const router = inject(Router);
+  return etat.estAdminPlateforme() ? true : router.createUrlTree(['/']);
+};
+
 export const ROUTES: Routes = [
   {
     path: 'connexion',
@@ -99,7 +112,7 @@ export const ROUTES: Routes = [
       { path: 'personnes', canActivate: [gerant], loadComponent: () => import('./ecrans/personnes').then((m) => m.Personnes), title: 'Personnes et rôles' },
       { path: 'import', canActivate: [gerant], loadComponent: () => import('./ecrans/import').then((m) => m.Import), title: 'Import du planning' },
       {
-        path: 'administration', canActivate: [gerant],
+        path: 'administration', canActivate: [administrateur],
         loadComponent: () => import('./ecrans/administration').then((m) => m.Administration),
         children: [
           { path: '', loadComponent: () => import('./ecrans/administration/apercu').then((m) => m.AdministrationApercu), title: 'Administration' },
@@ -108,6 +121,7 @@ export const ROUTES: Routes = [
           { path: 'courriel', loadComponent: () => import('./ecrans/administration/courriel').then((m) => m.AdministrationCourriel), title: 'Courriel' },
           { path: 'donnees', loadComponent: () => import('./ecrans/administration/donnees').then((m) => m.AdministrationDonnees), title: 'Données' },
           { path: 'serveur', loadComponent: () => import('./ecrans/administration/serveur').then((m) => m.AdministrationServeur), title: 'Serveur' },
+          { path: 'administrateurs', loadComponent: () => import('./ecrans/administration/administrateurs').then((m) => m.AdministrationAdministrateurs), title: 'Administrateurs' },
         ],
       },
       // Les deux anciennes adresses vivent encore dans des favoris, dans les

@@ -6,6 +6,7 @@
 // discret en pied de page.
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Api, ErreurAppel } from '../../core/api';
+import { Etat } from '../../core/etat';
 import { horodatageLisible } from '../../core/format';
 import type { Etat as EtatModele } from '../../core/modeles';
 
@@ -17,24 +18,42 @@ import type { Etat as EtatModele } from '../../core/modeles';
     <div class="d-flex flex-column gap-3">
       @if (erreur()) { <div class="alert alert-primary mb-0">{{ erreur() }}</div> }
 
-    <section class="card">
-      <div class="card-body">
-        <h2 class="h5 card-title">Export</h2>
-        <p class="text-body-secondary small">
-          Vous n'êtes prisonnier ni d'un tableur ni de cette application. L'export complet contient la
-          base et toutes les pièces jointes, et se restaure sur une instance vierge.
-        </p>
-        <div class="d-flex gap-2 flex-wrap">
-          <button class="btn btn-outline-secondary" (click)="exporter('/export/sejours.csv')" [disabled]="occupe()">
-            <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Séjours en CSV
-          </button>
-          <button class="btn btn-outline-secondary" (click)="exporter('/export/instance.tar.gz')"
-                  [disabled]="occupe()">
-            <i class="bi bi-box-arrow-down me-1" aria-hidden="true"></i>Export complet de l'instance
-          </button>
+    <!-- L'export emporte **toutes** les données de la famille, y compris ce
+         qu'aucun rôle ne voit à l'écran. Il reste donc réservé au gérant :
+         administrer la machine ne donne pas accès au contenu, et un bouton qui
+         répondrait 403 serait pire qu'un bouton absent. -->
+    @if (etatGlobal.estGerant()) {
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Export</h2>
+          <p class="text-body-secondary small">
+            Vous n'êtes prisonnier ni d'un tableur ni de cette application. L'export complet contient la
+            base et toutes les pièces jointes, et se restaure sur une instance vierge.
+          </p>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-secondary" (click)="exporter('/export/sejours.csv')" [disabled]="occupe()">
+              <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>Séjours en CSV
+            </button>
+            <button class="btn btn-outline-secondary" (click)="exporter('/export/instance.tar.gz')"
+                    [disabled]="occupe()">
+              <i class="bi bi-box-arrow-down me-1" aria-hidden="true"></i>Export complet de l'instance
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    } @else {
+      <section class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Export</h2>
+          <p class="text-body-secondary small mb-0" style="max-width:640px">
+            L'export emporte toute la base et toutes les pièces jointes. Il est réservé aux
+            gérants : administrer la plateforme donne la main sur la machine, pas sur le contenu
+            des dossiers de la famille. Une sauvegarde complète du serveur passe par
+            <code>deploy/lxc/sauvegarde.sh</code>.
+          </p>
+        </div>
+      </section>
+    }
 
       @if (etat(); as e) {
         <section class="card">
@@ -104,6 +123,7 @@ import type { Etat as EtatModele } from '../../core/modeles';
 })
 export class AdministrationDonnees {
   private readonly api = inject(Api);
+  readonly etatGlobal = inject(Etat);
   readonly etat = signal<EtatModele | null>(null);
   readonly occupe = signal(false);
   readonly erreur = signal('');

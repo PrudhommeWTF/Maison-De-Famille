@@ -30,9 +30,15 @@ export function lireEntrees(db: Db, date = aujourdhui()): Entrees {
       WHERE effet_du <= ? AND (effet_au IS NULL OR effet_au > ?)
     `).all(date, date) as Entrees['detentions'],
 
-    personnes: db.prepare(
-      'SELECT id AS personneId, foyer_id AS foyerId FROM personne WHERE archive_le IS NULL',
-    ).all() as Entrees['personnes'],
+    personnes: db.prepare(`
+      SELECT id AS personneId, foyer_id AS foyerId,
+             admin_plateforme AS adminPlateforme
+      FROM personne WHERE archive_le IS NULL
+    `).all().map((l) => {
+      const r = l as { personneId: number; foyerId: number | null; adminPlateforme: number };
+      // SQLite rend 0 ou 1 : le module pur, lui, ne connaît que des booléens.
+      return { personneId: r.personneId, foyerId: r.foyerId, adminPlateforme: r.adminPlateforme === 1 };
+    }) as Entrees['personnes'],
   };
 }
 

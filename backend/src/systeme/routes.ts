@@ -16,6 +16,7 @@ import { lire } from '../noyau/valider';
 import { verifier } from '../auth/mots-de-passe';
 import { etat } from '../notifications/file';
 import { orphelins } from '../stockage/fichiers';
+import { AdministrationImpossible, administrables, poserAdministrateur } from './administrateurs';
 import { VerificationImpossible, depotParDefaut } from './depot';
 import { declencher, enCours, statut } from './maj';
 import { lireVeille, verifier as veiller } from './veille';
@@ -26,7 +27,7 @@ export function routesSysteme(deps: Deps): Routeur {
 
   r.get('/sante', { acces: 'public' }, (ctx) => ({ ok: true, version: ctx.config.version }));
 
-  r.get('/etat', { acces: 'gerant' }, (ctx) => {
+  r.get('/etat', { acces: 'plateforme' }, (ctx) => {
     const migrations = ctx.db.prepare(
       'SELECT version, libelle, applique_le AS appliqueLe, duree_ms AS dureeMs FROM schema_migration ORDER BY version',
     ).all();
@@ -71,7 +72,7 @@ export function routesSysteme(deps: Deps): Routeur {
    * fonction, sinon l'un des deux finirait par répondre autre chose que l'autre.
    * Rien n'est installé ici.
    */
-  r.post('/systeme/maj/verification', { acces: 'gerant' }, async (ctx) => {
+  r.post('/systeme/maj/verification', { acces: 'plateforme' }, async (ctx) => {
     try {
       return { ...await veiller(ctx.config.dataDir, ctx.config.version), installationPossible: ctx.config.majAuto };
     } catch (e) {
@@ -83,7 +84,7 @@ export function routesSysteme(deps: Deps): Routeur {
     }
   });
 
-  r.get('/systeme/maj', { acces: 'gerant' }, (ctx) => ({
+  r.get('/systeme/maj', { acces: 'plateforme' }, (ctx) => ({
     installee: ctx.config.version,
     versionConnue: versionConnue(ctx.config.version),
     installationPossible: ctx.config.majAuto,
@@ -91,6 +92,36 @@ export function routesSysteme(deps: Deps): Routeur {
     statut: statut(ctx.config.dataDir),
     veille: lireVeille(ctx.config.dataDir),
   }));
+
+  /**
+   * Qui administre la plateforme, et le droit qui va avec.
+   *
+   * Cet écran vit dans l'Administration et non dans « Personnes et rôles » :
+   * un administrateur qui n'est pas gérant n'ouvre pas cet écran-là, et il doit
+   * pouvoir désigner un successeur sans passer par quelqu'un d'autre.
+   */
+  r.get('/systeme/administrateurs', { acces: 'plateforme' }, (ctx) => ({
+    personnes: administrables(ctx.db),
+    moi: ctx.personneId,
+  }));
+
+  r.post('/systeme/administrateurs', { acces: 'plateforme' }, (ctx) => {
+    const l = lire(ctx.corps);
+    const personneId = l.entier('personneId', { min: 1 });
+    const actif = l.booleen('actif');
+    l.fin();
+    try {
+      const change = poserAdministrateur(ctx.db, personneId, actif, ctx.personneId);
+      if (change) {
+        log.info(`Droit d'administration ${actif ? 'accordé à' : 'retiré à'} la personne ${personneId} `
+          + `par la personne ${ctx.personneId}.`);
+      }
+    } catch (e) {
+      if (e instanceof AdministrationImpossible) throw etatInvalide(e.message);
+      throw e;
+    }
+    return { personnes: administrables(ctx.db), moi: ctx.personneId };
+  });
 
   /**
    * Lancer la mise à jour.
@@ -103,7 +134,7 @@ export function routesSysteme(deps: Deps): Routeur {
    * serveur ». Un jeton dérobé sur un téléphone déverrouillé ne doit pas
    * suffire : il faut aussi savoir le mot de passe.
    */
-  r.post('/systeme/maj', { acces: 'gerant' }, async (ctx) => {
+  r.post('/systeme/maj', { acces: 'plateforme' }, async (ctx) => {
     if (!ctx.config.majAuto) {
       throw etatInvalide(
         "La mise à jour depuis l'interface n'est pas installée sur ce serveur. "

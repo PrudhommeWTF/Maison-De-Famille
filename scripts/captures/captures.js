@@ -123,6 +123,9 @@ async function cliquer(selecteur, quoi) {
   await aller('/administration/courriel');
   await capture('gerant-administration-courriel', { full: true });
 
+  await aller('/administration/administrateurs');
+  await capture('gerant-administrateurs', { full: true });
+
   await aller('/import');
   await capture('gerant-import-planning');
 
