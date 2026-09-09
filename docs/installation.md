@@ -205,18 +205,23 @@ git pull && docker compose up -d --build
 ### Mettre à jour depuis l'application
 
 Un gérant peut aussi lancer la mise à jour depuis **Administration**, section « Vue d'ensemble »,
-sans ouvrir de terminal. Il faut deux choses, et elles sont indépendantes :
+sans ouvrir de terminal. Il faut une chose : **l'assistant root**, installé par
+l'installateur quand on le lui demande.
 
-1. **L'assistant root**, installé par l'installateur quand on le lui demande :
+```bash
+MAJ_AUTO=true bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
+```
 
-   ```bash
-   MAJ_AUTO=true bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
-   ```
+Il pose `/usr/local/sbin/maison-de-famille-maj.sh`, deux unités systemd, et
+`MDF_MAJ_AUTO=true` dans la configuration. Sans lui, le bouton n'apparaît pas,
+parce qu'il ne mènerait à rien.
 
-   Il pose `/usr/local/sbin/maison-de-famille-maj.sh` et deux unités systemd.
-   Sans lui, le bouton n'apparaît pas, parce qu'il ne mènerait à rien.
+La commande vaut aussi sur une machine **déjà installée** : elle met le code à
+jour, pose l'assistant et rectifie la configuration, sans toucher au secret ni
+aux données. Sur une machine où le dépôt est déjà là, c'est la même chose avec
+`MAJ_AUTO=true bash /opt/maison-de-famille/deploy/lxc/install.sh`.
 
-Il n'y a plus de second interrupteur : le service demande à GitHub s'il existe
+Il n'y a pas de second interrupteur : le service demande à GitHub s'il existe
 une version plus récente au démarrage, puis toutes les six heures, et affiche ce
 qu'il a vu. Un serveur sans sortie Internet le dit à l'écran au lieu de rester
 muet, et le bouton « Vérifier maintenant » sert à ne pas attendre le prochain
@@ -238,7 +243,9 @@ chemin du journal : `<données>/maj.log`. Le service, lui, est relancé par le
 script même en cas d'échec après l'arrêt.
 
 Pour désactiver, relancez l'installateur sans `MAJ_AUTO` : l'assistant root et
-ses unités sont retirés.
+ses unités sont retirés, et `MDF_MAJ_AUTO` repasse à `false`. Les deux vont
+ensemble, exprès : un drapeau resté à `true` sans assistant afficherait un bouton
+qui redemande le mot de passe et ne ferait plus rien.
 
 ### Pourquoi `git pull` ne marchera jamais
 

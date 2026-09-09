@@ -35,6 +35,19 @@ export NG_CLI_ANALYTICS=false
 log() { echo -e "\e[1;32m[mdf]\e[0m $*"; }
 err() { echo -e "\e[1;31m[mdf]\e[0m $*" >&2; }
 
+# Pose une clé dans le fichier de configuration : remplace la ligne si elle
+# existe, l'ajoute sinon. Les clés qui décrivent ce que l'installateur vient de
+# faire passent toutes par ici, et sur CHAQUE passage : une configuration
+# existante ne doit pas figer une réponse devenue fausse.
+poser_env() {
+  local cle="$1" valeur="$2" fichier="$3"
+  if grep -q "^${cle}=" "${fichier}"; then
+    sed -i "s|^${cle}=.*|${cle}=${valeur}|" "${fichier}"
+  else
+    echo "${cle}=${valeur}" >> "${fichier}"
+  fi
+}
+
 [[ "${EUID}" -eq 0 ]] || { err "Ce script doit être lancé en root."; exit 1; }
 
 # --- Garde-fou : ce script installe DANS un conteneur, pas sur l'hyperviseur ---
@@ -178,8 +191,24 @@ else
   log "Configuration existante conservée : ${ENV_FILE}"
   # Les chemins peuvent avoir changé entre deux versions : on les remet à jour
   # sans toucher au reste, et surtout sans écraser le secret.
-  sed -i "s#^MDF_STATIC_DIR=.*#MDF_STATIC_DIR=${APP_DIR}/frontend/dist/frontend/browser#" "${ENV_FILE}"
+  poser_env MDF_STATIC_DIR "${APP_DIR}/frontend/dist/frontend/browser" "${ENV_FILE}"
 fi
+
+# --- Mise à jour depuis l'interface : ce que le service en croit ---
+#
+# Écrit à CHAQUE passage, et pas seulement à la première installation. Sans
+# cela, relancer l'installateur avec MAJ_AUTO=true posait bien l'assistant root
+# mais laissait `MDF_MAJ_AUTO=false` dans une configuration déjà existante :
+# l'écran continuait d'annoncer que l'installation depuis l'interface n'était
+# pas en place, et la seule façon documentée de l'activer ne marchait pas.
+#
+# L'inverse était pire. Relancer sans la variable retirait l'assistant mais
+# laissait le drapeau à `true` : l'application offrait un bouton, redemandait le
+# mot de passe, écrivait son déclencheur, et plus personne ne le regardait. Une
+# mise à jour qui ne se fait pas en disant qu'elle se fait.
+#
+# Le drapeau décrit donc désormais l'état réel de la machine, dans les deux sens.
+poser_env MDF_MAJ_AUTO "${MAJ_AUTO}" "${ENV_FILE}"
 
 # --- Version déployée ---
 #
@@ -197,11 +226,7 @@ if [[ -z "${VERSION}" ]]; then
 fi
 VERSION="${VERSION#v}"
 if [[ -n "${VERSION}" && "${VERSION}" != "0.0.0" ]]; then
-  if grep -q '^MDF_VERSION=' "${ENV_FILE}"; then
-    sed -i "s|^MDF_VERSION=.*|MDF_VERSION=${VERSION}|" "${ENV_FILE}"
-  else
-    echo "MDF_VERSION=${VERSION}" >> "${ENV_FILE}"
-  fi
+  poser_env MDF_VERSION "${VERSION}" "${ENV_FILE}"
   log "Version déployée : ${VERSION}"
 else
   err "Version indéterminable : le service l'affichera comme inconnue."
@@ -261,7 +286,11 @@ EOF
 # Le service ne gagne aucun droit : c'est tout l'intérêt du détour.
 if [[ "${MAJ_AUTO}" =~ ^(1|true|yes|on)$ ]]; then
   log "Activation de la mise à jour depuis l'interface (assistant root)"
-  install -m 0755 -o root -g root "${SCRIPT_DIR}/maj.sh" /usr/local/sbin/maison-de-famille-maj.sh
+  # `${APP_DIR}` et non `${SCRIPT_DIR}` : la façon documentée d'installer est
+  # `bash <(curl ...)`, où le script n'a pas de dossier et où `maj.sh` n'est
+  # donc nulle part à côté de lui. L'installation s'interrompait là, après avoir
+  # déjà tout posé. Le code qui vient d'être déployé, lui, est toujours là.
+  install -m 0755 -o root -g root "${APP_DIR}/deploy/lxc/maj.sh" /usr/local/sbin/maison-de-famille-maj.sh
   cat > "/etc/systemd/system/${UNITE}-maj.service" <<EOF
 [Unit]
 Description=Maison de Famille, mise à jour
