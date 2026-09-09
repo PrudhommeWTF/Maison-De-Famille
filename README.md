@@ -63,12 +63,11 @@ cp .env.exemple .env && openssl rand -hex 32   # à coller dans MDF_JWT_SECRET
 docker compose up -d --build
 ```
 
-Ou en LXC natif sous Proxmox, ce qui est le mode recommandé ici :
+Ou en LXC natif sous Proxmox, ce qui est le mode recommandé ici. Une seule
+commande, sur l'hôte : le conteneur est créé, puis l'application y est installée.
 
 ```bash
-bash deploy/lxc/proxmox-create.sh    # sur l'hôte Proxmox
-pct enter <ID>
-bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
+bash deploy/lxc/proxmox-create.sh
 ```
 
 Le détail, le reverse-proxy et la mise à jour sont dans

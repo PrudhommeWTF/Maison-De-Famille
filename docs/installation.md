@@ -16,12 +16,16 @@ certificat : l'application ne fait pas de TLS elle-même.
 
 ## LXC natif sous Proxmox
 
-### 1. Créer le conteneur, depuis l'hôte Proxmox
+### 1. Créer le conteneur et installer, depuis l'hôte Proxmox
 
 ```bash
 git clone https://github.com/PrudhommeWTF/Maison-De-Famille.git /tmp/mdf
 bash /tmp/mdf/deploy/lxc/proxmox-create.sh
 ```
+
+**Une seule commande suffit** : le conteneur est créé, puis l'installateur y est
+lancé dans la foulée. Comptez cinq à dix minutes, la compilation de
+l'application n'est pas rapide. L'adresse à ouvrir s'affiche à la fin.
 
 Un conteneur Debian 12 **non privilégié** est créé (2 vCPU, 1 Go, 8 Go de
 disque), démarré au boot. Ces valeurs se règlent par variables d'environnement :
@@ -52,20 +56,40 @@ sa fabrication : installer quoi que ce soit sans `apt-get update` échoue sur de
 404, parce que le miroir a retiré les paquets de la version corrective que cet
 index réclame.
 
-### 2. Installer, dans le conteneur
+Trois variables commandent ce qui est installé :
+
+```bash
+INSTALLER=false bash deploy/lxc/proxmox-create.sh   # conteneur nu, sans l'application
+MDF_BRANCH=0.0.7 bash deploy/lxc/proxmox-create.sh  # ce tag plutôt que « main »
+MAJ_AUTO=true bash deploy/lxc/proxmox-create.sh     # avec la mise à jour depuis l'interface
+```
+
+`MDF_BRANCH` sert **aussi** à télécharger l'installateur : lancer ce script au
+tag 0.0.7 ne pose pas un conteneur en « main ». Sur un dépôt qui n'est pas
+hébergé par GitHub, l'adresse de l'installateur n'est pas devinable : le script
+le dit et s'arrête après avoir créé le conteneur, à moins que `MDF_INSTALL_URL`
+ne la donne.
+
+Si l'installation échoue, **le conteneur reste** : le script affiche l'erreur et
+la commande exacte pour reprendre dedans.
+
+### 2. Installer à la main, si besoin
+
+Utile sur un conteneur créé autrement, ou après un `INSTALLER=false` :
 
 ```bash
 pct enter 210
 bash <(curl -fsSL https://raw.githubusercontent.com/PrudhommeWTF/Maison-De-Famille/main/deploy/lxc/install.sh)
 ```
 
-Le script installe Node 22, compile le backend et l'application, crée
-l'utilisateur de service `maison`, engendre un secret JWT, écrit l'unité systemd
-et démarre le service. Il est **idempotent** : le relancer met à jour le code
-sans toucher aux données.
+C'est le même script que celui lancé automatiquement, avec les mêmes variables.
+Il installe Node 22, compile le backend et l'application, crée l'utilisateur de
+service `maison`, engendre un secret JWT, écrit l'unité systemd et démarre le
+service. Il est **idempotent** : le relancer met à jour le code sans toucher aux
+données.
 
-Sur un conteneur créé à la main plutôt que par le script précédent, il faut
-d'abord donner à Debian de quoi télécharger :
+Sur un conteneur créé à la main, il faut d'abord donner à Debian de quoi
+télécharger :
 
 ```bash
 apt-get update && apt-get install -y curl ca-certificates
