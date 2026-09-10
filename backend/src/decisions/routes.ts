@@ -172,13 +172,15 @@ export function routesDecisions(deps: Deps): Routeur {
         'Un accès temporaire ne dépasse pas un an. Au-delà, ouvrez un vrai compte '
         + 'depuis l\'écran « Personnes et rôles ».');
     }
-    if (!ctx.config.publicUrl) {
-      throw etatInvalide(
-        "L'adresse publique de l'instance n'est pas configurée (MDF_PUBLIC_URL) : le lien "
-        + 'engendré serait incomplet et ne mènerait nulle part.');
-    }
+    // Sans adresse publique, le lien sort en chemin nu et l'écran le complète
+    // avec l'adresse du navigateur. On refusait ici, ce qui interdisait purement
+    // d'ouvrir un accès sur une instance dont l'adresse n'est pas déclarée, alors
+    // que la gérante a le lien sous les yeux et sait sur quel domaine elle est.
+    // Aucun courriel ne porte ce lien, et un relais SMTP ne peut pas être
+    // configuré sans adresse publique (le service refuse de démarrer) : il n'y a
+    // donc pas de chemin par lequel un lien incomplet parte à quelqu'un.
     return ouvrirAcces(ctx.db, ctx.bienId,
-      { libelle, email: email || null, sejourId, expireLe }, ctx.personneId, ctx.config.publicUrl);
+      { libelle, email: email || null, sejourId, expireLe }, ctx.personneId, ctx.config.publicUrl ?? '');
   });
 
   r.post('/biens/:bienId/acces/:accesId/revocation', { acces: 'bien', role: 'gerant' }, (ctx) => {
