@@ -188,14 +188,64 @@ interface Contact {
                 @if (inventaire().length) {
                   <ul class="list-group list-group-flush flex-grow-1">
                     @for (i of inventaire(); track i.id) {
-                      <li class="list-group-item d-flex justify-content-between gap-3 px-0 small">
-                        <span>{{ i.libelle }}</span>
-                        <span class="text-body-secondary">{{ i.etat || 'Bon' }}</span>
+                      <li class="list-group-item px-0 small">
+                        @if (inventaireEdite() === i.id) {
+                          <form class="row g-2" (ngSubmit)="enregistrerInventaire(i.id)">
+                            <div class="col-12">
+                              <input class="form-control form-control-sm" name="ilib" [(ngModel)]="fInvLibelle"
+                                     aria-label="Objet">
+                            </div>
+                            <div class="col-12">
+                              <input class="form-control form-control-sm" name="ietat" [(ngModel)]="fInvEtat"
+                                     aria-label="État" placeholder="Bon">
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                              <button class="btn btn-sm btn-primary" type="submit"
+                                      [disabled]="occupe() || !fInvLibelle.trim()">Enregistrer</button>
+                              <button class="btn btn-sm btn-outline-secondary" type="button"
+                                      (click)="inventaireEdite.set(null)">Annuler</button>
+                            </div>
+                          </form>
+                        } @else {
+                          <!-- Les actions sur leur propre ligne, et non au bout de
+                               l'état : la colonne est étroite, et « Usé mais
+                               utilisable » suivi de deux liens s'enroulait
+                               différemment à chaque ligne. -->
+                          <div class="d-flex justify-content-between gap-2">
+                            <span class="flex-grow-1">{{ i.libelle }}</span>
+                            <span class="text-end text-body-secondary">{{ i.etat || 'Bon' }}</span>
+                          </div>
+                          @if (etat.estGeranteIci()) {
+                            <div class="d-flex gap-3 mt-1">
+                              <button class="btn btn-sm btn-link text-body-secondary p-0" type="button"
+                                      (click)="editerInventaire(i)">modifier</button>
+                              <button class="btn btn-sm btn-link text-body-secondary p-0" type="button"
+                                      (click)="retirerInventaire(i)">retirer</button>
+                            </div>
+                          }
+                        }
                       </li>
                     }
                   </ul>
                 } @else {
                   <p class="text-body-secondary small flex-grow-1">Aucune ligne d'inventaire.</p>
+                }
+
+                @if (etat.estGeranteIci() && inventaireEdite() === null) {
+                  <form class="row g-2 mt-2" (ngSubmit)="ajouterInventaire()">
+                    <div class="col-12">
+                      <input class="form-control form-control-sm" name="nlib" [(ngModel)]="fInvNouvLibelle"
+                             aria-label="Objet" placeholder="Six chaises de jardin">
+                    </div>
+                    <div class="col-8">
+                      <input class="form-control form-control-sm" name="netat" [(ngModel)]="fInvNouvEtat"
+                             aria-label="État" placeholder="Bon">
+                    </div>
+                    <div class="col-4">
+                      <button class="btn btn-sm btn-outline-secondary w-100" type="submit"
+                              [disabled]="occupe() || !fInvNouvLibelle.trim()">Ajouter</button>
+                    </div>
+                  </form>
                 }
                 <button class="btn btn-sm btn-outline-secondary w-100 mt-3" type="button"
                         (click)="casse.set(!casse())">
@@ -211,6 +261,19 @@ interface Contact {
                       <input class="form-control" name="kdet" [(ngModel)]="fCasseDetail" aria-label="Détail"
                              placeholder="affaissé au milieu">
                     </div>
+                    @if (inventaire().length) {
+                      <!-- Sans ce choix, signaler la casse d'un objet déjà inventorié
+                           en créait un second à côté, et l'inventaire doublonnait. -->
+                      <div class="col-12">
+                        <select class="form-select" name="kinv" [(ngModel)]="fCasseInventaireId"
+                                (ngModelChange)="surLigneCassee()" aria-label="Ligne d'inventaire concernée">
+                          <option [ngValue]="null">Objet absent de l'inventaire</option>
+                          @for (i of inventaire(); track i.id) {
+                            <option [ngValue]="i.id">{{ i.libelle }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
                     <div class="col-12">
                       <button class="btn btn-primary w-100" type="submit"
                               [disabled]="occupe() || !fCasseLibelle.trim()">Signaler</button>
@@ -374,6 +437,16 @@ export class Fiche {
   readonly guide = signal<LigneFiche[]>([]);
   readonly peutModifierFiche = signal(false);
   readonly inventaire = signal<{ id: number; libelle: string; etat: string }[]>([]);
+
+  /** La ligne en cours d'édition, ou null. Une seule à la fois : deux lignes
+   *  ouvertes ensemble donneraient deux formulaires concurrents sur le même
+   *  état, et c'est le genre de chose qu'on ne remarque qu'en perdant une
+   *  saisie. */
+  readonly inventaireEdite = signal<number | null>(null);
+  fInvLibelle = '';
+  fInvEtat = '';
+  fInvNouvLibelle = '';
+  fInvNouvEtat = '';
   readonly contacts = signal<Contact[]>([]);
   readonly rolesContact = signal<{ cle: string; libelle: string }[]>([]);
   readonly peutModifierContacts = signal(false);
@@ -383,6 +456,7 @@ export class Fiche {
   fGuideValeur = '';
   fCasseLibelle = '';
   fCasseDetail = '';
+  fCasseInventaireId: number | null = null;
   fContactNom = '';
   fContactRole = 'artisan';
   fContactTel = '';
@@ -508,16 +582,76 @@ export class Fiche {
     });
   }
 
+  // ---------- Inventaire ----------
+  //
+  // Le serveur savait créer, modifier et archiver une ligne depuis la tranche 3.
+  // L'écran, lui, ne faisait que lire : une gérante qui achetait six chaises
+  // n'avait aucun moyen de les inscrire, et un état devenu faux le restait.
+
+  editerInventaire(i: { id: number; libelle: string; etat: string }): void {
+    this.inventaireEdite.set(i.id);
+    this.fInvLibelle = i.libelle;
+    this.fInvEtat = i.etat;
+  }
+
+  ajouterInventaire(): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || !this.fInvNouvLibelle.trim()) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/inventaire`, {
+        libelle: this.fInvNouvLibelle.trim(), etat: this.fInvNouvEtat.trim(),
+        ordre: this.inventaire().length + 1,
+      });
+      const quoi = this.fInvNouvLibelle.trim();
+      this.fInvNouvLibelle = '';
+      this.fInvNouvEtat = '';
+      return `« ${quoi} » ajouté à l'inventaire.`;
+    });
+  }
+
+  enregistrerInventaire(id: number): Promise<void> {
+    const b = this.etat.bien();
+    if (!b || !this.fInvLibelle.trim()) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/inventaire/${id}`, {
+        libelle: this.fInvLibelle.trim(), etat: this.fInvEtat.trim(),
+      });
+      this.inventaireEdite.set(null);
+      return 'Ligne d\'inventaire modifiée.';
+    });
+  }
+
+  retirerInventaire(i: { id: number; libelle: string }): Promise<void> {
+    const b = this.etat.bien();
+    if (!b) return Promise.resolve();
+    return this.agir(async () => {
+      await this.api.post(`/biens/${b.id}/inventaire/${i.id}/archivage`, {});
+      // Archivage daté côté serveur, pas de suppression : une ligne retirée
+      // reste rattachée aux tâches d'entretien qui la citent.
+      return `« ${i.libelle} » retiré de l'inventaire.`;
+    });
+  }
+
+  /** Choisir une ligne existante nomme le signalement à sa place. */
+  surLigneCassee(): void {
+    const l = this.inventaire().find((x) => x.id === this.fCasseInventaireId);
+    if (l) this.fCasseLibelle = l.libelle;
+  }
+
   signalerCasse(): Promise<void> {
     const b = this.etat.bien();
     if (!b || !this.fCasseLibelle.trim()) return Promise.resolve();
     return this.agir(async () => {
       await this.api.post(`/biens/${b.id}/casse`, {
         libelle: this.fCasseLibelle.trim(), detail: this.fCasseDetail.trim(),
+        // Renseigné, le serveur marque la ligne « À remplacer » au lieu d'en
+        // créer une seconde pour le même objet.
+        ...(this.fCasseInventaireId ? { inventaireId: this.fCasseInventaireId } : {}),
       });
       const quoi = this.fCasseLibelle.trim();
       this.fCasseLibelle = '';
       this.fCasseDetail = '';
+      this.fCasseInventaireId = null;
       this.casse.set(false);
       return `Casse signalée : une tâche « Remplacer ${quoi} » attend dans le carnet d'entretien.`;
     });
