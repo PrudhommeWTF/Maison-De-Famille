@@ -123,7 +123,12 @@ log "Compilation du backend"
 # et échoue sur une erreur node-gyp que personne ne veut lire à trois heures du
 # matin. On ne préinstalle pas la chaîne de compilation (deux cents méga-octets
 # sur un conteneur qui se veut minimal), on dit quoi faire si le cas arrive.
-if ! npm --prefix "${APP_DIR}/backend" ci --silent; then
+#
+# `--include=dev` : sans lui, un NODE_ENV=production hérité de l'appelant ferait
+# sauter tsc, et la compilation échouerait sur « tsc: not found ». C'est ce qui
+# est arrivé à la mise à jour depuis l'interface, lancée par une unité systemd
+# qui lit le fichier d'environnement du service.
+if ! npm --prefix "${APP_DIR}/backend" ci --include=dev --silent; then
   err "L'installation des dépendances du backend a échoué."
   err "Cause la plus fréquente : « better-sqlite3 » n'a pas trouvé de binaire prêt"
   err "à l'emploi pour cette machine et a tenté de le compiler."
@@ -134,7 +139,7 @@ fi
 npm --prefix "${APP_DIR}/backend" run build --silent
 
 log "Compilation de l'application (cela prend une à deux minutes)"
-npm --prefix "${APP_DIR}/frontend" ci --silent
+npm --prefix "${APP_DIR}/frontend" ci --include=dev --silent
 npm --prefix "${APP_DIR}/frontend" run build --silent
 
 # Les dépendances de développement ne servent plus : on ne laisse pas un
