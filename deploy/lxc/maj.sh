@@ -132,11 +132,45 @@ archive || cloner || echouer "Téléchargement de ${TAG} impossible"
 [ -f "$TMP/src/backend/package.json" ] || echouer "L'archive ${TAG} est incomplète"
 [ -f "$TMP/src/frontend/package.json" ] || echouer "L'archive ${TAG} est incomplète"
 
+# Ce script vit hors de $APP_DIR : la mise à jour ne recopierait donc que le
+# code de l'application et laisserait CE script dans la version posée par
+# install.sh, pour toujours. Autrement dit, aucune correction du script de mise
+# à jour ne pourrait jamais atteindre une machine autrement qu'à la main.
+#
+# **Ici et non à la fin, et c'est le point.** Tant que ce remplacement suivait la
+# compilation, un assistant qui échouait avant elle ne pouvait pas se réparer :
+# il rejouait éternellement son propre défaut, et il fallait un accès au serveur.
+# C'est exactement ce qui est arrivé avec « tsc: not found ». Posé juste après le
+# téléchargement, dont l'archive vient d'être contrôlée, le correctif d'un
+# assistant cassé arrive à la tentative suivante. On n'y perd rien : sur une mise
+# à jour qui réussit, cet assistant-là aurait de toute façon été installé.
+#
+# Remplacement par renommage et non par écrasement : bash lit son propre fichier
+# au fur et à mesure de l'exécution, réécrire celui qui tourne lui ferait
+# exécuter n'importe quoi. La version posée ici servira la prochaine fois.
+ASSISTANT=/usr/local/sbin/maison-de-famille-maj.sh
+NEUF="$TMP/src/deploy/lxc/maj.sh"
+if [ -f "$ASSISTANT" ] && [ -f "$NEUF" ] && ! cmp -s "$NEUF" "$ASSISTANT"; then
+  install -m 0755 -o root -g root "$NEUF" "${ASSISTANT}.nouveau" && mv -f "${ASSISTANT}.nouveau" "$ASSISTANT"
+  echo "Assistant de mise à jour actualisé : ${ASSISTANT}"
+fi
+
+# `--include=dev` sur les deux compilations, et il n'est pas décoratif.
+#
+# L'unité systemd de la mise à jour lit le fichier d'environnement du service,
+# qui contient `NODE_ENV=production`. Or npm en déduit `omit=dev` et saute les
+# dépendances de développement : `tsc` et le compilateur Angular n'étaient pas
+# installés, et la mise à jour depuis l'interface échouait sur
+# « sh: 1: tsc: not found ». En ligne de commande, où NODE_ENV n'est pas posé,
+# le même script marchait, ce qui rendait la panne difficile à croire.
+#
+# `--include=dev` gagne sur `omit` quel que soit l'ordre : c'est ce que dit npm,
+# et c'est ce qu'on veut ici, sans dépendre de l'environnement du service.
 etape "Compilation du serveur" "Compilation du serveur…"
-npm --prefix "$TMP/src/backend" ci
+npm --prefix "$TMP/src/backend" ci --include=dev
 npm --prefix "$TMP/src/backend" run build
 etape "Compilation de l'application" "Compilation de l'application…"
-npm --prefix "$TMP/src/frontend" ci
+npm --prefix "$TMP/src/frontend" ci --include=dev
 npm --prefix "$TMP/src/frontend" run build
 [ -d "$TMP/src/frontend/dist/frontend/browser" ] || echouer "La compilation de l'application n'a rien produit"
 
@@ -146,6 +180,9 @@ etape "Installation" "Installation…"
 systemctl stop "$UNITE" || true
 ARRETE=1
 rsync -a --delete --exclude 'node_modules' "$TMP/src/backend/" "${APP_DIR}/backend/"
+# Ici `--omit=dev` est voulu : on ne laisse pas un compilateur et ses cent
+# paquets sur la machine de la famille. C'est l'inverse des deux lignes de
+# compilation plus haut, et c'est normal.
 npm --prefix "${APP_DIR}/backend" ci --omit=dev
 rm -rf "${APP_DIR}/frontend/dist"
 mkdir -p "${APP_DIR}/frontend/dist"
@@ -164,20 +201,6 @@ else
 fi
 chown -R root:root "$APP_DIR"
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "$DATA_DIR"
-
-# Ce script vit hors de $APP_DIR : la mise à jour ne recopierait donc que le
-# code de l'application et laisserait CE script dans la version posée par
-# install.sh, pour toujours. Autrement dit, aucune correction du script de mise
-# à jour ne pourrait jamais atteindre une machine autrement qu'à la main.
-# Remplacement par renommage et non par écrasement : bash lit son propre fichier
-# au fur et à mesure de l'exécution, réécrire celui qui tourne lui ferait
-# exécuter n'importe quoi. La version installée ici servira la prochaine fois.
-ASSISTANT=/usr/local/sbin/maison-de-famille-maj.sh
-NEUF="$TMP/src/deploy/lxc/maj.sh"
-if [ -f "$ASSISTANT" ] && [ -f "$NEUF" ] && ! cmp -s "$NEUF" "$ASSISTANT"; then
-  install -m 0755 -o root -g root "$NEUF" "${ASSISTANT}.nouveau" && mv -f "${ASSISTANT}.nouveau" "$ASSISTANT"
-  echo "Assistant de mise à jour actualisé : ${ASSISTANT}"
-fi
 
 etape "Redémarrage du service" "Redémarrage du service…"
 systemctl start "$UNITE"
