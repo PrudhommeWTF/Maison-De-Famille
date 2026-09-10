@@ -12,7 +12,10 @@
 //      comme une erreur, plutôt que de laisser croire à une invitation perdue.
 //   2. **Le lien d'invitation s'affiche en clair** quand le relais de courriel
 //      n'est pas encore configuré, ce qui est le cas le jour de l'installation.
-//      L'écran dit ce que cela veut dire avant de le montrer.
+//      L'écran dit ce que cela veut dire avant de le montrer. Il le complète
+//      aussi : sans `MDF_PUBLIC_URL`, le serveur rend un chemin nu, et c'est le
+//      navigateur qui sait sur quelle adresse la gérante travaille. Voir
+//      `core/liens.ts` pour ce que le serveur n'a pas le droit de deviner.
 //   3. **Une structure doit compter deux gérants.** Le retrait qui ferait
 //      descendre en dessous est refusé par le serveur ; l'écran le dit avant.
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
@@ -20,6 +23,7 @@ import { FormsModule } from '@angular/forms';
 import { Api, ErreurAppel } from '../core/api';
 import { Etat } from '../core/etat';
 import { dateLongue, initiales } from '../core/format';
+import { lienAbsolu } from '../core/liens';
 import type { Foyer, Personne } from '../core/modeles';
 
 interface RoleAttribue { structureId: number; role: string }
@@ -107,7 +111,7 @@ const LIBELLES: Record<string, string> = {
                   son mot de passe : ne le laissez pas traîner, et sachez que son affichage est
                   enregistré dans le journal avec votre nom.
                 </p>
-                <code class="d-block bg-body p-2 rounded my-2" style="word-break:break-all">{{ inv.lien }}</code>
+                <code class="d-block bg-body p-2 rounded my-2" style="word-break:break-all">{{ absolu(inv.lien) }}</code>
                 <p class="text-body-secondary small mb-0">
                   Valable jusqu'au {{ dateLongue(inv.expireLe!.slice(0, 10)) }}.
                   Redemander un lien annule celui-ci.
@@ -170,7 +174,7 @@ const LIBELLES: Record<string, string> = {
                   Transmettez ce lien. Il vaut jusqu'au {{ dateLongue(la.expireLe) }}, et personne
                   n'aura besoin de mot de passe pour s'en servir : ne le publiez nulle part.
                 </p>
-                <code class="d-block bg-body p-2 rounded my-2" style="word-break:break-all">{{ la.lien }}</code>
+                <code class="d-block bg-body p-2 rounded my-2" style="word-break:break-all">{{ absolu(la.lien) }}</code>
                 <button class="btn btn-sm btn-outline-secondary" type="button" (click)="lienAcces.set(null)">Fermer</button>
               </div>
             }
@@ -304,6 +308,14 @@ export class Personnes {
   readonly invitation = signal<Invitation | null>(null);
   readonly acces = signal<AccesTemporaire[]>([]);
   readonly lienAcces = signal<{ lien: string; expireLe: string } | null>(null);
+
+  /**
+   * Le lien tel qu'il se transmet.
+   *
+   * `document.baseURI` et non `location.origin` : il porte le sous-chemin quand
+   * l'application est servie sous un préfixe.
+   */
+  absolu(lien: string): string { return lienAbsolu(lien, document.baseURI); }
   readonly saisieAcces = signal(false);
   readonly invitePour = signal('');
   readonly occupe = signal(false);

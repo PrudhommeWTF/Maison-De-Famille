@@ -43,6 +43,23 @@ import type { Etat as EtatModele } from '../../core/modeles';
               </li>
             </ul>
 
+            <!-- L'adresse publique ne sert pas qu'aux courriels : sans elle, les
+                 liens d'invitation sortent du serveur en chemin nu. L'écran de
+                 Personnes les complète avec l'adresse du navigateur, mais un
+                 courriel, lui, part sans navigateur. -->
+            @if (!e.courriel.adressePublique) {
+              <div class="alert alert-primary mt-3 mb-0 small">
+                <strong>L'adresse publique n'est pas renseignée.</strong>
+                Les liens d'invitation et d'accès affichés à l'écran sont complétés avec l'adresse
+                sur laquelle vous consultez l'application, ce qui suffit pour les transmettre à la
+                main. Un courriel, lui, part sans navigateur : tant que cette adresse manque, aucun
+                relais ne peut être configuré. Ajoutez
+                <code>MDF_PUBLIC_URL={{ adresseDuNavigateur }}</code> dans
+                <code>/etc/maison-de-famille/mdf.env</code>, puis
+                <code>systemctl restart maison-de-famille</code>.
+              </div>
+            }
+
             @if (!e.courriel.relais) {
               <div class="alert alert-primary mt-3 mb-0 small">
                 <strong>Aucun relais n'est configuré : les notifications s'accumulent sans partir.</strong>
@@ -113,6 +130,13 @@ export class AdministrationCourriel {
   private readonly api = inject(Api);
   readonly etat = signal<EtatModele | null>(null);
   readonly horodatageLisible = horodatageLisible;
+
+  /**
+   * L'adresse sur laquelle cette page est ouverte, proposée telle quelle dans
+   * la ligne à recopier. Le serveur ne peut pas la deviner : il n'a que
+   * l'en-tête « Host », que n'importe quel appelant écrit comme il veut.
+   */
+  readonly adresseDuNavigateur = document.baseURI.replace(/\/+$/, '');
 
   constructor() {
     void this.api.get<EtatModele>('/etat').then((e) => this.etat.set(e)).catch(() => this.etat.set(null));
