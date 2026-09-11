@@ -94,8 +94,27 @@ import type { Etat as EtatModele, StatutMaj, Veille } from '../../core/modeles';
               </div>
             } @else {
               @if (statutMaj(); as st) {
-                @if (st.etat === 'echec') { <div class="alert alert-primary">{{ st.message }}</div> }
-                @if (st.etat === 'termine') { <div class="alert alert-success">{{ st.message }}</div> }
+                <!-- L'horodatage n'est pas décoratif. Ce bandeau garde le dernier
+                     résultat tant qu'une autre mise à jour n'a pas eu lieu : sans
+                     date, un échec d'avant-hier se lit exactement comme un échec
+                     d'il y a une minute, et on refait trois fois le diagnostic
+                     d'une panne déjà corrigée. C'est arrivé. -->
+                @if (st.etat === 'echec') {
+                  <div class="alert alert-primary">
+                    {{ st.message }}
+                    @if (quand(st); as q) {
+                      <span class="d-block small mt-1">Tentative du {{ q }}.</span>
+                    }
+                  </div>
+                }
+                @if (st.etat === 'termine') {
+                  <div class="alert alert-success">
+                    {{ st.message }}
+                    @if (quand(st); as q) {
+                      <span class="d-block small mt-1">Le {{ q }}.</span>
+                    }
+                  </div>
+                }
               }
               @if (erreur()) { <div class="alert alert-primary">{{ erreur() }}</div> }
 
@@ -214,6 +233,11 @@ export class AdministrationApercu implements OnDestroy {
   private minuteur: ReturnType<typeof setInterval> | null = null;
 
   readonly statutMaj = computed<StatutMaj | null>(() => this.etat()?.maj.statut ?? null);
+
+  /** Quand le dernier résultat de mise à jour a été écrit, ou '' s'il l'ignore. */
+  quand(st: StatutMaj): string {
+    return typeof st.ts === 'number' ? horodatageLisible(new Date(st.ts).toISOString()) : '';
+  }
   readonly majEnCours = computed(() => this.statutMaj()?.etat === 'en_cours');
 
   constructor() { void this.charger(); }
