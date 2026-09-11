@@ -96,7 +96,9 @@ test('NODE_ENV appartient à l\'unité du service, pas au fichier d\'environneme
     install.indexOf('chmod 600 "${ENV_FILE}"'));
   assert.doesNotMatch(heredoc, /^NODE_ENV=/m,
     'le fichier d\'environnement ne doit plus porter NODE_ENV');
-  assert.match(install, /^Environment=NODE_ENV=production$/m,
+  // Les unités ont quitté install.sh pour unites.sh, partagé avec maj.sh.
+  const u = fs.readFileSync(path.join(LXC, 'unites.sh'), 'utf8');
+  assert.match(u, /^Environment=NODE_ENV=production$/m,
     'l\'unité du service doit le porter');
   assert.match(install, /sed -i '\/\^NODE_ENV=\/d'/,
     'et la ligne doit disparaître des configurations déjà installées');
@@ -130,4 +132,75 @@ test('la version se déclare quand la source n\'est pas un dépôt git', () => {
   // « --exact-match » pour dire qu'on ne s'en sert plus.
   const commandes = bloc.split('\n').filter((l) => !l.trimStart().startsWith('#')).join('\n');
   assert.doesNotMatch(commandes, /--exact-match/);
+});
+
+// ---------------------------------------------------------------------------
+// Les deux derniers écarts avec Foyer-App.
+// ---------------------------------------------------------------------------
+
+const unites = fs.readFileSync(path.join(LXC, 'unites.sh'), 'utf8');
+
+/** Joue `ecrire_unites` dans un bac à sable, avec un faux systemctl. */
+function poserUnites(majAuto: string): { fichiers: string[]; service: string; assistant: boolean } {
+  const bac = fs.mkdtempSync(path.join(os.tmpdir(), 'mdf-unites-'));
+  const sys = path.join(bac, 'systemd');
+  const sbin = path.join(bac, 'sbin');
+  fs.mkdirSync(sys, { recursive: true });
+  fs.mkdirSync(sbin, { recursive: true });
+  fs.writeFileSync(path.join(sbin, 'maison-de-famille-maj.sh'), '#!/bin/bash\n');
+  fs.mkdirSync(path.join(bac, 'bin'));
+  fs.writeFileSync(path.join(bac, 'bin', 'systemctl'), '#!/bin/bash\nexit 0\n');
+  fs.chmodSync(path.join(bac, 'bin', 'systemctl'), 0o755);
+  const detourne = unites
+    .replaceAll('/etc/systemd/system/', `${sys}/`)
+    .replaceAll('/usr/local/sbin/maison-de-famille-maj.sh', path.join(sbin, 'maison-de-famille-maj.sh'));
+  const source = path.join(bac, 'unites.sh');
+  fs.writeFileSync(source, detourne);
+  execFileSync('bash', ['-c', [
+    `export PATH="${path.join(bac, 'bin')}:$PATH"`,
+    'APP_DIR=/opt/mdf; ENV_FILE=/etc/mdf.env; DATA_DIR=/var/lib/mdf',
+    'SERVICE_USER=maison; UNITE=maison-de-famille',
+    `. '${source}'`,
+    `MAJ_AUTO=${majAuto} ecrire_unites`,
+  ].join('\n')]);
+  const fichiers = fs.readdirSync(sys).sort();
+  const service = fs.readFileSync(path.join(sys, 'maison-de-famille.service'), 'utf8');
+  const assistant = fs.existsSync(path.join(sbin, 'maison-de-famille-maj.sh'));
+  fs.rmSync(bac, { recursive: true, force: true });
+  return { fichiers, service, assistant };
+}
+
+test('les unités portent NODE_ENV sur le service et jamais sur la mise à jour', () => {
+  const r = poserUnites('true');
+  assert.deepEqual(r.fichiers, [
+    'maison-de-famille-maj.path', 'maison-de-famille-maj.service', 'maison-de-famille.service',
+  ]);
+  assert.match(r.service, /^Environment=NODE_ENV=production$/m);
+  const bac = unites.slice(unites.indexOf('-maj.service'));
+  assert.doesNotMatch(bac.slice(0, bac.indexOf('EOF')), /NODE_ENV/,
+    'l\'unité qui compile ne doit pas hériter de NODE_ENV');
+});
+
+test('éteindre retire les unités de mise à jour et l\'assistant', () => {
+  const r = poserUnites('false');
+  assert.deepEqual(r.fichiers, ['maison-de-famille.service']);
+  assert.equal(r.assistant, false, 'un assistant root inutilisé est une surface d\'attaque gratuite');
+});
+
+test('la mise à jour réécrit les unités depuis la version téléchargée', () => {
+  assert.match(maj, /UNITES="\$TMP\/src\/deploy\/lxc\/unites\.sh"/,
+    'depuis l\'archive, pas depuis la machine : une correction doit voyager avec le code');
+  assert.match(maj, /\. "\$UNITES"\n\s*ecrire_unites/);
+  // La branche « éteinte » supprimerait le script en cours d'exécution.
+  const bloc = maj.slice(maj.indexOf('UNITES='), maj.indexOf('etape "Redémarrage'));
+  assert.match(bloc, /^\s*MAJ_AUTO=true$/m);
+});
+
+test('relancer l\'installateur ne désactive plus la mise à jour par oubli', () => {
+  const ligne = install.split('\n').find((l) => l.startsWith('MAJ_AUTO='));
+  assert.ok(ligne, 'la ligne de résolution de MAJ_AUTO est introuvable');
+  assert.match(ligne, /\$\{MAJ_AUTO:-\$\{_maj_actuel:-false\}\}/,
+    'variable donnée, sinon ce qui est configuré, sinon éteinte');
+  assert.match(install, /grep -oP '\^MDF_MAJ_AUTO=/,
+    'la valeur en place doit être relue dans le fichier d\'environnement');
 });

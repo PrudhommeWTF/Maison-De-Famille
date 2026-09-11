@@ -29,9 +29,23 @@ PORT="${PORT:-8099}"
 ENV_FILE="/etc/maison-de-famille/mdf.env"
 SERVICE_USER="maison"
 UNITE="maison-de-famille"
-# Mise à jour depuis l'interface. Éteinte par défaut : elle installe un
-# assistant root, et cela se décide, ça ne se subit pas.
-MAJ_AUTO="${MAJ_AUTO:-false}"
+# Mise à jour depuis l'interface.
+#
+# Priorité : la variable donnée ici, sinon ce qui est déjà configuré sur la
+# machine, sinon éteinte.
+#
+# **La lecture du fichier n'est pas un détail.** Sans elle, relancer
+# l'installateur sans penser à `MAJ_AUTO=true` retirait l'assistant root,
+# désactivait l'unité et repassait le drapeau à false. Or relancer
+# l'installateur est la façon documentée de mettre à jour à la main : on
+# perdait donc le bouton en s'en servant. Foyer-App conserve le réglage depuis
+# toujours.
+#
+# Éteinte pour une PREMIÈRE installation, en revanche : poser un assistant root
+# se décide, ça ne se subit pas. Le perdre par oubli, non.
+_maj_actuel=""
+[[ -f "${ENV_FILE}" ]] && _maj_actuel="$(grep -oP '^MDF_MAJ_AUTO=\K\S+' "${ENV_FILE}" 2>/dev/null || true)"
+MAJ_AUTO="${MAJ_AUTO:-${_maj_actuel:-false}}"
 
 export NG_CLI_ANALYTICS=false
 
@@ -261,61 +275,16 @@ fi
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "${DATA_DIR}"
 chown -R root:root "${APP_DIR}"
 
-# --- Unité systemd ---
-log "Installation de l'unité systemd"
-cat > "/etc/systemd/system/${UNITE}.service" <<EOF
-[Unit]
-Description=Maison de Famille
-Documentation=https://github.com/PrudhommeWTF/Maison-De-Famille
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=${SERVICE_USER}
-Group=${SERVICE_USER}
-WorkingDirectory=${APP_DIR}/backend
-EnvironmentFile=${ENV_FILE}
-# NODE_ENV appartient à CE service, et à lui seul. Tant qu'il vivait dans le
-# fichier d'environnement, l'unité de mise à jour le lisait elle aussi : npm en
-# déduisait « omit=dev », sautait tsc et le compilateur Angular, et la mise à
-# jour depuis l'interface échouait sur « sh: 1: tsc: not found ». Foyer-App le
-# pose ici depuis toujours, et sa mise à jour n'a jamais eu ce défaut.
-Environment=NODE_ENV=production
-ExecStart=/usr/bin/node ${APP_DIR}/backend/dist/server.js
-Restart=on-failure
-RestartSec=5
-# Le service refuse de démarrer si la configuration est incomplète : sans cette
-# limite, systemd le relancerait indéfiniment et le journal serait illisible.
-StartLimitBurst=5
-StartLimitIntervalSec=120
-
-# Durcissement. Le service n'a besoin d'écrire que dans son répertoire de
-# données : tout le reste du système lui est en lecture seule.
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=${DATA_DIR}
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
-RestrictNamespaces=true
-LockPersonality=true
-MemoryDenyWriteExecute=false
-SystemCallArchitectures=native
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# --- Mise à jour depuis l'interface (assistant root, déclenché par systemd) ---
+# --- Unités systemd ---
 #
-# Le service tourne sans privilège et ne peut ni remplacer son code ni se
-# redémarrer. Il dépose un fichier dans son répertoire de données ; l'unité
-# `path` ci-dessous le voit apparaître et lance l'assistant, qui est en root.
-# Le service ne gagne aucun droit : c'est tout l'intérêt du détour.
+# Elles vivent dans `unites.sh`, chargé depuis la source qu'on déploie, pour que
+# `maj.sh` puisse écrire exactement les mêmes depuis l'archive qu'il télécharge.
+# Deux copies des mêmes heredocs auraient divergé au premier durcissement ajouté
+# d'un seul côté.
+log "Installation des unités systemd"
+# shellcheck source=/dev/null
+. "${MDF_SRC}/deploy/lxc/unites.sh"
+
 if [[ "${MAJ_AUTO}" =~ ^(1|true|yes|on)$ ]]; then
   log "Activation de la mise à jour depuis l'interface (assistant root)"
   # `${APP_DIR}` et non `${SCRIPT_DIR}` : la façon documentée d'installer est
@@ -323,40 +292,8 @@ if [[ "${MAJ_AUTO}" =~ ^(1|true|yes|on)$ ]]; then
   # donc nulle part à côté de lui. L'installation s'interrompait là, après avoir
   # déjà tout posé. Le code qui vient d'être déployé, lui, est toujours là.
   install -m 0755 -o root -g root "${APP_DIR}/deploy/lxc/maj.sh" /usr/local/sbin/maison-de-famille-maj.sh
-  cat > "/etc/systemd/system/${UNITE}-maj.service" <<EOF
-[Unit]
-Description=Maison de Famille, mise à jour
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-EnvironmentFile=${ENV_FILE}
-Environment=APP_DIR=${APP_DIR}
-Environment=ENV_FILE=${ENV_FILE}
-ExecStart=/usr/local/sbin/maison-de-famille-maj.sh
-EOF
-  cat > "/etc/systemd/system/${UNITE}-maj.path" <<EOF
-[Unit]
-Description=Maison de Famille, surveille le déclencheur de mise à jour
-
-[Path]
-PathExists=${DATA_DIR}/.maj-declencheur
-Unit=${UNITE}-maj.service
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  systemctl daemon-reload
-  systemctl enable --now "${UNITE}-maj.path" >/dev/null 2>&1 || true
-else
-  # Éteinte : on retire l'assistant et les unités s'ils traînent d'une
-  # installation précédente. Laisser un assistant root inutilisé serait une
-  # surface d'attaque gratuite.
-  systemctl disable --now "${UNITE}-maj.path" >/dev/null 2>&1 || true
-  rm -f "/etc/systemd/system/${UNITE}-maj.path" "/etc/systemd/system/${UNITE}-maj.service" \
-        /usr/local/sbin/maison-de-famille-maj.sh
 fi
+ecrire_unites
 
 systemctl daemon-reload
 systemctl enable "${UNITE}" >/dev/null
