@@ -88,14 +88,15 @@ export class Navigation {
     const e: Entree[] = [{ chemin: '/', libelle: 'Tableau de bord', icone: 'bi-house-heart' }];
     if (this.etat.estGerant()) {
       e.push({ chemin: '/biens', libelle: 'Biens gérés', icone: 'bi-houses' });
-      e.push({ chemin: '/personnes', libelle: 'Personnes et rôles', icone: 'bi-people' });
-      e.push({ chemin: '/import', libelle: 'Import du planning', icone: 'bi-box-arrow-in-right' });
     }
-    // L'Administration suit un droit **distinct** de la gérance : celui qui
-    // tient le serveur n'arbitre pas forcément les séjours, et l'inverse est
-    // aussi vrai. Les deux listes ci-dessus et celle-ci ne se recouvrent pas.
+    // Les comptes valent pour toute l'instance et se rangent avec elle ; les
+    // rôles valent pour une structure et vivent sous le bien. La gérante qui
+    // n'administre pas la plateforme n'ouvre que la première section, et
+    // l'entrée l'y mène directement : la vue d'ensemble lui serait refusée.
     if (this.etat.estAdminPlateforme()) {
       e.push({ chemin: '/administration', libelle: 'Administration', icone: 'bi-sliders' });
+    } else if (this.etat.estGerant()) {
+      e.push({ chemin: '/administration/personnes', libelle: 'Personnes', icone: 'bi-people' });
     }
     // L'aide s'adresse à tout le monde, y compris à l'invité d'un séjour : son
     // guide existe, et le lui cacher n'aurait servi personne.
@@ -105,6 +106,7 @@ export class Navigation {
 
   readonly groupesBien = computed<Groupe[]>(() => {
     const membre = this.etat.roleIci() !== 'invite';
+    const gerante = this.etat.estGeranteIci();
     const parts = this.etat.vocabulaire().parts;
 
     const groupes: Groupe[] = [
@@ -144,6 +146,11 @@ export class Navigation {
             { chemin: '/bien/entretien', libelle: "Carnet d'entretien", icone: 'bi-tools' },
           ] : []),
           { chemin: '/bien/fiche', libelle: 'Fiche du bien', icone: 'bi-journal-bookmark' },
+          // L'import alimente le calendrier de CE bien : il se range avec lui,
+          // et non dans une rubrique générale où il fallait rechoisir sa cible.
+          ...(gerante ? [
+            { chemin: '/bien/import', libelle: 'Import du planning', icone: 'bi-box-arrow-in-right' },
+          ] : []),
           // Le coffre-fort s'affiche pour tous : son contenu est filtré par
           // portée, et un invité en séjour y trouve le code du portail.
           { chemin: '/bien/coffre', libelle: 'Coffre-fort', icone: 'bi-shield-lock' },
@@ -155,6 +162,11 @@ export class Navigation {
           { chemin: '/bien/decisions', libelle: 'Décisions & votes', icone: 'bi-hand-thumbs-up' },
           { chemin: '/bien/souvenirs', libelle: 'Souvenirs', icone: 'bi-images' },
           { chemin: '/bien/membres', libelle: `Membres & ${parts}`, icone: 'bi-people' },
+          // Qui entre et à quel titre : une décision de gérance, rangée avec la
+          // famille parce que c'est d'elle qu'il s'agit, et non un réglage.
+          ...(gerante ? [
+            { chemin: '/bien/roles', libelle: 'Rôles et accès', icone: 'bi-person-check' },
+          ] : []),
         ] : [],
       },
     ];

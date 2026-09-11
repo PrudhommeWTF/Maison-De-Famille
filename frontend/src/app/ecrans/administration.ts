@@ -14,8 +14,9 @@
 // Chaque section est une route fille : une adresse se met en favori, se colle
 // dans un message, et le bouton « précédent » du navigateur fait ce qu'on
 // attend.
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Etat } from '../core/etat';
 
 @Component({
   selector: 'app-administration',
@@ -34,7 +35,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       <div>
         <h1 class="h2 mb-2">Administration</h1>
         <p class="text-body-secondary mb-0">
-          Les réglages de l'instance, sa santé et ses mises à jour, au même endroit.
+          Les comptes de la famille, les réglages de l'instance, sa santé et ses mises à jour,
+          au même endroit.
         </p>
       </div>
 
@@ -44,7 +46,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
                oblige à ouvrir pour savoir, ce qui est exactement le problème
                qu'on répare. -->
           <nav class="nav nav-pills flex-column gap-1 sections" aria-label="Sections de l'administration">
-            @for (s of SECTIONS; track s.chemin) {
+            @for (s of sections(); track s.chemin) {
               <a class="nav-link side-link text-start d-flex gap-3 align-items-start"
                  [routerLink]="s.chemin" routerLinkActive="active"
                  [routerLinkActiveOptions]="{ exact: s.chemin === '/administration' }">
@@ -66,10 +68,16 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   `,
 })
 export class Administration {
+  private readonly etat = inject(Etat);
+
   readonly SECTIONS = [
     {
       chemin: '/administration', icone: 'bi-speedometer2', libelle: "Vue d'ensemble",
       quoi: 'Version installée, mises à jour, santé du service',
+    },
+    {
+      chemin: '/administration/personnes', icone: 'bi-people', libelle: 'Personnes',
+      quoi: 'Les comptes de la famille, les foyers, les invitations',
     },
     {
       chemin: '/administration/reglages', icone: 'bi-sliders', libelle: 'Réglages',
@@ -96,4 +104,16 @@ export class Administration {
       quoi: 'Qui tient la plateforme, indépendamment des biens',
     },
   ];
+
+  /**
+   * Ce qui n'est pas ouvert n'est pas listé.
+   *
+   * Une gérante qui n'administre pas la plateforme n'a qu'une section ici, et
+   * l'entrée qui la mènerait à un refus serait un mensonge : la règle est la
+   * même que dans la navigation principale, et elle vaut aussi ici.
+   */
+  readonly sections = computed(() => {
+    const admin = this.etat.estAdminPlateforme();
+    return this.SECTIONS.filter((s) => admin || s.chemin === '/administration/personnes');
+  });
 }

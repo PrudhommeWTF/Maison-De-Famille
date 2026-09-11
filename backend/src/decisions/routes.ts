@@ -170,7 +170,7 @@ export function routesDecisions(deps: Deps): Routeur {
     if (expireLe > decale(aujourdhui(), 366)) {
       throw invalide(
         'Un accès temporaire ne dépasse pas un an. Au-delà, ouvrez un vrai compte '
-        + 'depuis l\'écran « Personnes et rôles ».');
+        + 'depuis l\'Administration, section « Personnes ».');
     }
     // Sans adresse publique, le lien sort en chemin nu et l'écran le complète
     // avec l'adresse du navigateur. On refusait ici, ce qui interdisait purement

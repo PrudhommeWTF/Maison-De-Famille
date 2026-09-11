@@ -126,17 +126,22 @@ async function cliquer(selecteur, quoi) {
   await aller('/administration/administrateurs');
   await capture('gerant-administrateurs', { full: true });
 
-  await aller('/import');
-  await capture('gerant-import-planning');
+  // Les comptes vivent dans l'Administration et n'ont pas besoin d'un bien
+  // ouvert : ils valent pour toute l'instance.
+  await aller('/administration/personnes');
+  await capture('gerant-personnes', { full: true });
 
   await aller('/');
   await ouvrirBien("Maison de Kerloc'h");
   await capture('gerant-bien-ouvert');
 
-  // Cet écran a besoin d'un bien ouvert : sans cela il n'affiche ni les rôles
-  // ni la section des accès temporaires, et les captures mentent.
-  await aller('/personnes');
-  await capture('gerant-personnes', { full: true });
+  // Ces trois écrans vivent sous le bien : sans bien ouvert, ils redirigent
+  // vers le tableau de bord et les captures montreraient autre chose.
+  await aller('/bien/import');
+  await capture('gerant-import-planning');
+
+  await aller('/bien/roles');
+  await capture('gerant-roles', { full: true });
   await capture('gerant-acces-temporaires', { scrollTo: 'h2:has-text("Accès"), h3:has-text("Accès")' });
 
   await aller('/bien/calendrier');

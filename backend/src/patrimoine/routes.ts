@@ -283,6 +283,42 @@ export function routesPatrimoine(deps: Deps): Routeur {
   });
 
   /**
+   * Donner un rôle à tout un foyer d'un coup.
+   *
+   * Le cas courant est un couple : saisir le conjoint séparément était un geste
+   * de plus à chaque fois, et l'oubli se traduisait par « je ne vois pas le
+   * calendrier », qui ne se diagnostique pas tout seul.
+   *
+   * Rend le compte de ce qui a été fait, et non un simple succès : « 2 ajoutés,
+   * 1 avait déjà le rôle » se lit, « c'est fait » laisse dans le doute.
+   */
+  r.post('/structures/:structureId/roles/foyer', { acces: 'structure', role: 'gerant' }, (ctx) => {
+    const l = lire(ctx.corps);
+    const foyerId = l.entier('foyerId', { min: 1 });
+    const role = l.choix('role', ROLES);
+    l.fin();
+    const membres = ctx.db.prepare(
+      `SELECT id, nom FROM personne
+       WHERE foyer_id = ? AND archive_le IS NULL AND acces_lien_seul = 0 ORDER BY nom`,
+    ).all(foyerId) as { id: number; nom: string }[];
+    if (!membres.length) throw invalide('Ce foyer ne compte personne à qui donner un rôle.');
+
+    let ajoutes = 0;
+    const deja: string[] = [];
+    for (const m of membres) {
+      if (rolesAttribues(ctx.db, m.id).some((x) => x.structureId === ctx.structureId && x.role === role)) {
+        deja.push(m.nom);
+        continue;
+      }
+      attribuerRole(ctx.db, m.id, { structureId: ctx.structureId }, role, aujourdhui(), ctx.personneId);
+      ajoutes++;
+    }
+    log.info(`Rôle ${role} donné à ${ajoutes} membre(s) du foyer ${foyerId} `
+      + `sur la structure ${ctx.structureId} par la personne ${ctx.personneId}.`);
+    return { ajoutes, deja, total: membres.length };
+  });
+
+  /**
    * Retirer un rôle. C'est ici que vit la règle des deux gérants : elle
    * s'applique au serveur, pas seulement à l'écran, sinon elle ne s'applique
    * pas du tout.

@@ -48,7 +48,7 @@ export function etapes(f: FaitsDemarrage): Etape[] {
       cle: 'personnes',
       titre: 'Inscrire la famille',
       pourquoi: "Vous êtes seule sur l'instance. Créez les comptes, chacun choisira son mot de passe.",
-      lien: '/personnes', bloquante: false,
+      lien: '/administration/personnes', bloquante: false,
     });
   }
 
@@ -58,7 +58,7 @@ export function etapes(f: FaitsDemarrage): Etape[] {
       titre: `Désigner un second gérant pour ${nom}`,
       pourquoi: 'Si vous perdez votre accès, plus personne ne peut arbitrer une demande '
         + "ni saisir un séjour. C'est la seule porte de secours qui ne passe pas par une sauvegarde.",
-      lien: '/personnes', bloquante: true,
+      lien: '/bien/roles', bloquante: true,
     });
   }
 
@@ -98,7 +98,7 @@ export function etapes(f: FaitsDemarrage): Etape[] {
       titre: 'Importer le planning existant',
       pourquoi: 'Le calendrier reste vide tant que les séjours déjà convenus ne sont pas repris. '
         + "L'import se simule d'abord, et s'annule si le résultat ne convient pas.",
-      lien: '/import', bloquante: false,
+      lien: '/bien/import', bloquante: false,
     });
   }
 
