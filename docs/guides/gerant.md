@@ -250,10 +250,17 @@ Quatre parties sur un seul écran.
 | Mensuelle | Entretien du jardin, tous les mois d'avril à octobre | Un mois de début et un mois de fin |
 | À chaque séjour | Relever les compteurs | Rien d'autre |
 
-**L'inventaire** liste le matériel et son état. Un membre de la famille peut
-**signaler une casse** depuis son écran : cela crée à la fois une ligne
-d'inventaire et une tâche pour vous. C'est ouvert à tous exprès, parce que celui
-qui casse un matelas est rarement celui qui gère la maison.
+**L'inventaire** liste le matériel et son état. Il se tient depuis la
+[fiche du bien](#10-la-fiche-du-bien), carte « Inventaire » : vous y ajoutez une
+ligne, vous corrigez un libellé ou un état, vous retirez ce qui n'est plus là.
+Retirer archive, cela ne supprime pas : les tâches d'entretien qui citaient
+l'objet gardent leur trace.
+
+Un membre de la famille peut **signaler une casse** depuis son écran : cela crée
+une tâche pour vous et marque l'objet « À remplacer ». C'est ouvert à tous
+exprès, parce que celui qui casse un matelas est rarement celui qui gère la
+maison. Si l'objet est déjà à l'inventaire, choisissez-le dans la liste :
+sans cela une seconde ligne apparaît à côté de la première, pour le même objet.
 
 **La checklist de départ** est envoyée automatiquement la veille de la fin de
 chaque séjour à celui qui occupe la maison.
