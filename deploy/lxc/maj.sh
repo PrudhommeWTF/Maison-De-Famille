@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# Maison de Famille — mise à jour depuis l'interface, EXÉCUTÉE EN ROOT.
+# Maison de Famille : mise à jour depuis l'interface, EXÉCUTÉE EN ROOT.
 #
 # Déclenchée par l'unité `maison-de-famille-maj.path` lorsque le service crée le
 # fichier ${DATA_DIR}/.maj-declencheur. À ne pas lancer à la main d'ordinaire :
@@ -201,6 +201,34 @@ else
 fi
 chown -R root:root "$APP_DIR"
 chown -R "${SERVICE_USER}:${SERVICE_USER}" "$DATA_DIR"
+
+# Les unités systemd font partie de la version, au même titre que le code.
+#
+# Tant que seul install.sh les écrivait, la mise à jour ne faisait qu'arrêter et
+# relancer : une correction dans une définition d'unité n'atteignait jamais une
+# machine autrement qu'en y ouvrant un terminal. C'est la même impasse que
+# l'assistant qui ne pouvait pas se réparer, un étage au-dessus.
+#
+# Chargées depuis l'archive qu'on vient d'installer, donc à la version qu'on
+# installe. En cas d'absence (mise à jour vers une version antérieure à ce
+# fichier), on ne touche à rien : les unités en place ont déjà fait démarrer ce
+# service, et les réécrire n'est jamais aussi urgent que le redémarrer.
+UNITES="$TMP/src/deploy/lxc/unites.sh"
+if [ -f "$UNITES" ]; then
+  etape "Mise à jour des unités systemd" "Mise à jour des unités systemd…"
+  # `true` en dur, et sur sa propre ligne. Ce script ne tourne que parce que la
+  # mise à jour depuis l'interface est activée : c'est son unité `path` qui l'a
+  # lancé. Surtout, la branche « éteinte » de `ecrire_unites` supprime
+  # /usr/local/sbin/maison-de-famille-maj.sh, c'est-à-dire le fichier en train
+  # de s'exécuter. On ne lui laisse pas l'occasion d'y passer.
+  MAJ_AUTO=true
+  # shellcheck source=/dev/null
+  . "$UNITES"
+  ecrire_unites
+  echo "Unités systemd réécrites depuis ${TAG}"
+else
+  echo "Pas de unites.sh dans ${TAG} : unités laissées en l'état."
+fi
 
 etape "Redémarrage du service" "Redémarrage du service…"
 systemctl start "$UNITE"

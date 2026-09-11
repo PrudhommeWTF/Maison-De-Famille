@@ -216,6 +216,14 @@ Il pose `/usr/local/sbin/maison-de-famille-maj.sh`, deux unités systemd, et
 `MDF_MAJ_AUTO=true` dans la configuration. Sans lui, le bouton n'apparaît pas,
 parce qu'il ne mènerait à rien.
 
+Depuis une **archive de release** décompressée, donnez la version : une archive
+n'est pas un dépôt git, `git describe` n'a rien à interroger, et le service se
+croirait en retard de toutes les versions publiées depuis le `package.json`.
+
+```bash
+MDF_VERSION=0.0.12 MAJ_AUTO=true bash deploy/lxc/install.sh
+```
+
 La commande vaut aussi sur une machine **déjà installée** : elle met le code à
 jour, pose l'assistant et rectifie la configuration, sans toucher au secret ni
 aux données. Sur une machine où le dépôt est déjà là, c'est la même chose avec
@@ -242,8 +250,15 @@ s'interrompt (coupure, disque plein, compilation qui échoue), l'application
 chemin du journal : `<données>/maj.log`. Le service, lui, est relancé par le
 script même en cas d'échec après l'arrêt.
 
-Pour désactiver, relancez l'installateur sans `MAJ_AUTO` : l'assistant root et
-ses unités sont retirés, et `MDF_MAJ_AUTO` repasse à `false`. Les deux vont
+Relancer l'installateur **sans** `MAJ_AUTO` ne désactive rien : il conserve le
+réglage déjà en place. C'est voulu, parce que relancer l'installateur est aussi
+la façon de mettre à jour à la main, et qu'on perdait le bouton en s'en servant.
+
+Pour désactiver, il faut le dire, avec `MAJ_AUTO=false` : l'assistant root et
+ses unités sont retirés, et `MDF_MAJ_AUTO` repasse à `false`.
+Les unités systemd elles-mêmes vivent dans `deploy/lxc/unites.sh`, chargé aussi
+bien par l'installateur que par la mise à jour : une correction d'unité voyage
+donc avec le code, au lieu d'attendre qu'on ouvre un terminal. Les deux vont
 ensemble, exprès : un drapeau resté à `true` sans assistant afficherait un bouton
 qui redemande le mot de passe et ne ferait plus rien.
 
