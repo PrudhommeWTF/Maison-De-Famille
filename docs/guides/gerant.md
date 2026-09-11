@@ -116,7 +116,21 @@ loyer, et il n'apparaîtrait dans aucun compte.
 
 ## 4. Les personnes et les rôles
 
-![Personnes et rôles](images/gerant-personnes.png)
+Deux écrans, parce que ce sont deux choses.
+
+- **Les comptes** valent pour toute l'instance : ils se tiennent dans
+  **Administration**, section **Personnes**. C'est là qu'on crée quelqu'un, qu'on
+  le rattache à un foyer et qu'on lui renvoie une invitation.
+- **Les rôles** valent pour une structure : ils se donnent depuis la maison
+  concernée, groupe **Famille**, entrée **Rôles et accès**. Un rôle accordé là
+  ouvre tous les biens portés par la même structure, et l'écran le dit en haut
+  quand c'est le cas.
+
+Avant, tout tenait sur un seul écran atteint depuis le portefeuille : on y
+donnait des rôles sans savoir de quelle structure il s'agissait, et on y arrivait
+sans maison ouverte, auquel cas la moitié de l'écran ne servait à rien.
+
+![Les comptes, dans l'Administration](images/gerant-personnes.png)
 
 ### Inviter quelqu'un
 
@@ -138,16 +152,27 @@ que vous ayez à le saisir deux fois.
 
 ### Donner un rôle
 
-Le menu **Donner un rôle** attribue un rôle sur une structure. Vous n'avez
-**pas besoin de le faire pour un indivisaire** : détenir des parts suffit à être
-détenteur, c'est pourquoi la liste affiche « Aucun rôle explicite » en face de
-gens qui ont pourtant tous les droits d'un détenteur.
+![Rôles et accès](images/gerant-roles.png)
+
+Depuis la maison, **Rôles et accès**. Vous n'avez **pas besoin de donner un rôle
+à un indivisaire** : détenir des parts suffit à être détenteur, c'est pourquoi
+des gens qui ont tous les droits d'un détenteur n'apparaissent pas dans la liste
+des rôles explicites.
 
 Vous vous en servez pour :
 
 - **désigner un second gérant** (fortement recommandé, voir plus bas) ;
 - donner un accès **invité** à quelqu'un qui n'a ni parts ni conjoint dans la
-  famille.
+  famille ;
+- ouvrir la maison au **conjoint** d'un détenteur.
+
+### Ajouter un foyer entier
+
+Le cas courant est un couple. Le formulaire **Ajouter un foyer entier** donne le
+même rôle à tous ses membres d'un coup, et vous dit ce qu'il a fait plutôt qu'un
+simple « c'est fait » : combien de personnes ont reçu le rôle, et lesquelles
+l'avaient déjà. Saisir le conjoint séparément s'oubliait, et l'oubli se lisait
+« je ne vois pas le calendrier », ce qui ne se diagnostique pas tout seul.
 
 > **Désignez toujours un second gérant.** L'application vous le rappelle par un
 > avertissement tant qu'il n'y en a qu'un. La raison est simple : si cette
@@ -371,8 +396,8 @@ Pour un locataire, un ami ou un artisan qui n'a pas besoin d'un compte.
 
 ![Les accès temporaires](images/gerant-acces-temporaires.png)
 
-Depuis **Personnes et rôles**, section **Accès temporaires** (visible quand une
-maison est ouverte) : **Ouvrir un accès**. Vous donnez un libellé, une date
+Depuis la maison, **Rôles et accès**, section **Accès temporaires** :
+**Ouvrir un accès**. Vous donnez un libellé, une date
 d'expiration, et éventuellement le séjour concerné.
 
 Vous obtenez un lien à transmettre. La personne entre par ce lien, **sans compte
@@ -449,6 +474,13 @@ Un réglage ajoute les deux fériés d'Alsace-Moselle, à laisser éteint ailleu
 ## 15. Reprendre un planning existant
 
 ![L'import du planning](images/gerant-import-planning.png)
+
+Depuis la maison concernée, groupe **Maison**, entrée **Import du planning**, ou
+le bouton **Importer un planning** de sa fiche. L'écran alimente **la maison
+ouverte** : il n'y a plus de menu déroulant où se tromper de cible, et se tromper
+coûtait une annulation d'import. Si votre fichier porte une colonne « bien », elle
+continue de valoir, et un planning qui nomme ses maisons reste importable d'un
+coup.
 
 Si la famille tenait un tableur, vous n'avez pas à ressaisir dix ans de séjours.
 

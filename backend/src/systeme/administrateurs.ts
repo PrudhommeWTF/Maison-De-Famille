@@ -17,6 +17,8 @@
 // raison, et elle se vérifie ici et non dans la route.
 import type { Db } from '../noyau/db';
 import { horodatage } from '../noyau/dates';
+import { introuvable } from '../noyau/erreurs';
+import { log } from '../noyau/log';
 
 export class AdministrationImpossible extends Error {}
 
@@ -96,4 +98,81 @@ export function poserAdministrateur(db: Db, personneId: number, actif: boolean, 
     );
   })();
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// Réparer un accès, et rien de plus.
+//
+// **Où passe la cloison.** Un administrateur de plateforme tient la machine, pas
+// les gens : il ne crée personne, n'archive personne, ne rattache personne à un
+// foyer, ne donne aucun rôle et ne voit ni les foyers ni les quotes-parts. Les
+// deux gestes ci-dessous sont du travail de machine, au même titre que
+// réinstaller un service.
+//
+// **Pourquoi le second facteur avait besoin de ça.** Personne ne pouvait retirer
+// celui d'un autre. Un téléphone perdu avec les codes de secours fermait le
+// compte pour toujours, et il fallait ouvrir la base à la main pour en sortir.
+// ---------------------------------------------------------------------------
+
+export interface Compte {
+  id: number; nom: string; email: string | null;
+  aUnCompte: boolean; derniereConnexion: string | null; secondFacteur: boolean;
+}
+
+/**
+ * Les comptes, vus par un administrateur de plateforme.
+ *
+ * Volontairement plus pauvre que `personnes()` : ni foyer, ni rôle, ni
+ * quote-part. Ce qu'il faut pour réparer un accès, pas pour connaître la
+ * composition de la famille.
+ */
+export const comptes = (db: Db): Compte[] => (db.prepare(`
+  SELECT id, nom, email, mot_de_passe_hash AS hash, derniere_connexion AS derniereConnexion,
+         totp_secret AS totp
+  FROM personne
+  WHERE archive_le IS NULL AND acces_lien_seul = 0
+  ORDER BY nom
+`).all() as { id: number; nom: string; email: string | null; hash: string | null;
+  derniereConnexion: string | null; totp: string | null }[])
+  .map((l) => ({
+    id: l.id, nom: l.nom, email: l.email, aUnCompte: !!l.hash,
+    derniereConnexion: l.derniereConnexion, secondFacteur: !!l.totp,
+  }));
+
+/**
+ * Retirer le second facteur d'un compte bloqué.
+ *
+ * Ne donne aucun accès par lui-même : il reste le mot de passe. Combiné à
+ * l'envoi d'un lien de réinitialisation, que l'administrateur déclenche mais ne
+ * lit pas (il part par courriel, jamais affiché à l'écran), il ne compose pas
+ * une prise de contrôle. Le geste est confirmé par le mot de passe de
+ * l'administrateur et écrit au journal d'audit : c'est exactement le traitement
+ * réservé à l'installation d'une mise à jour, et pour la même raison.
+ */
+export function retirerSecondFacteur(db: Db, personneId: number, parQui: number): string {
+  const cible = db.prepare(
+    'SELECT nom, totp_secret AS totp FROM personne WHERE id = ? AND archive_le IS NULL',
+  ).get(personneId) as { nom: string; totp: string | null } | undefined;
+  if (!cible) throw introuvable('Cette personne');
+  if (!cible.totp) {
+    throw new AdministrationImpossible(
+      `${cible.nom} n'a pas de second facteur actif : il n'y a rien à retirer.`,
+    );
+  }
+  db.transaction(() => {
+    // `token_version` incrémenté : les sessions ouvertes tombent. Sans cela, un
+    // téléphone volé encore connecté garderait sa session après le déblocage.
+    db.prepare(`
+      UPDATE personne SET totp_secret = NULL, totp_pending = NULL, totp_recovery = '[]',
+                          totp_last_step = 0, totp_active_le = NULL,
+                          token_version = token_version + 1
+      WHERE id = ?
+    `).run(personneId);
+    db.prepare(`
+      INSERT INTO journal_audit (acteur_id, action, objet_kind, objet_id, detail_json, fait_le)
+      VALUES (?, 'plateforme.second_facteur.retrait', 'personne', ?, ?, ?)
+    `).run(parQui, personneId, JSON.stringify({ nom: cible.nom }), horodatage());
+  })();
+  log.attention(`Second facteur de ${cible.nom} (${personneId}) retiré par la personne ${parQui}.`);
+  return cible.nom;
 }

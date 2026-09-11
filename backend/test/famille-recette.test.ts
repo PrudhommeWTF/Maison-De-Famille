@@ -395,7 +395,7 @@ test('un accès temporaire ne dépasse pas un an, et le message dit quoi faire',
       libelle: 'Éternel', email: '', expireLe: jourDecale(400),
     });
     assert.equal(trop.statut, 400);
-    assert.match(trop.corps.message, /Personnes et rôles/, 'le message doit dire par où passer');
+    assert.match(trop.corps.message, /Administration, section « Personnes »/, 'le message doit dire par où passer');
 
     const passe = await i.post(`/api/biens/${bienId}/acces`, {
       libelle: 'Passé', email: '', expireLe: jourDecale(-1),

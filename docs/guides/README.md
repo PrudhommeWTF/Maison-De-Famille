@@ -37,8 +37,10 @@ sauvegardes sont décrites à part : voir [installation.md](../installation.md) 
 Le menu de gauche le dit sans qu'on ait à le demander : **il ne montre que ce à
 quoi vous avez droit.** Comparez avec le tableau ci-dessous.
 
-- Vous voyez **Personnes et rôles**, **Import du planning** et **Administration** en haut
-  du menu : vous êtes gérant.
+- Vous voyez **Biens gérés** et **Personnes** en haut du menu, et le groupe
+  **Maison** de votre maison contient **Import du planning** : vous êtes gérant.
+  (**Administration** s'affiche en plus si vous tenez aussi le serveur : c'est un
+  droit distinct.)
 - Vous voyez un groupe **Argent** (Dépenses, Soldes) mais pas les entrées
   ci-dessus : vous êtes détenteur.
 - Vous ne voyez **pas** de groupe Argent, mais vous voyez Carnet d'entretien et

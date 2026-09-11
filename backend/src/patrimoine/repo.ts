@@ -281,8 +281,21 @@ export function personne(db: Db, id: number): Personne {
   return versPersonne(l);
 }
 
+/**
+ * Les personnes de l'instance.
+ *
+ * **Les accès temporaires par lien en sont exclus.** Ce sont des locataires de
+ * passage, sans mot de passe, dont le compte n'existe que le temps d'un séjour.
+ * Ils apparaissaient ici, donc dans la liste des comptes, dans le menu des
+ * payeurs d'une dépense et dans celui des détenteurs : trois endroits où ils
+ * n'ont rien à faire, et où « Afficher le lien » proposait d'ouvrir une
+ * invitation à choisir un mot de passe pour un compte qui n'en a pas. Ils se
+ * gèrent là où ils se créent, sous le bien, section « Rôles et accès ».
+ */
 export function personnes(db: Db): Personne[] {
-  return (db.prepare(`${SELECT_PERSONNE} WHERE p.archive_le IS NULL ORDER BY p.nom`).all() as LignePersonne[]).map(versPersonne);
+  return (db.prepare(
+    `${SELECT_PERSONNE} WHERE p.archive_le IS NULL AND p.acces_lien_seul = 0 ORDER BY p.nom`,
+  ).all() as LignePersonne[]).map(versPersonne);
 }
 
 export function creerPersonne(

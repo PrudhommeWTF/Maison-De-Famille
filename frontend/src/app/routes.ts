@@ -68,6 +68,21 @@ const administrateur = () => {
   return etat.estAdminPlateforme() ? true : router.createUrlTree(['/']);
 };
 
+/**
+ * L'entrée de l'Administration, ouverte aussi aux gérants.
+ *
+ * La section « Personnes » y vit et **ne suit pas le droit de plateforme** : les
+ * comptes de la famille sont l'affaire du gérant. Le cadre s'ouvre donc aux
+ * deux, et chaque section admin garde sa propre garde : sans elle, ranger un
+ * écran de comptes dans l'Administration aurait rouvert aux gérants les
+ * réglages qu'on venait de leur retirer.
+ */
+const administrationOuverte = () => {
+  const etat = inject(Etat);
+  const router = inject(Router);
+  return etat.estAdminPlateforme() || etat.estGerant() ? true : router.createUrlTree(['/']);
+};
+
 export const ROUTES: Routes = [
   {
     path: 'connexion',
@@ -90,7 +105,10 @@ export const ROUTES: Routes = [
     loadComponent: () => import('./shell/cadre').then((m) => m.Cadre),
     children: [
       { path: '', loadComponent: () => import('./ecrans/tableau-de-bord').then((m) => m.TableauDeBord), title: 'Tableau de bord' },
-      { path: 'biens', loadComponent: () => import('./ecrans/biens').then((m) => m.Biens), title: 'Biens gérés' },
+      // Réservé au gérant comme l'entrée de menu qui y mène : l'écran porte un
+      // formulaire de création que le serveur refuse à tout autre, et un bouton
+      // qui répond « accès refusé » est une coquille, pas une fonction.
+      { path: 'biens', canActivate: [gerant], loadComponent: () => import('./ecrans/biens').then((m) => m.Biens), title: 'Biens gérés' },
       // L'aide est ouverte à toute personne connectée : c'est de la
       // documentation, pas une donnée de la famille. L'adresse sans guide
       // ouvre la page qui dit lequel est pour vous.
@@ -111,22 +129,29 @@ export const ROUTES: Routes = [
           { path: 'location', loadComponent: () => import('./ecrans/location').then((m) => m.Location), title: 'Location saisonnière' },
           { path: 'souvenirs', loadComponent: () => import('./ecrans/souvenirs').then((m) => m.Souvenirs), title: 'Souvenirs' },
           { path: 'fiche', loadComponent: () => import('./ecrans/fiche').then((m) => m.Fiche), title: 'Fiche du bien' },
+          // L'import vit sous le bien qu'il alimente : on n'y choisit plus sa
+          // cible dans une liste, on est déjà dedans.
+          { path: 'import', canActivate: [gerant], loadComponent: () => import('./ecrans/import').then((m) => m.Import), title: 'Import du planning' },
+          // Les rôles se donnent sur la structure du bien : l'écran vit donc
+          // sous le bien, et non dans une rubrique générale où il fallait
+          // deviner de quelle structure on parlait.
+          { path: 'roles', canActivate: [gerant], loadComponent: () => import('./ecrans/roles').then((m) => m.Roles), title: 'Rôles et accès' },
           { path: '', pathMatch: 'full', redirectTo: 'calendrier' },
         ],
       },
-      { path: 'personnes', canActivate: [gerant], loadComponent: () => import('./ecrans/personnes').then((m) => m.Personnes), title: 'Personnes et rôles' },
-      { path: 'import', canActivate: [gerant], loadComponent: () => import('./ecrans/import').then((m) => m.Import), title: 'Import du planning' },
       {
-        path: 'administration', canActivate: [administrateur],
+        path: 'administration', canActivate: [administrationOuverte],
         loadComponent: () => import('./ecrans/administration').then((m) => m.Administration),
         children: [
-          { path: '', loadComponent: () => import('./ecrans/administration/apercu').then((m) => m.AdministrationApercu), title: 'Administration' },
-          { path: 'reglages', loadComponent: () => import('./ecrans/administration/reglages').then((m) => m.AdministrationReglages), title: 'Réglages' },
-          { path: 'vacances', loadComponent: () => import('./ecrans/administration/vacances').then((m) => m.AdministrationVacances), title: 'Vacances scolaires' },
-          { path: 'courriel', loadComponent: () => import('./ecrans/administration/courriel').then((m) => m.AdministrationCourriel), title: 'Courriel' },
-          { path: 'donnees', loadComponent: () => import('./ecrans/administration/donnees').then((m) => m.AdministrationDonnees), title: 'Données' },
-          { path: 'serveur', loadComponent: () => import('./ecrans/administration/serveur').then((m) => m.AdministrationServeur), title: 'Serveur' },
-          { path: 'administrateurs', loadComponent: () => import('./ecrans/administration/administrateurs').then((m) => m.AdministrationAdministrateurs), title: 'Administrateurs' },
+          { path: '', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/apercu').then((m) => m.AdministrationApercu), title: 'Administration' },
+          // La seule section que la gérante ouvre : les comptes de la famille.
+          { path: 'personnes', loadComponent: () => import('./ecrans/administration/personnes').then((m) => m.AdministrationPersonnes), title: 'Personnes' },
+          { path: 'reglages', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/reglages').then((m) => m.AdministrationReglages), title: 'Réglages' },
+          { path: 'vacances', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/vacances').then((m) => m.AdministrationVacances), title: 'Vacances scolaires' },
+          { path: 'courriel', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/courriel').then((m) => m.AdministrationCourriel), title: 'Courriel' },
+          { path: 'donnees', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/donnees').then((m) => m.AdministrationDonnees), title: 'Données' },
+          { path: 'serveur', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/serveur').then((m) => m.AdministrationServeur), title: 'Serveur' },
+          { path: 'administrateurs', canActivate: [administrateur], loadComponent: () => import('./ecrans/administration/administrateurs').then((m) => m.AdministrationAdministrateurs), title: 'Administrateurs' },
         ],
       },
       // Les deux anciennes adresses vivent encore dans des favoris, dans les
@@ -134,6 +159,10 @@ export const ROUTES: Routes = [
       // désormais à la section qui a repris leur contenu.
       { path: 'reglages', redirectTo: 'administration/reglages' },
       { path: 'etat', redirectTo: 'administration' },
+      // « Personnes et rôles » s'est scindé en deux : les comptes ici, les
+      // rôles sous le bien. L'ancienne adresse mène à la moitié qui garde son
+      // nom, et non à un 404 pour qui l'a mise en favori.
+      { path: 'personnes', redirectTo: 'administration/personnes' },
       { path: '**', redirectTo: '' },
     ],
   },

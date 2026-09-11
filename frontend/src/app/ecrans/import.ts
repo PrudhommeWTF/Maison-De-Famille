@@ -37,8 +37,8 @@ interface LigneHistorique {
       <div>
         <h1 class="h2 mb-2">Import du planning</h1>
         <p class="text-body-secondary mb-0">
-          Reprenez le calendrier existant : un fichier Excel (.xlsx) ou un export CSV. Rien n'est
-          écrit avant que vous ayez vu le rapport.
+          Reprenez le calendrier existant de {{ etat.bien()?.nom }} : un fichier Excel (.xlsx) ou un
+          export CSV. Rien n'est écrit avant que vous ayez vu le rapport.
         </p>
       </div>
 
@@ -94,12 +94,17 @@ interface LigneHistorique {
                 </div>
               }
               <div class="col">
-                <label class="form-label small text-body-secondary" for="c-bien">Bien par défaut</label>
-                <select class="form-select" id="c-bien" name="bienParDefaut" [(ngModel)]="bienParDefaut"
-                        (ngModelChange)="simuler()">
-                  @for (b of analyse()!.biens; track b.id) { <option [ngValue]="b.id">{{ b.nom }}</option> }
-                </select>
-                <div class="form-text">Utilisé pour les lignes sans colonne « bien ».</div>
+                <!-- Plus de menu déroulant : l'écran vit sous un bien, et c'est
+                     celui-là qu'on alimente. Se tromper de bien dans une liste
+                     et s'en apercevoir après coup coûtait une annulation
+                     d'import. La colonne « bien » du fichier, elle, continue de
+                     valoir : un planning qui nomme ses maisons reste importable
+                     d'un coup. -->
+                <label class="form-label small text-body-secondary">Bien par défaut</label>
+                <div class="form-control-plaintext fw-medium">{{ etat.bien()?.nom }}</div>
+                <div class="form-text">
+                  Pour les lignes sans colonne « bien ». Les autres suivent ce que dit le fichier.
+                </div>
               </div>
               <div class="col">
                 <label class="form-label small text-body-secondary" for="c-entete">Ligne des intitulés</label>
@@ -227,7 +232,7 @@ interface LigneHistorique {
 })
 export class Import {
   private readonly api = inject(Api);
-  private readonly etat = inject(Etat);
+  readonly etat = inject(Etat);
   readonly plage = plage;
   readonly horodatageLisible = horodatageLisible;
 
@@ -259,7 +264,8 @@ export class Import {
       this.analyse.set(a);
       this.ligneEntete.set(a.ligneEntete);
       this.correspondance = { ...a.correspondance };
-      this.bienParDefaut = a.biens.find((b) => b.id === this.etat.bien()?.id)?.id ?? a.biens[0]?.id ?? 0;
+      // Le bien ouvert, et rien d'autre : l'écran vit sous lui.
+      this.bienParDefaut = this.etat.bien()?.id ?? a.biens[0]?.id ?? 0;
       await this.simuler();
     });
   }

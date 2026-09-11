@@ -6,6 +6,7 @@
 // vide qui promet un contenu à venir ne rend service à personne.
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api, ErreurAppel } from '../core/api';
 import { Fichiers } from '../core/fichiers';
 import { Etat } from '../core/etat';
@@ -19,7 +20,7 @@ interface Contact {
 @Component({
   selector: 'app-fiche',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     /* La photo remplit son cadre : Bootstrap pose la proportion, pas le
@@ -288,6 +289,23 @@ interface Contact {
             </section>
           </div>
         </div>
+
+        @if (etat.estGeranteIci()) {
+          <section class="card">
+            <div class="card-body d-flex justify-content-between align-items-center gap-3 flex-wrap">
+              <div>
+                <div class="eyebrow mb-2">
+                  <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>Import du planning
+                </div>
+                <p class="text-body-secondary small mb-0" style="max-width:640px">
+                  Reprenez le calendrier existant de ce bien depuis un fichier Excel ou un export CSV.
+                  L'import se simule d'abord, et s'annule si le résultat ne convient pas.
+                </p>
+              </div>
+              <a class="btn btn-outline-secondary flex-shrink-0" routerLink="/bien/import">Importer un planning</a>
+            </div>
+          </section>
+        }
 
         <section class="card">
           <div class="card-body">
