@@ -12,6 +12,9 @@
 #   MDF_REPO      URL Git (défaut : https://github.com/PrudhommeWTF/Maison-De-Famille.git)
 #   MDF_BRANCH    branche à déployer (défaut : main)
 #   MDF_SRC       chemin d'une copie locale du dépôt (sinon auto-détecté, puis cloné)
+#   MDF_VERSION   version déployée, à donner quand la source n'est pas un dépôt
+#                 git (archive de release) : sans elle, le service se croira en
+#                 retard de toutes les versions publiées depuis le package.json
 #   APP_DIR       dossier du code    (défaut : /opt/maison-de-famille)
 #   DATA_DIR      dossier des données (défaut : /var/lib/maison-de-famille)
 #   PORT          port d'écoute      (défaut : 8099)
@@ -156,7 +159,6 @@ if [[ ! -f "${ENV_FILE}" ]]; then
 # Configuration de Maison de Famille.
 # Après toute modification :  systemctl restart ${UNITE}
 
-NODE_ENV=production
 PORT=${PORT}
 MDF_MAJ_AUTO=${MAJ_AUTO}
 
@@ -215,17 +217,36 @@ fi
 # Le drapeau décrit donc désormais l'état réel de la machine, dans les deux sens.
 poser_env MDF_MAJ_AUTO "${MAJ_AUTO}" "${ENV_FILE}"
 
+# NODE_ENV a longtemps été écrit ici. Il est désormais porté par l'unité du
+# service : on retire la ligne des configurations existantes, sans quoi l'unité
+# de mise à jour continuerait de l'hériter et de sauter tsc.
+sed -i '/^NODE_ENV=/d' "${ENV_FILE}"
+
 # --- Version déployée ---
 #
 # Sans cette ligne, le service retombe sur le « 0.0.0 » du package.json, se croit
 # éternellement en retard, et propose de se mettre à jour vers la version qu'il
 # exécute déjà. C'est arrivé sur une installation fraîche depuis le tag 0.0.5.
 #
-# Le tag exact d'abord (installation depuis une version publiée), le package.json
-# ensuite (installation depuis une branche). Écrit à chaque passage, même sur une
-# configuration existante : c'est le seul endroit qui sait ce qui vient d'être
-# posé, et maj.sh réécrira la ligne à la prochaine mise à jour.
-VERSION="$(git -C "${MDF_SRC}" describe --tags --exact-match 2>/dev/null || true)"
+# Trois sources, dans cet ordre, repris de Foyer-App :
+#
+#   1. `MDF_VERSION` passé à l'installateur. **C'est le cas qui manquait.** Une
+#      archive de release n'est pas un dépôt git : `git describe` n'a rien à
+#      interroger, et l'installation se rabattait sur `package.json`, resté en
+#      arrière. Une instance posée depuis l'archive 0.0.11 s'annonçait 0.0.5 et
+#      se croyait sept versions en retard, pour toujours.
+#   2. Le dernier tag du dépôt source, s'il y en a un. `--abbrev=0` et non
+#      `--exact-match` : installer depuis une branche quelques commits après un
+#      tag donne une réponse utile plutôt que rien.
+#   3. `package.json`, en dernier recours.
+#
+# Écrit à chaque passage, même sur une configuration existante : c'est le seul
+# endroit qui sait ce qui vient d'être posé, et maj.sh réécrira la ligne à la
+# prochaine mise à jour.
+VERSION="${MDF_VERSION:-}"
+if [[ -z "${VERSION}" ]]; then
+  VERSION="$(git -C "${MDF_SRC}" describe --tags --abbrev=0 2>/dev/null || true)"
+fi
 if [[ -z "${VERSION}" ]]; then
   VERSION="$(node -p "require('${MDF_SRC}/backend/package.json').version" 2>/dev/null || true)"
 fi
@@ -255,6 +276,12 @@ User=${SERVICE_USER}
 Group=${SERVICE_USER}
 WorkingDirectory=${APP_DIR}/backend
 EnvironmentFile=${ENV_FILE}
+# NODE_ENV appartient à CE service, et à lui seul. Tant qu'il vivait dans le
+# fichier d'environnement, l'unité de mise à jour le lisait elle aussi : npm en
+# déduisait « omit=dev », sautait tsc et le compilateur Angular, et la mise à
+# jour depuis l'interface échouait sur « sh: 1: tsc: not found ». Foyer-App le
+# pose ici depuis toujours, et sa mise à jour n'a jamais eu ce défaut.
+Environment=NODE_ENV=production
 ExecStart=/usr/bin/node ${APP_DIR}/backend/dist/server.js
 Restart=on-failure
 RestartSec=5

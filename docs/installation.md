@@ -216,6 +216,14 @@ Il pose `/usr/local/sbin/maison-de-famille-maj.sh`, deux unités systemd, et
 `MDF_MAJ_AUTO=true` dans la configuration. Sans lui, le bouton n'apparaît pas,
 parce qu'il ne mènerait à rien.
 
+Depuis une **archive de release** décompressée, donnez la version : une archive
+n'est pas un dépôt git, `git describe` n'a rien à interroger, et le service se
+croirait en retard de toutes les versions publiées depuis le `package.json`.
+
+```bash
+MDF_VERSION=0.0.12 MAJ_AUTO=true bash deploy/lxc/install.sh
+```
+
 La commande vaut aussi sur une machine **déjà installée** : elle met le code à
 jour, pose l'assistant et rectifie la configuration, sans toucher au secret ni
 aux données. Sur une machine où le dépôt est déjà là, c'est la même chose avec

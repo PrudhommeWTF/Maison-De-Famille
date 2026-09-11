@@ -15,6 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 const LXC = path.join(__dirname, '..', '..', 'deploy', 'lxc');
@@ -78,4 +79,55 @@ test("l'installateur compile lui aussi avec les dépendances de développement",
     assert.ok(ligne, `la ligne de compilation de ${cible} est introuvable dans install.sh`);
     assert.match(ligne, /--include=dev/);
   }
+});
+
+// ---------------------------------------------------------------------------
+// L'alignement sur Foyer-App, dont la mise à jour fonctionne depuis longtemps.
+//
+// Deux écarts expliquaient les deux symptômes vus sur l'instance de la famille,
+// et les deux sont réparés du même côté que Foyer-App les avait déjà réparés.
+// ---------------------------------------------------------------------------
+
+test('NODE_ENV appartient à l\'unité du service, pas au fichier d\'environnement', () => {
+  // Dans le fichier, l'unité de mise à jour l'hérite : npm saute alors les
+  // dépendances de développement, et la compilation échoue sur « tsc: not
+  // found ». Foyer-App le pose sur son unité de service depuis toujours.
+  const heredoc = install.slice(install.indexOf('cat > "${ENV_FILE}"'),
+    install.indexOf('chmod 600 "${ENV_FILE}"'));
+  assert.doesNotMatch(heredoc, /^NODE_ENV=/m,
+    'le fichier d\'environnement ne doit plus porter NODE_ENV');
+  assert.match(install, /^Environment=NODE_ENV=production$/m,
+    'l\'unité du service doit le porter');
+  assert.match(install, /sed -i '\/\^NODE_ENV=\/d'/,
+    'et la ligne doit disparaître des configurations déjà installées');
+});
+
+test('une configuration existante perd sa ligne NODE_ENV', () => {
+  const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'mdf-env-'));
+  const fichier = path.join(dossier, 'mdf.env');
+  fs.writeFileSync(fichier, 'NODE_ENV=production\nPORT=8099\nMDF_JWT_SECRET=abcdef\n');
+  execFileSync('bash', ['-c', `set -euo pipefail\nsed -i '/^NODE_ENV=/d' '${fichier}'`]);
+  const apres = fs.readFileSync(fichier, 'utf8');
+  fs.rmSync(dossier, { recursive: true, force: true });
+  assert.doesNotMatch(apres, /^NODE_ENV=/m);
+  assert.match(apres, /^MDF_JWT_SECRET=abcdef$/m, 'le reste ne bouge pas');
+  assert.match(apres, /^PORT=8099$/m);
+});
+
+test('la version se déclare quand la source n\'est pas un dépôt git', () => {
+  // Le cas réel : une archive de release, décompressée, sans .git. « git
+  // describe » n'a rien à interroger et l'installation se rabattait sur
+  // package.json, resté en arrière. Foyer-App accepte FOYER_VERSION pour ça.
+  const bloc = install.slice(install.indexOf('# --- Version déployée ---'),
+    install.indexOf('chown -R "${SERVICE_USER}'));
+  assert.match(bloc, /VERSION="\$\{MDF_VERSION:-\}"/,
+    'MDF_VERSION doit primer sur tout le reste');
+  assert.ok(bloc.indexOf('VERSION="${MDF_VERSION:-}"') < bloc.indexOf('describe --tags'),
+    'et être consulté avant git describe');
+  assert.match(bloc, /describe --tags --abbrev=0/,
+    '--abbrev=0 et non --exact-match : quelques commits après un tag, on répond');
+  // Sur les lignes de commande seulement : le commentaire au-dessus cite
+  // « --exact-match » pour dire qu'on ne s'en sert plus.
+  const commandes = bloc.split('\n').filter((l) => !l.trimStart().startsWith('#')).join('\n');
+  assert.doesNotMatch(commandes, /--exact-match/);
 });
